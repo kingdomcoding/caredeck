@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 64" width="320" height="64" aria-label="Caredeck lockup">
+  <g>
+    <circle cx="26" cy="26" r="18" fill="#4cd6c5" />
+    <circle cx="38" cy="38" r="18" fill="#1fbfaa" />
+  </g>
+  <text x="76" y="46" font-family="Figtree, sans-serif" font-weight="700" font-size="40" fill="#1fbfaa">caredeck</text>
+</svg>

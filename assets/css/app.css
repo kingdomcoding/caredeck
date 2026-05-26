@@ -1,5 +1,5 @@
-@import "tailwindcss" source(none);
-@source "../css";
+@import "tailwindcss";
+
 @source "../js";
 @source "../../lib/caredeck_web";
 
@@ -10,4 +10,72 @@
 @theme {
   --font-sans: "Figtree", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
     Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  --text-display-xl: 4.5rem;
+  --text-display-xl--line-height: 1.05;
+  --text-display-xl--letter-spacing: -0.02em;
+  --text-display-xl--font-weight: 700;
+
+  --text-display-lg: 3rem;
+  --text-display-lg--line-height: 1.1;
+  --text-display-lg--font-weight: 700;
+
+  --text-display-md: 2rem;
+  --text-display-md--line-height: 1.15;
+  --text-display-md--font-weight: 600;
+
+  --text-display-sm: 1.5rem;
+  --text-display-sm--line-height: 1.2;
+  --text-display-sm--font-weight: 600;
+
+  --color-teal-50:  #e6faf8;
+  --color-teal-100: #c2f2ec;
+  --color-teal-200: #8be6db;
+  --color-teal-300: #4cd6c5;
+  --color-teal-400: #2bcab6;
+  --color-teal-500: #1fbfaa;
+  --color-teal-600: #18a392;
+  --color-teal-700: #138072;
+  --color-teal-800: #0f5e54;
+  --color-teal-900: #0a3c35;
+  --color-brand: var(--color-teal-500);
+
+  --color-like-red: #ef4444;
+
+  --color-ink-900: #0f1115;
+  --color-ink-700: #2a2f37;
+  --color-ink-500: #5b6470;
+  --color-ink-300: #97a0ad;
+  --color-card: #ffffff;
+  --color-page: #f6f8fa;
+  --color-divider: #e5e8ec;
+
+  --color-status-draft-bg:        #fef9c3;
+  --color-status-draft-border:    #facc15;
+  --color-status-draft-text:      #854d0e;
+
+  --color-status-missing-bg:      #ffedd5;
+  --color-status-missing-border:  #fb923c;
+  --color-status-missing-text:    #9a3412;
+
+  --color-status-ready-bg:        #dbeafe;
+  --color-status-ready-border:    #3b82f6;
+  --color-status-ready-text:      #1e3a8a;
+
+  --color-status-submitted-bg:    #ede9fe;
+  --color-status-submitted-border:#8b5cf6;
+  --color-status-submitted-text:  #5b21b6;
+
+  --color-status-approved-bg:     #dcfce7;
+  --color-status-approved-border: #22c55e;
+  --color-status-approved-text:   #166534;
+
+  --radius-chip: 9999px;
+  --radius-card: 1.25rem;
+  --radius-button: 0.75rem;
+  --radius-fab: 9999px;
+
+  --shadow-card: 0 1px 2px rgba(15, 17, 21, 0.04),
+                 0 4px 12px rgba(15, 17, 21, 0.06);
+  --shadow-fab:  0 8px 24px rgba(31, 191, 170, 0.35);
 }
