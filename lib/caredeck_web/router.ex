@@ -15,6 +15,10 @@ defmodule CaredeckWeb.Router do
   end
 
   scope "/", CaredeckWeb do
+    get "/healthz", HealthController, :index
+  end
+
+  scope "/", CaredeckWeb do
     pipe_through :browser
 
     get "/", PageController, :home

@@ -35,3 +35,10 @@ caredeck-*.tar
 npm-debug.log
 /assets/node_modules/
 
+# Local prod secrets — never committed
+.env.prod
+.env.local
+
+# Dialyzer PLTs
+/priv/plts/
+

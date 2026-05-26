@@ -60,13 +60,32 @@ if config_env() == :prod do
   config :caredeck, CaredeckWeb.Endpoint,
     url: [host: host, port: 443, scheme: "https"],
     http: [
-      # Enable IPv6 and bind on all interfaces.
-      # Set it to  {0, 0, 0, 0, 0, 0, 0, 1} for local network only access.
-      # See the documentation on https://hexdocs.pm/bandit/Bandit.html#t:options/0
-      # for details about using IPv6 vs IPv4 and loopback vs public addresses.
-      ip: {0, 0, 0, 0, 0, 0, 0, 0}
+      ip: {0, 0, 0, 0, 0, 0, 0, 0},
+      port: String.to_integer(System.get_env("PHX_PORT") || "4000")
     ],
-    secret_key_base: secret_key_base
+    secret_key_base: secret_key_base,
+    server: true,
+    check_origin: ["https://#{host}"]
+
+  config :caredeck, :token_signing_secret,
+    System.get_env("TOKEN_SIGNING_SECRET") ||
+      raise("TOKEN_SIGNING_SECRET environment variable is missing.")
+
+  role = System.get_env("ROLE", "web")
+
+  oban_queues =
+    case role do
+      "worker" -> [default: 10, mailers: 5, thumbnails: 4, fanout: 8, aid: 4]
+      _ -> false
+    end
+
+  config :caredeck, Oban,
+    repo: Caredeck.Repo,
+    queues: oban_queues,
+    plugins: [
+      Oban.Plugins.Pruner,
+      {Oban.Plugins.Cron, crontab: []}
+    ]
 
   # ## SSL Support
   #

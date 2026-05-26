@@ -1,5 +1,11 @@
 defmodule Caredeck.Repo do
-  use Ecto.Repo,
-    otp_app: :caredeck,
-    adapter: Ecto.Adapters.Postgres
+  use AshPostgres.Repo, otp_app: :caredeck
+
+  def installed_extensions do
+    ["ash-functions", "uuid-ossp", "citext", "pg_trgm"]
+  end
+
+  def min_pg_version do
+    %Version{major: 16, minor: 0, patch: 0}
+  end
 end
