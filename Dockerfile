@@ -24,8 +24,8 @@ COPY priv priv
 COPY lib lib
 COPY assets assets
 
-RUN mix assets.deploy
 RUN mix compile
+RUN mix assets.deploy
 RUN mix release
 
 FROM debian:${DEBIAN_VERSION} AS runner
