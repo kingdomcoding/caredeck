@@ -16,9 +16,11 @@ defmodule CaredeckWeb.DesignSystemLive do
 
   @status_badges [
     {"Draft", "bg-status-draft-bg border-status-draft-border text-status-draft-text"},
-    {"Missing Documents", "bg-status-missing-bg border-status-missing-border text-status-missing-text"},
+    {"Missing Documents",
+     "bg-status-missing-bg border-status-missing-border text-status-missing-text"},
     {"Ready to Submit", "bg-status-ready-bg border-status-ready-border text-status-ready-text"},
-    {"Submitted", "bg-status-submitted-bg border-status-submitted-border text-status-submitted-text"},
+    {"Submitted",
+     "bg-status-submitted-bg border-status-submitted-border text-status-submitted-text"},
     {"Approved", "bg-status-approved-bg border-status-approved-border text-status-approved-text"}
   ]
 

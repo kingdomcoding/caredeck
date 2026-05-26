@@ -11,21 +11,21 @@ defmodule Caredeck.Resource do
         extensions: [AshPaperTrail.Resource, AshArchival.Resource]
 
       paper_trail do
-        change_tracking_mode :changes_only
-        store_action_name? true
-        ignore_attributes [:hashed_password]
+        change_tracking_mode(:changes_only)
+        store_action_name?(true)
+        ignore_attributes([:hashed_password])
         unquote(paper_trail_opts)
       end
 
       archive do
-        attribute :archived_at
-        base_filter? false
-        exclude_read_actions [:get_with_archived, :list_with_archived]
+        attribute(:archived_at)
+        base_filter?(false)
+        exclude_read_actions([:get_with_archived, :list_with_archived])
       end
 
       pub_sub do
-        module CaredeckWeb.Endpoint
-        prefix "resource"
+        module(CaredeckWeb.Endpoint)
+        prefix("resource")
       end
     end
   end

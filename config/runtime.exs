@@ -67,9 +67,10 @@ if config_env() == :prod do
     server: true,
     check_origin: ["https://#{host}"]
 
-  config :caredeck, :token_signing_secret,
-    System.get_env("TOKEN_SIGNING_SECRET") ||
-      raise("TOKEN_SIGNING_SECRET environment variable is missing.")
+  config :caredeck,
+         :token_signing_secret,
+         System.get_env("TOKEN_SIGNING_SECRET") ||
+           raise("TOKEN_SIGNING_SECRET environment variable is missing.")
 
   role = System.get_env("ROLE", "web")
 

@@ -1,0 +1,10 @@
+[
+  verbose: true,
+  private: false,
+  skip: false,
+  router: "lib/caredeck_web/router.ex",
+  exit: "low",
+  format: "txt",
+  out: "",
+  ignore: ["Config.HTTPS"]
+]

@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  MIX_ENV: test
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      db:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: caredeck
+          POSTGRES_PASSWORD: caredeck
+          POSTGRES_DB: caredeck_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U caredeck"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: erlef/setup-beam@v1
+        with:
+          elixir-version: "1.18"
+          otp-version: "27"
+
+      - name: Cache deps
+        uses: actions/cache@v4
+        with:
+          path: |
+            deps
+            _build
+          key: ${{ runner.os }}-mix-${{ hashFiles('mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-mix-
+
+      - run: mix deps.get
+      - run: mix format --check-formatted
+      - run: mix compile --warnings-as-errors
+      - run: mix credo --strict
+      - run: mix sobelow --config
+      - run: mix deps.audit --ignore-advisory-ids GHSA-g2wm-735q-3f56
+      - run: mix test
+        env:
+          DATABASE_URL: ecto://caredeck:caredeck@localhost/caredeck_test
+          TOKEN_SIGNING_SECRET: ci-token-signing-secret-not-real

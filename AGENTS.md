@@ -1,3 +1,63 @@
+# Caredeck
+
+Phoenix 1.8 + Ash 3.x portfolio reproduction of the myo elder-care platform.
+UI/UX patterns inspired by myo.de; implementation is original. Read the
+plan in `docs/architecture/decisions/` before changing anything load-bearing.
+
+## Language policy
+
+**English only, everywhere.** UI strings, route slugs, code identifiers, enum
+atoms, database columns, comments, ADR text. The original product (myo.de) is
+in German; we translate every label to English. This is a convention, not a
+lint check — keep it via code review.
+
+## Ash conventions
+
+- Every resource starts with `use Caredeck.Resource`. The base macro wires
+  AshPostgres, AshPaperTrail (with `ignore_attributes [:hashed_password]`),
+  AshArchival, Ash.Notifier.PubSub, and Ash.Policy.Authorizer.
+- Side effects live in `change` modules, `after_action` hooks, or notifiers —
+  never on the caller side.
+- Code interfaces live on the domain, not the resource. Callers invoke
+  `Caredeck.Org.register_facility!(...)`, never `Ash.create(Facility, ...)`
+  or a resource-level `code_interface do`.
+- Multi-tenancy is mandatory in Phase 2+ resources. Derive the tenant via
+  `Caredeck.Tenancy.to_tenant/1`. Passing `nil` raises.
+- Policies must be present on every resource.
+
+## CSS conventions
+
+- Tailwind v4. The token source of truth is the `@theme {}` block in
+  `assets/css/app.css`. The `/design-system` LiveView is its visual mirror.
+- **Never** hardcode a hex value in a HEEx template — add a token first.
+- **Never** use `@apply`. Compose Tailwind classes in the template.
+- **Never** add an inline `<script>` to a HEEx template.
+- Avoid dynamic class string interpolation (`"bg-teal-#{step}"`) — Tailwind's
+  static scanner won't see it. Use static class strings and pick via tuple
+  lookups instead.
+
+## Deployment
+
+Production runs on this box via `docker compose -f docker-compose.prod.yml
+up -d`. The `web` container binds to `127.0.0.1:4080`; Nginx Proxy Manager
+on the host proxies the public hostname with TLS + WebSocket support
+enabled. See `docs/operations/deployment-runbook.md`.
+
+## Test conventions
+
+- Use `start_supervised!/1` to start processes in tests.
+- Never `Process.sleep/1` to synchronise — use `Process.monitor/1` +
+  `assert_receive`, or `_ = :sys.get_state/1`.
+- Every Ash policy gets a positive and a negative test.
+
+## Pre-commit
+
+Always run `mix precommit` before committing. The alias runs format check,
+warnings-as-errors compile, Credo strict, Sobelow, dep audit, and the test
+suite.
+
+---
+
 This is a web application written using the Phoenix web framework.
 
 ## Project guidelines

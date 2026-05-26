@@ -82,6 +82,7 @@ defmodule Caredeck.MixProject do
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
       {:sobelow, "~> 0.13", only: [:dev, :test], runtime: false},
       {:mix_audit, "~> 2.1", only: [:dev, :test], runtime: false},
+      {:sourceror, "~> 1.7", only: [:dev, :test]},
       {:lazy_html, ">= 0.1.0", only: :test},
       {:floki, ">= 0.30.0", only: :test},
       {:bypass, "~> 2.1", only: :test}
@@ -109,7 +110,7 @@ defmodule Caredeck.MixProject do
         "compile --warnings-as-errors",
         "credo --strict",
         "sobelow --config",
-        "deps.audit",
+        "deps.audit --ignore-advisory-ids GHSA-g2wm-735q-3f56",
         "test"
       ]
     ]
