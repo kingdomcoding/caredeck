@@ -21,6 +21,9 @@ services:
         condition: service_healthy
     ports:
       - "127.0.0.1:4080:4000"
+    networks:
+      - default
+      - npm_default
     restart: unless-stopped
     command: ["/app/bin/caredeck", "start"]
     healthcheck:
@@ -38,6 +41,11 @@ services:
     command: ["/app/bin/caredeck", "start"]
     environment:
       ROLE: "worker"
+
+networks:
+  default:
+  npm_default:
+    external: true
 
 volumes:
   prod_db:
