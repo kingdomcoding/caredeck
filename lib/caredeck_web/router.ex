@@ -48,6 +48,24 @@ defmodule CaredeckWeb.Router do
     confirm_route Caredeck.Accounts.User, :confirm_new_user, auth_routes_prefix: "/auth"
   end
 
+  scope "/team", CaredeckWeb do
+    pipe_through :browser
+
+    auth_routes TeamAuthController, Caredeck.Accounts.TeamIdentity, path: "/auth"
+
+    sign_in_route(
+      register_path: nil,
+      reset_path: nil,
+      auth_routes_prefix: "/team/auth",
+      live_view: AshAuthentication.Phoenix.SignInLive,
+      on_mount: [{CaredeckWeb.LiveUserAuth, :live_no_team}],
+      as: :team_auth,
+      overrides: [CaredeckWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default]
+    )
+
+    get "/sign-out", TeamAuthController, :sign_out
+  end
+
   scope "/" do
     pipe_through :browser
     ash_admin "/admin"
