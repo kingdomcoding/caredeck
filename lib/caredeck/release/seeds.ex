@@ -60,18 +60,19 @@ defmodule Caredeck.Release.Seeds do
            authorize?: false
          ) do
       {:ok, nil} ->
-        AshAuthentication.Strategy.Password.Actions.register(
-          AshAuthentication.Info.strategy!(Accounts.TeamIdentity, :password),
+        Accounts.TeamIdentity
+        |> Ash.Changeset.for_create(
+          :register_with_password,
           %{
             handle: handle,
             name: name,
             role_kind: role_kind,
             facility_id: facility.id,
-            password: @demo_password,
-            password_confirmation: @demo_password
+            password: @demo_password
           },
-          []
+          authorize?: false
         )
+        |> Ash.create!(authorize?: false)
 
       {:ok, _existing} ->
         :ok
@@ -84,9 +85,10 @@ defmodule Caredeck.Release.Seeds do
            authorize?: false
          ) do
       {:ok, nil} ->
-        {:ok, user} =
-          AshAuthentication.Strategy.Password.Actions.register(
-            AshAuthentication.Info.strategy!(Accounts.User, :password),
+        user =
+          Accounts.User
+          |> Ash.Changeset.for_create(
+            :register_with_password,
             %{
               email: @relative_email,
               name: "Demo",
@@ -94,8 +96,9 @@ defmodule Caredeck.Release.Seeds do
               password: @demo_password,
               password_confirmation: @demo_password
             },
-            []
+            authorize?: false
           )
+          |> Ash.create!(authorize?: false)
 
         user
         |> Ash.Changeset.for_update(:update_profile, %{}, authorize?: false)

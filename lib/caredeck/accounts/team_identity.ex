@@ -45,7 +45,6 @@ defmodule Caredeck.Accounts.TeamIdentity do
       enabled? true
       token_resource Caredeck.Accounts.TeamToken
       signing_secret Caredeck.Accounts.Secrets
-      require_token_presence_for_authentication? true
     end
 
     strategies do

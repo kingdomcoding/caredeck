@@ -50,7 +50,6 @@ defmodule Caredeck.Accounts.User do
       enabled? true
       token_resource Caredeck.Accounts.Token
       signing_secret Caredeck.Accounts.Secrets
-      require_token_presence_for_authentication? true
     end
 
     strategies do
