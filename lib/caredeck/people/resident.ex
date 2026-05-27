@@ -44,6 +44,15 @@ defmodule Caredeck.People.Resident do
   relationships do
     belongs_to :facility, Caredeck.Org.Facility, allow_nil?: false
     belongs_to :ward, Caredeck.Org.Ward
+
+    has_many :relative_links, Caredeck.People.RelativeOfResident,
+      destination_attribute: :resident_id
+
+    many_to_many :relatives, Caredeck.People.Relative do
+      through Caredeck.People.RelativeOfResident
+      source_attribute_on_join_resource :resident_id
+      destination_attribute_on_join_resource :relative_id
+    end
   end
 
   state_machine do
