@@ -3,6 +3,8 @@ defmodule Caredeck.Resource do
     domain = Keyword.get(opts, :domain)
     paper_trail_opts = Keyword.get(opts, :paper_trail, [])
     paper_trail_attrs = Keyword.get(paper_trail_opts, :attributes_as_attributes, [])
+    extra_extensions = Keyword.get(opts, :extensions, [])
+    extensions = [AshPaperTrail.Resource, AshArchival.Resource] ++ extra_extensions
 
     quote do
       use Ash.Resource,
@@ -11,7 +13,7 @@ defmodule Caredeck.Resource do
         data_layer: AshPostgres.DataLayer,
         notifiers: [Ash.Notifier.PubSub],
         authorizers: [Ash.Policy.Authorizer],
-        extensions: [AshPaperTrail.Resource, AshArchival.Resource]
+        extensions: unquote(extensions)
 
       paper_trail do
         change_tracking_mode(:changes_only)
