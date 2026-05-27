@@ -1,0 +1,42 @@
+defmodule Caredeck.Org.District do
+  use Caredeck.Resource, domain: Caredeck.Org
+
+  postgres do
+    table "districts"
+    repo Caredeck.Repo
+  end
+
+  attributes do
+    uuid_primary_key :id
+
+    attribute :name, :string, allow_nil?: false, public?: true
+    attribute :slug, :ci_string, allow_nil?: false, public?: true
+
+    create_timestamp :inserted_at
+    update_timestamp :updated_at
+  end
+
+  identities do
+    identity :unique_slug, [:slug]
+  end
+
+  actions do
+    defaults [:read, :destroy]
+
+    create :create do
+      primary? true
+      accept [:name, :slug]
+    end
+
+    update :update do
+      primary? true
+      accept [:name]
+    end
+  end
+
+  policies do
+    policy always() do
+      forbid_if always()
+    end
+  end
+end

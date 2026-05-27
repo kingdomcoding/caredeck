@@ -1,10 +1,12 @@
 defmodule Caredeck.Resource do
   defmacro __using__(opts) do
     paper_trail_opts = Keyword.get(opts, :paper_trail, [])
+    domain = Keyword.get(opts, :domain)
 
     quote do
       use Ash.Resource,
         otp_app: :caredeck,
+        domain: unquote(domain),
         data_layer: AshPostgres.DataLayer,
         notifiers: [Ash.Notifier.PubSub],
         authorizers: [Ash.Policy.Authorizer],
