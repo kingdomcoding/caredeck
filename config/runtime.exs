@@ -88,6 +88,21 @@ if config_env() == :prod do
       {Oban.Plugins.Cron, crontab: []}
     ]
 
+  smtp_relay = System.get_env("SMTP_RELAY")
+
+  if smtp_relay && smtp_relay != "" do
+    config :caredeck, Caredeck.Mailer,
+      adapter: Swoosh.Adapters.SMTP,
+      relay: smtp_relay,
+      username: System.fetch_env!("SMTP_USERNAME"),
+      password: System.fetch_env!("SMTP_PASSWORD"),
+      tls: :always,
+      auth: :always,
+      port: String.to_integer(System.get_env("SMTP_PORT") || "587")
+  else
+    config :caredeck, Caredeck.Mailer, adapter: Swoosh.Adapters.Local
+  end
+
   # ## SSL Support
   #
   # To get SSL working, you will need to add the `https` key

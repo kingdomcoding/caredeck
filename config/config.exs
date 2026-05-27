@@ -40,6 +40,9 @@ config :spark, formatter: [remove_parens?: true]
 
 config :swoosh, :api_client, Swoosh.ApiClient.Req
 
+config :caredeck, Caredeck.Mailer, adapter: Swoosh.Adapters.Local
+config :caredeck, :from_email, {"Caredeck", "no-reply@caredeck.josboxoffice.com"}
+
 config :logger, :default_formatter,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id]

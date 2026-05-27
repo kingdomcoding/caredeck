@@ -1,5 +1,6 @@
 defmodule CaredeckWeb.Router do
   use CaredeckWeb, :router
+  use AshAuthentication.Phoenix.Router
   import AshAdmin.Router
 
   @csp_header %{
@@ -14,10 +15,12 @@ defmodule CaredeckWeb.Router do
     plug :put_root_layout, html: {CaredeckWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers, @csp_header
+    plug :load_from_session
   end
 
   pipeline :api do
     plug :accepts, ["json"]
+    plug :load_from_bearer
   end
 
   scope "/", CaredeckWeb do
@@ -29,6 +32,20 @@ defmodule CaredeckWeb.Router do
 
     get "/", PageController, :home
     live "/design-system", DesignSystemLive
+
+    auth_routes AuthController, Caredeck.Accounts.User, path: "/auth"
+    sign_out_route AuthController
+
+    sign_in_route(
+      register_path: "/register",
+      reset_path: "/password-reset-request",
+      auth_routes_prefix: "/auth",
+      on_mount: [{CaredeckWeb.LiveUserAuth, :live_no_user}],
+      overrides: [CaredeckWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default]
+    )
+
+    reset_route auth_routes_prefix: "/auth"
+    confirm_route Caredeck.Accounts.User, :confirm_new_user, auth_routes_prefix: "/auth"
   end
 
   scope "/" do

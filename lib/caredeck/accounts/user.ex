@@ -42,8 +42,50 @@ defmodule Caredeck.Accounts.User do
     exclude_read_actions [:get_with_archived, :list_with_archived]
   end
 
+  authentication do
+    domain Caredeck.Accounts
+    session_identifier :jti
+
+    tokens do
+      enabled? true
+      token_resource Caredeck.Accounts.Token
+      signing_secret Caredeck.Accounts.Secrets
+      require_token_presence_for_authentication? true
+    end
+
+    strategies do
+      password :password do
+        identity_field :email
+        hash_provider AshAuthentication.BcryptProvider
+        sign_in_tokens_enabled? true
+        confirmation_required? true
+
+        register_action_accept [:name, :family_name, :phone]
+
+        resettable do
+          sender Caredeck.Accounts.UserNotifier
+        end
+      end
+    end
+
+    add_ons do
+      confirmation :confirm_new_user do
+        monitor_fields [:email]
+        confirm_on_create? true
+        confirm_on_update? false
+        require_interaction? true
+        sender Caredeck.Accounts.UserNotifier
+      end
+    end
+  end
+
   actions do
     defaults [:read]
+
+    update :update_profile do
+      accept [:name, :family_name, :phone]
+      require_atomic? false
+    end
   end
 
   policies do
