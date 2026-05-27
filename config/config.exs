@@ -2,7 +2,7 @@ import Config
 
 config :caredeck,
   ecto_repos: [Caredeck.Repo],
-  ash_domains: [],
+  ash_domains: [Caredeck.Accounts],
   generators: [timestamp_type: :utc_datetime]
 
 config :caredeck, CaredeckWeb.Endpoint,

@@ -1,5 +1,6 @@
 defmodule CaredeckWeb.Router do
   use CaredeckWeb, :router
+  import AshAdmin.Router
 
   @csp_header %{
     "content-security-policy" =>
@@ -28,6 +29,11 @@ defmodule CaredeckWeb.Router do
 
     get "/", PageController, :home
     live "/design-system", DesignSystemLive
+  end
+
+  scope "/" do
+    pipe_through :browser
+    ash_admin "/admin"
   end
 
   # Other scopes may use custom stacks.
