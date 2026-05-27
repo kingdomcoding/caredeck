@@ -40,17 +40,27 @@ defmodule Caredeck.Org.FacilityMembership do
       team_id = Ash.Changeset.get_attribute(changeset, :team_identity_id)
 
       case {user_id, team_id} do
-        {nil, nil} -> {:error, field: :user_id, message: "must set user_id or team_identity_id"}
-        {_, nil} -> :ok
-        {nil, _} -> :ok
-        {_, _} -> {:error, field: :user_id, message: "set only one of user_id or team_identity_id"}
+        {nil, nil} ->
+          {:error, field: :user_id, message: "must set user_id or team_identity_id"}
+
+        {_, nil} ->
+          :ok
+
+        {nil, _} ->
+          :ok
+
+        {_, _} ->
+          {:error, field: :user_id, message: "set only one of user_id or team_identity_id"}
       end
     end
   end
 
   actions do
     defaults [:read, :destroy]
-    create :create, primary?: true, accept: [:facility_id, :user_id, :team_identity_id, :role, :source]
+
+    create :create,
+      primary?: true,
+      accept: [:facility_id, :user_id, :team_identity_id, :role, :source]
   end
 
   policies do

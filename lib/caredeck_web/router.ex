@@ -33,8 +33,8 @@ defmodule CaredeckWeb.Router do
     get "/", PageController, :home
     live "/design-system", DesignSystemLive
 
-    auth_routes AuthController, Caredeck.Accounts.User, path: "/auth"
-    sign_out_route AuthController
+    auth_routes(AuthController, Caredeck.Accounts.User, path: "/auth")
+    sign_out_route(AuthController)
 
     sign_in_route(
       register_path: "/register",
@@ -44,14 +44,14 @@ defmodule CaredeckWeb.Router do
       overrides: [CaredeckWeb.AuthOverrides, AshAuthentication.Phoenix.Overrides.Default]
     )
 
-    reset_route auth_routes_prefix: "/auth"
-    confirm_route Caredeck.Accounts.User, :confirm_new_user, auth_routes_prefix: "/auth"
+    reset_route(auth_routes_prefix: "/auth")
+    confirm_route(Caredeck.Accounts.User, :confirm_new_user, auth_routes_prefix: "/auth")
   end
 
   scope "/team", CaredeckWeb do
     pipe_through :browser
 
-    auth_routes TeamAuthController, Caredeck.Accounts.TeamIdentity, path: "/auth"
+    auth_routes(TeamAuthController, Caredeck.Accounts.TeamIdentity, path: "/auth")
 
     sign_in_route(
       register_path: nil,
@@ -68,7 +68,7 @@ defmodule CaredeckWeb.Router do
 
   scope "/" do
     pipe_through :browser
-    ash_admin "/admin"
+    ash_admin("/admin")
   end
 
   # Other scopes may use custom stacks.

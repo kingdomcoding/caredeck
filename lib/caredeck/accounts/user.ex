@@ -31,15 +31,15 @@ defmodule Caredeck.Accounts.User do
   end
 
   paper_trail do
-    change_tracking_mode :changes_only
-    store_action_name? true
-    ignore_attributes [:hashed_password]
+    change_tracking_mode(:changes_only)
+    store_action_name?(true)
+    ignore_attributes([:hashed_password])
   end
 
   archive do
     attribute :archived_at
-    base_filter? false
-    exclude_read_actions [:get_with_archived, :list_with_archived]
+    base_filter?(false)
+    exclude_read_actions([:get_with_archived, :list_with_archived])
   end
 
   authentication do
