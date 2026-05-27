@@ -2,11 +2,13 @@ defmodule Caredeck.Release.Seeds do
   alias Caredeck.Accounts
   alias Caredeck.Org
   alias Caredeck.People
+  alias Caredeck.Release.NamePool
 
   require Ash.Query
 
   @relative_email "demo-relative@example.test"
   @demo_password "phase1-demo-pass"
+  @bulk_password "phase2-bulk-pass"
 
   @team_seeds [
     %{name: "Team Care", handle: "team-care", role_kind: :care},
@@ -14,52 +16,154 @@ defmodule Caredeck.Release.Seeds do
     %{name: "Team Therapy", handle: "team-therapy", role_kind: :therapy}
   ]
 
-  @resident_seeds [
-    %{first_name: "Erika", last_name: "Schmidt", date_of_birth: ~D[1944-09-15]},
-    %{first_name: "Dietrich", last_name: "Manner", date_of_birth: ~D[1938-04-02]},
-    %{first_name: "Marie", last_name: "Becker", date_of_birth: ~D[1940-11-22]}
-  ]
+  @resident_count 30
+  @relative_count_target 80
+  @relationship_pool ~w(daughter son niece nephew granddaughter grandson spouse sibling)a
 
   def run do
     district = find_or_create_district()
     facility = find_or_create_facility(district)
-    find_or_create_ward(facility)
+    primary_ward = find_or_create_primary_ward(facility)
+    secondary_ward = find_or_create_secondary_ward(facility)
     Enum.each(@team_seeds, &find_or_create_team(&1, facility))
     relative = find_or_create_relative()
     find_or_create_membership(relative, facility)
-    find_or_create_residents(facility)
+    find_or_create_residents(facility, primary_ward, secondary_ward)
+    find_or_create_relatives_and_links(facility)
+
+    resident_count =
+      People.Resident
+      |> Ash.read!(tenant: facility.id, authorize?: false)
+      |> length()
+
+    relative_count =
+      People.Relative
+      |> Ash.read!(tenant: facility.id, authorize?: false)
+      |> length()
 
     IO.puts("")
     IO.puts("Sandbox facility ready.")
     IO.puts("  Relative: #{@relative_email} / #{@demo_password}")
     IO.puts("  Teams:    team-care · team-activities · team-therapy / #{@demo_password}")
-    IO.puts("  Residents: #{length(@resident_seeds)} seeded")
+    IO.puts("  Residents: #{resident_count}")
+    IO.puts("  Relatives: #{relative_count}")
     IO.puts("")
 
     :ok
   end
 
-  defp find_or_create_residents(facility) do
-    for attrs <- @resident_seeds do
-      query =
-        People.Resident
-        |> Ash.Query.filter(
-          first_name == ^attrs.first_name and last_name == ^attrs.last_name
-        )
+  defp find_or_create_residents(facility, primary_ward, secondary_ward) do
+    existing =
+      People.Resident
+      |> Ash.read!(tenant: facility.id, authorize?: false)
+      |> length()
 
-      case Ash.read_one(query, tenant: facility.id, authorize?: false) do
-        {:ok, nil} ->
-          People.Resident
+    needed = @resident_count - existing
+
+    if needed > 0 do
+      for i <- 1..needed do
+        ward = if rem(i, 3) == 0, do: secondary_ward, else: primary_ward
+
+        attrs = %{
+          facility_id: facility.id,
+          ward_id: ward.id,
+          first_name: NamePool.random_first_name(),
+          last_name: NamePool.random_last_name(),
+          date_of_birth: NamePool.random_birth_date()
+        }
+
+        People.Resident
+        |> Ash.Changeset.for_create(:create, attrs,
+          tenant: facility.id,
+          authorize?: false
+        )
+        |> Ash.create!(tenant: facility.id, authorize?: false)
+      end
+    end
+  end
+
+  defp find_or_create_relatives_and_links(facility) do
+    residents =
+      People.Resident
+      |> Ash.read!(tenant: facility.id, authorize?: false)
+
+    existing =
+      People.Relative
+      |> Ash.read!(tenant: facility.id, authorize?: false)
+      |> length()
+
+    needed = @relative_count_target - existing
+
+    if needed > 0 and residents != [] do
+      for _ <- 1..needed do
+        first = NamePool.random_first_name()
+        last = NamePool.random_last_name()
+        suffix = :erlang.unique_integer([:positive])
+
+        email =
+          "#{String.downcase(first)}.#{String.downcase(last)}.#{suffix}@example.test"
+
+        user =
+          Accounts.User
+          |> Ash.Changeset.for_create(
+            :register_with_password,
+            %{
+              email: email,
+              name: first,
+              family_name: last,
+              password: @bulk_password,
+              password_confirmation: @bulk_password
+            },
+            authorize?: false
+          )
+          |> Ash.create!(authorize?: false)
+
+        user
+        |> Ash.Changeset.for_update(:update_profile, %{}, authorize?: false)
+        |> Ash.Changeset.change_attribute(:confirmed_at, DateTime.utc_now())
+        |> Ash.update!(authorize?: false)
+
+        relative =
+          People.Relative
           |> Ash.Changeset.for_create(
             :create,
-            Map.put(attrs, :facility_id, facility.id),
+            %{
+              facility_id: facility.id,
+              user_id: user.id,
+              display_name: "#{first} #{last}"
+            },
             tenant: facility.id,
             authorize?: false
           )
           |> Ash.create!(tenant: facility.id, authorize?: false)
 
-        {:ok, _existing} ->
-          :ok
+        Ash.create!(
+          Org.FacilityMembership,
+          %{
+            facility_id: facility.id,
+            user_id: user.id,
+            role: :relative,
+            source: :manual
+          },
+          authorize?: false
+        )
+
+        resident = Enum.random(residents)
+        relationship = Enum.random(@relationship_pool)
+
+        People.RelativeOfResident
+        |> Ash.Changeset.for_create(
+          :create,
+          %{
+            facility_id: facility.id,
+            resident_id: resident.id,
+            relative_id: relative.id,
+            relationship: relationship
+          },
+          tenant: facility.id,
+          authorize?: false
+        )
+        |> Ash.create!(tenant: facility.id, authorize?: false)
       end
     end
   end
@@ -80,11 +184,19 @@ defmodule Caredeck.Release.Seeds do
     )
   end
 
-  defp find_or_create_ward(facility) do
+  defp find_or_create_primary_ward(facility) do
     find_or_create(
       Org.Ward |> Ash.Query.filter(facility_id == ^facility.id and name == "Ground Floor"),
       Org.Ward,
       %{facility_id: facility.id, name: "Ground Floor"}
+    )
+  end
+
+  defp find_or_create_secondary_ward(facility) do
+    find_or_create(
+      Org.Ward |> Ash.Query.filter(facility_id == ^facility.id and name == "First Floor"),
+      Org.Ward,
+      %{facility_id: facility.id, name: "First Floor"}
     )
   end
 
