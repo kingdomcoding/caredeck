@@ -1,6 +1,7 @@
 defmodule Caredeck.Release.Seeds do
   alias Caredeck.Accounts
   alias Caredeck.Org
+  alias Caredeck.People
 
   require Ash.Query
 
@@ -13,6 +14,12 @@ defmodule Caredeck.Release.Seeds do
     %{name: "Team Therapy", handle: "team-therapy", role_kind: :therapy}
   ]
 
+  @resident_seeds [
+    %{first_name: "Erika", last_name: "Schmidt", date_of_birth: ~D[1944-09-15]},
+    %{first_name: "Dietrich", last_name: "Manner", date_of_birth: ~D[1938-04-02]},
+    %{first_name: "Marie", last_name: "Becker", date_of_birth: ~D[1940-11-22]}
+  ]
+
   def run do
     district = find_or_create_district()
     facility = find_or_create_facility(district)
@@ -20,14 +27,41 @@ defmodule Caredeck.Release.Seeds do
     Enum.each(@team_seeds, &find_or_create_team(&1, facility))
     relative = find_or_create_relative()
     find_or_create_membership(relative, facility)
+    find_or_create_residents(facility)
 
     IO.puts("")
     IO.puts("Sandbox facility ready.")
     IO.puts("  Relative: #{@relative_email} / #{@demo_password}")
     IO.puts("  Teams:    team-care · team-activities · team-therapy / #{@demo_password}")
+    IO.puts("  Residents: #{length(@resident_seeds)} seeded")
     IO.puts("")
 
     :ok
+  end
+
+  defp find_or_create_residents(facility) do
+    for attrs <- @resident_seeds do
+      query =
+        People.Resident
+        |> Ash.Query.filter(
+          first_name == ^attrs.first_name and last_name == ^attrs.last_name
+        )
+
+      case Ash.read_one(query, tenant: facility.id, authorize?: false) do
+        {:ok, nil} ->
+          People.Resident
+          |> Ash.Changeset.for_create(
+            :create,
+            Map.put(attrs, :facility_id, facility.id),
+            tenant: facility.id,
+            authorize?: false
+          )
+          |> Ash.create!(tenant: facility.id, authorize?: false)
+
+        {:ok, _existing} ->
+          :ok
+      end
+    end
   end
 
   defp find_or_create_district do

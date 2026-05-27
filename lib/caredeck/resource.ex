@@ -1,7 +1,8 @@
 defmodule Caredeck.Resource do
   defmacro __using__(opts) do
-    paper_trail_opts = Keyword.get(opts, :paper_trail, [])
     domain = Keyword.get(opts, :domain)
+    paper_trail_opts = Keyword.get(opts, :paper_trail, [])
+    paper_trail_attrs = Keyword.get(paper_trail_opts, :attributes_as_attributes, [])
 
     quote do
       use Ash.Resource,
@@ -16,7 +17,7 @@ defmodule Caredeck.Resource do
         change_tracking_mode(:changes_only)
         store_action_name?(true)
         ignore_attributes([:hashed_password])
-        unquote(paper_trail_opts)
+        attributes_as_attributes(unquote(paper_trail_attrs))
       end
 
       archive do
