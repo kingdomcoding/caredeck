@@ -39,7 +39,7 @@ The dev database lives on the host's Postgres (see `config/dev.exs`). No Docker 
    curl http://127.0.0.1:4080/healthz   # → ok
    ```
 5. In Nginx Proxy Manager → **Proxy Hosts** → **Add Proxy Host**:
-   - Domain: `caredeck.example.com` (substitute your hostname)
+   - Domain: `caredeck.josboxoffice.com` (substitute your hostname)
    - Scheme: `http`
    - Forward Hostname / IP: `127.0.0.1`
    - Forward Port: `4080`
@@ -51,7 +51,7 @@ The dev database lives on the host's Postgres (see `config/dev.exs`). No Docker 
      client_max_body_size 25M;
      proxy_read_timeout 300;
      ```
-6. Visit `https://caredeck.example.com/design-system` from a public browser.
+6. Visit `https://caredeck.josboxoffice.com/design-system` from a public browser.
 
 ## Backups
 

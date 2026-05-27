@@ -49,7 +49,7 @@
 
 ## Outstanding pre-prod tasks (user action)
 
-- [ ] Reserve DNS `caredeck.example.com` (or chosen hostname) and point at this box.
+- [ ] Reserve DNS `caredeck.josboxoffice.com` (or chosen hostname) and point at this box.
 - [ ] In NPM admin UI: add Proxy Host with WebSocket Support + Let's Encrypt cert, per `docs/operations/deployment-runbook.md`.
 - [ ] Add nightly `pg_dump` cron entry on the host.
 - [ ] Push the repo to GitHub so CI can run.

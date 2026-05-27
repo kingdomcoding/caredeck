@@ -53,7 +53,7 @@ If a migration is in flight that the previous tag can't read, restore from the l
 In NPM admin UI:
 
 1. **Proxy Hosts → Add Proxy Host**
-2. Domain Names: `caredeck.example.com`
+2. Domain Names: `caredeck.josboxoffice.com`
 3. Scheme: `http`, Forward Hostname / IP: `127.0.0.1`, Forward Port: `4080`
 4. Toggle on: **Block Common Exploits** and **Websockets Support** (LiveView requirement).
 5. **SSL tab:** request a new Let's Encrypt cert; Force SSL on; HTTP/2 on.
@@ -64,7 +64,7 @@ In NPM admin UI:
    ```
 7. Save. Wait ~30 seconds for the certificate.
 
-Verify with `curl -I https://caredeck.example.com/healthz` from a public network.
+Verify with `curl -I https://caredeck.josboxoffice.com/healthz` from a public network.
 
 ## Backups
 
