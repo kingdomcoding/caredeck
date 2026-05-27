@@ -2,9 +2,12 @@ defmodule CaredeckWeb.TeamAuthController do
   use CaredeckWeb, :controller
   use AshAuthentication.Phoenix.Controller
 
-  def success(conn, _activity, team, _token) do
+  def success(conn, _activity, team, token) do
+    team_with_token =
+      if token, do: Map.update!(team, :__metadata__, &Map.put(&1, :token, token)), else: team
+
     conn
-    |> store_in_session(team)
+    |> store_in_session(team_with_token)
     |> put_session(:current_facility_id, team.facility_id)
     |> assign(:current_team, team)
     |> put_flash(:info, "Signed in as #{team.name}.")

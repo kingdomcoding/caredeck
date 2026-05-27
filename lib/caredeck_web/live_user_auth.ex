@@ -1,6 +1,8 @@
 defmodule CaredeckWeb.LiveUserAuth do
   import Phoenix.Component, only: [assign: 3, assign_new: 3]
 
+  require Ash.Query
+
   def on_mount(:live_user_required, _params, session, socket) do
     socket = resolve(socket, session)
 
@@ -64,8 +66,45 @@ defmodule CaredeckWeb.LiveUserAuth do
   end
 
   defp alias_assigns(socket) do
-    socket
-    |> assign_new(:current_user, fn -> nil end)
-    |> assign(:current_team, socket.assigns[:current_team_identity])
+    socket =
+      socket
+      |> assign_new(:current_user, fn -> nil end)
+      |> assign(:current_team, socket.assigns[:current_team_identity])
+
+    assign(socket, :current_facility, resolve_facility(socket))
+  end
+
+  defp resolve_facility(socket) do
+    cond do
+      team = socket.assigns[:current_team] ->
+        lookup_facility(team.facility_id)
+
+      user = socket.assigns[:current_user] ->
+        first_facility_for_user(user.id)
+
+      true ->
+        nil
+    end
+  end
+
+  defp lookup_facility(nil), do: nil
+
+  defp lookup_facility(facility_id) do
+    case Ash.get(Caredeck.Org.Facility, facility_id, authorize?: false) do
+      {:ok, facility} -> facility
+      _ -> nil
+    end
+  end
+
+  defp first_facility_for_user(user_id) do
+    case Ash.read_one(
+           Caredeck.Org.FacilityMembership
+           |> Ash.Query.filter(user_id == ^user_id)
+           |> Ash.Query.load(:facility),
+           authorize?: false
+         ) do
+      {:ok, %{facility: facility}} -> facility
+      _ -> nil
+    end
   end
 end

@@ -44,6 +44,11 @@ defmodule CaredeckWeb.Router do
 
     reset_route(auth_routes_prefix: "/auth")
     confirm_route(Caredeck.Accounts.User, :confirm_new_user, auth_routes_prefix: "/auth")
+
+    live_session :authenticated,
+      on_mount: {CaredeckWeb.LiveUserAuth, :live_signed_in_optional} do
+      live "/feed", FeedLive
+    end
   end
 
   scope "/team", CaredeckWeb do
