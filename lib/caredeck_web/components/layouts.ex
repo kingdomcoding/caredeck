@@ -30,21 +30,21 @@ defmodule CaredeckWeb.Layouts do
           <.link
             :if={@current_user && @profile_rid}
             navigate={~p"/residents/#{@profile_rid}"}
-            class="hidden md:inline-block hover:text-ink-900"
+            class="hover:text-ink-900"
           >
             Profile
           </.link>
           <.link
             :if={@current_user}
             navigate={~p"/profile/edit"}
-            class="hidden md:inline-block hover:text-ink-900"
+            class="hover:text-ink-900"
           >
             Edit
           </.link>
           <.link
             :if={@current_user}
             navigate={~p"/notifications"}
-            class="relative hidden md:inline-block hover:text-ink-900"
+            class="relative hover:text-ink-900"
             aria-label="Notifications"
           >
             <span aria-hidden="true">🔔</span>
@@ -55,14 +55,14 @@ defmodule CaredeckWeb.Layouts do
               {format_count(@unread)}
             </span>
           </.link>
-          <span :if={@current_user} class="hidden lg:inline-block text-ink-900 truncate max-w-[18ch]">
+          <span :if={@current_user} class="hidden sm:inline-block text-ink-900 truncate max-w-[18ch]">
             {@current_user.email}
           </span>
           <.link
             :if={@current_user}
             href={~p"/sign-out"}
             method="delete"
-            class="hidden md:inline-block hover:text-ink-900"
+            class="hover:text-ink-900"
           >
             Sign out
           </.link>
