@@ -173,6 +173,7 @@ defmodule CaredeckWeb.PostComposeLive do
         sync_audience(post, socket.assigns.audience_ids, facility, team)
         sync_tags(post, socket.assigns.tag_ids, facility, team)
         upload_attachments(socket, post, facility, team)
+        enqueue_post_fanout(socket, post)
 
         {:noreply,
          socket
@@ -180,6 +181,14 @@ defmodule CaredeckWeb.PostComposeLive do
          |> push_navigate(to: ~p"/feed")}
     end
   end
+
+  defp enqueue_post_fanout(%{assigns: %{mode: :new}}, post) do
+    %{event: "post_created", post_id: post.id, facility_id: post.facility_id}
+    |> Caredeck.Workers.NotificationFanout.new()
+    |> Oban.insert()
+  end
+
+  defp enqueue_post_fanout(_, _), do: :ok
 
   defp persist_post(%{assigns: %{mode: :new}}, body, is_internal?, facility, team) do
     Post

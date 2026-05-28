@@ -1,5 +1,6 @@
 defmodule CaredeckWeb.PostComposeLiveTest do
   use CaredeckWeb.ConnCase, async: false
+  use Oban.Testing, repo: Caredeck.Repo
 
   import Phoenix.LiveViewTest
 
@@ -119,6 +120,27 @@ defmodule CaredeckWeb.PostComposeLiveTest do
       |> Ash.read!(tenant: ctx.facility.id, authorize?: false)
 
     assert audience != []
+  end
+
+  test "sending enqueues a post_created fanout job after audience sync", ctx do
+    conn = ctx.conn |> sign_in_team(ctx.team)
+    {:ok, view, _html} = live(conn, ~p"/feed/compose")
+
+    view |> element("button[phx-click=toggle_audience]") |> render_click()
+
+    view
+    |> form("#compose-form", %{"body" => "Fan me out"})
+    |> render_submit()
+
+    post =
+      Feed.Post
+      |> Ash.read!(tenant: ctx.facility.id, authorize?: false)
+      |> Enum.find(&(&1.body == "Fan me out"))
+
+    assert_enqueued(
+      worker: Caredeck.Workers.NotificationFanout,
+      args: %{event: "post_created", post_id: post.id, facility_id: ctx.facility.id}
+    )
   end
 
   defp sign_in_team(conn, team) do
