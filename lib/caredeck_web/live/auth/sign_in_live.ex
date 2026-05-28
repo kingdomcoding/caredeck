@@ -73,6 +73,19 @@ defmodule CaredeckWeb.Auth.SignInLive do
             </div>
           </form>
 
+          <div class="mt-4 text-center">
+            <button
+              id="sign-in-passkey"
+              type="button"
+              phx-hook="PasskeySignIn"
+              data-status-target="#passkey-status"
+              class="w-full rounded-button bg-card border border-divider text-ink-900 py-3 hover:bg-page text-sm"
+            >
+              Use a passkey
+            </button>
+            <p id="passkey-status" class="text-ink-500 text-xs mt-2"></p>
+          </div>
+
           <div class="mt-8 pt-6 border-t border-divider text-center">
             <p class="text-sm text-ink-500">
               Not yet registered?

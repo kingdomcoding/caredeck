@@ -1,6 +1,7 @@
 defmodule CaredeckWeb.EditProfileLive do
   use CaredeckWeb, :live_view
 
+  alias Caredeck.Accounts.UserPasskey
   alias Caredeck.Feed.S3
   alias Caredeck.People.{Relative, RelativeOfResident}
 
@@ -44,6 +45,7 @@ defmodule CaredeckWeb.EditProfileLive do
                :relationship,
                (primary_link && to_string(primary_link.relationship)) || ""
              )
+             |> assign(:passkeys, load_passkeys(user))
              |> assign(:page_title, "Edit profile")
              |> allow_upload(:avatar,
                accept: ~w(.jpg .jpeg .png),
@@ -52,6 +54,13 @@ defmodule CaredeckWeb.EditProfileLive do
              )}
         end
     end
+  end
+
+  defp load_passkeys(user) do
+    UserPasskey
+    |> Ash.Query.filter(user_id == ^user.id)
+    |> Ash.Query.sort(inserted_at: :desc)
+    |> Ash.read!(actor: user)
   end
 
   defp load_relative(facility, user) do
@@ -105,6 +114,23 @@ defmodule CaredeckWeb.EditProfileLive do
      socket
      |> put_flash(:info, "Profile saved.")
      |> push_navigate(to: ~p"/feed")}
+  end
+
+  def handle_event("passkey_registered", _params, socket) do
+    {:noreply, assign(socket, :passkeys, load_passkeys(socket.assigns.current_user))}
+  end
+
+  def handle_event("remove_passkey", %{"id" => id}, socket) do
+    user = socket.assigns.current_user
+
+    case Ash.get(UserPasskey, id, actor: user) do
+      {:ok, passkey} ->
+        Ash.destroy!(passkey, actor: user)
+        {:noreply, assign(socket, :passkeys, load_passkeys(user))}
+
+      _ ->
+        {:noreply, socket}
+    end
   end
 
   defp consume_avatar(socket) do
@@ -205,6 +231,48 @@ defmodule CaredeckWeb.EditProfileLive do
             Save
           </button>
         </form>
+
+        <section class="mt-8 pt-6 border-t border-divider">
+          <h2 class="text-display-sm text-ink-900 mb-2">Passkey sign-in</h2>
+          <p class="text-ink-500 text-sm mb-3">
+            Register this device so you can sign in with Face ID, Touch ID, or a security key next time.
+          </p>
+
+          <ul
+            :if={@passkeys != []}
+            class="bg-card rounded-card shadow-card divide-y divide-divider mb-3"
+          >
+            <li :for={pk <- @passkeys} class="px-4 py-3 flex items-center justify-between">
+              <div>
+                <p class="text-ink-900 text-sm">{pk.nickname || "Unnamed device"}</p>
+                <p class="text-ink-500 text-xs">
+                  Registered {Calendar.strftime(pk.inserted_at, "%d %b %Y")}
+                </p>
+              </div>
+              <button
+                type="button"
+                phx-click="remove_passkey"
+                phx-value-id={pk.id}
+                phx-confirm="Remove this passkey?"
+                class="text-like-red text-sm hover:underline"
+              >
+                Remove
+              </button>
+            </li>
+          </ul>
+
+          <button
+            id="register-passkey"
+            type="button"
+            phx-hook="PasskeyRegister"
+            data-nickname={"#{@current_user.email}"}
+            data-status-target="#register-passkey-status"
+            class="rounded-button bg-brand text-white px-4 py-2 text-sm hover:bg-brand-strong"
+          >
+            Register this device
+          </button>
+          <p id="register-passkey-status" class="text-ink-500 text-xs mt-2"></p>
+        </section>
       </div>
     </Layouts.app>
     """
