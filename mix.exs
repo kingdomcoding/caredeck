@@ -86,8 +86,7 @@ defmodule Caredeck.MixProject do
       {:lazy_html, ">= 0.1.0", only: :test},
       {:floki, ">= 0.30.0", only: :test},
       {:bypass, "~> 2.1", only: :test},
-      {:picosat_elixir, "~> 0.2"},
-      {:wax_, "~> 0.6"}
+      {:picosat_elixir, "~> 0.2"}
     ]
   end
 

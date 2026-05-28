@@ -25,8 +25,8 @@ Three things changed between ADR-005 and this decision:
      opens the rear camera on iOS Safari and Android Chrome.
    - Audio recording: `MediaRecorder` + `getUserMedia` works on iOS Safari
      14.1+ and every other browser worth supporting.
-   - Biometric: WebAuthn / passkeys hit the same Face ID / Touch ID prompt
-     as a native binary.
+   - Biometric: WebAuthn / passkeys could hit the same Face ID / Touch ID
+     prompt as a native binary, but see "Decision changes" below.
    - Deep-link: the existing `/invitations/:token` route opens in the
      browser; with PWA install it opens in the PWA shell.
 3. **Phase 6 shipped LiveView PubSub for in-tab realtime.** The bell badge
@@ -45,8 +45,9 @@ What ships in Phase 7:
   `MediaRecorder` respectively.
 - A mobile-only bottom nav (Home / Profile / Inbox / Sign out) rendered by
   `Layouts.app/1` only at `md:` and below.
-- WebAuthn passkey registration and sign-in via a new `UserPasskey`
-  resource and a `wax_`-backed `PasskeyController`.
+- ~~WebAuthn passkey registration and sign-in via a new `UserPasskey`
+  resource and a `wax_`-backed `PasskeyController`.~~ Reverted on 2026-05-28
+  — see "Decision changes" below.
 - Responsive audit at 360 / 414 / 768 viewport widths.
 
 What is explicitly out of scope (deferred or dropped):
@@ -88,6 +89,18 @@ What is explicitly out of scope (deferred or dropped):
 - **Native shell as in ADR-005.** Rejected — see Context.
 - **React Native / Capacitor / Flutter.** Still rejected for the reasons
   in ADR-005.
+
+## Decision changes
+
+**2026-05-28 — WebAuthn passkeys removed.** Day 3 of Phase 7 shipped a
+`UserPasskey` resource + `PasskeyController` + JS hooks against the
+`wax_` library. Removed before sign-off real-device QA on the call that
+the portfolio scope doesn't need an alternative auth path. The password
+flow (Phase 1) is sufficient for the demo, and removing the dep + the
+table reduces audit surface area. The `user_passkeys` table is dropped
+via `20260528143804_drop_user_passkeys.exs`. If a future phase wants
+biometric unlock back, the implementation pattern is reachable from
+git history at the `v0.7.0-phase-7-complete` tag.
 
 ## Cross-references
 

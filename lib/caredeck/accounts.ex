@@ -8,6 +8,5 @@ defmodule Caredeck.Accounts do
     resource Caredeck.Accounts.TeamIdentity
     resource Caredeck.Accounts.TeamIdentity.Version
     resource Caredeck.Accounts.TeamToken
-    resource Caredeck.Accounts.UserPasskey
   end
 end

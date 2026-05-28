@@ -69,9 +69,4 @@ config :logger, :default_formatter,
 
 config :phoenix, :json_library, Jason
 
-config :wax_,
-  origin: "https://caredeck.josboxoffice.com",
-  rp_id: "caredeck.josboxoffice.com",
-  user_verification: "preferred"
-
 import_config "#{config_env()}.exs"

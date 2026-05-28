@@ -22,14 +22,6 @@ defmodule CaredeckWeb.Router do
     plug :load_from_bearer
   end
 
-  pipeline :passkey_api do
-    plug :accepts, ["json"]
-    plug :fetch_session
-    plug :protect_from_forgery
-    plug :put_secure_browser_headers, @csp_header
-    plug :load_from_session
-  end
-
   pipeline :authenticated_browser do
     plug :accepts, ["html"]
     plug :fetch_session
@@ -88,15 +80,6 @@ defmodule CaredeckWeb.Router do
     pipe_through :authenticated_browser
 
     get "/attachments/*key", AttachmentController, :show
-  end
-
-  scope "/passkey", CaredeckWeb do
-    pipe_through :passkey_api
-
-    post "/register/options", PasskeyController, :register_options
-    post "/register/finish", PasskeyController, :register_finish
-    post "/sign-in/options", PasskeyController, :sign_in_options
-    post "/sign-in/finish", PasskeyController, :sign_in_finish
   end
 
   scope "/team", CaredeckWeb do

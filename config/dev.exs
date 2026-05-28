@@ -12,10 +12,6 @@ config :caredeck, Caredeck.Repo,
 
 config :caredeck, :token_signing_secret, "dev-token-signing-secret-not-for-prod"
 
-config :wax_,
-  origin: "http://localhost:4000",
-  rp_id: "localhost"
-
 config :bcrypt_elixir, log_rounds: 4
 
 # For development, we disable any cache and enable
