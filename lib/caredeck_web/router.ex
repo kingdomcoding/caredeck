@@ -22,6 +22,16 @@ defmodule CaredeckWeb.Router do
     plug :load_from_bearer
   end
 
+  pipeline :authenticated_browser do
+    plug :accepts, ["html"]
+    plug :fetch_session
+    plug :fetch_live_flash
+    plug :protect_from_forgery
+    plug :put_secure_browser_headers, @csp_header
+    plug :load_from_session
+    plug CaredeckWeb.Plugs.LoadCurrentFacility
+  end
+
   scope "/", CaredeckWeb do
     get "/healthz", HealthController, :index
   end
@@ -48,6 +58,12 @@ defmodule CaredeckWeb.Router do
       on_mount: {CaredeckWeb.LiveUserAuth, :live_signed_in_optional} do
       live "/feed", FeedLive
     end
+  end
+
+  scope "/", CaredeckWeb do
+    pipe_through :authenticated_browser
+
+    get "/attachments/*key", AttachmentController, :show
   end
 
   scope "/team", CaredeckWeb do

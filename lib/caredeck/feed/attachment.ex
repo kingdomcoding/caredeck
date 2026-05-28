@@ -61,11 +61,23 @@ defmodule Caredeck.Feed.Attachment do
       ]
 
       change after_action(fn _changeset, attachment, _ctx ->
-               if attachment.kind == :photo and
-                    Application.get_env(:caredeck, :thumbnailer_mode, :async) == :async do
-                 %{attachment_id: attachment.id, facility_id: attachment.facility_id}
-                 |> Caredeck.Workers.Thumbnailer.new()
-                 |> Oban.insert()
+               case {attachment.kind,
+                     Application.get_env(:caredeck, :thumbnailer_mode, :async)} do
+                 {:photo, :async} ->
+                   %{attachment_id: attachment.id, facility_id: attachment.facility_id}
+                   |> Caredeck.Workers.Thumbnailer.new()
+                   |> Oban.insert()
+
+                 {:photo, :sync} ->
+                   Caredeck.Workers.Thumbnailer.perform(%Oban.Job{
+                     args: %{
+                       "attachment_id" => attachment.id,
+                       "facility_id" => attachment.facility_id
+                     }
+                   })
+
+                 _ ->
+                   :ok
                end
 
                {:ok, attachment}

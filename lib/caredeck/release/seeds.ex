@@ -67,6 +67,8 @@ defmodule Caredeck.Release.Seeds do
       seed_demo_attachments(facility, post, 3)
     end
 
+    seed_extra_posts(facility)
+
     resident_count =
       People.Resident
       |> Ash.read!(tenant: facility.id, authorize?: false)
@@ -118,6 +120,81 @@ defmodule Caredeck.Release.Seeds do
     :ok
   end
 
+  defp seed_extra_posts(facility) do
+    extras = [
+      %{
+        team: "team-activities",
+        body: "Group photo from this week's painting workshop — everyone in great spirits.",
+        photo_count: 4,
+        audience: 5
+      },
+      %{
+        team: "team-therapy",
+        body: "Two short clips from today's hand-motor exercises.",
+        photo_count: 2,
+        audience: 2
+      }
+    ]
+
+    Enum.each(extras, &find_or_create_extra_post(facility, &1))
+  end
+
+  defp find_or_create_extra_post(facility, %{team: handle, body: body, photo_count: n, audience: aud_n}) do
+    {:ok, team} =
+      Ash.read_one(
+        Accounts.TeamIdentity |> Ash.Query.filter(handle == ^handle),
+        authorize?: false
+      )
+
+    existing =
+      Feed.Post
+      |> Ash.Query.filter(team_identity_id == ^team.id and body == ^body)
+      |> Ash.read!(tenant: facility.id, authorize?: false)
+
+    case existing do
+      [_ | _] ->
+        :ok
+
+      [] ->
+        post =
+          Feed.Post
+          |> Ash.Changeset.for_create(
+            :create,
+            %{facility_id: facility.id, team_identity_id: team.id, body: body},
+            tenant: facility.id,
+            authorize?: false
+          )
+          |> Ash.create!(tenant: facility.id, authorize?: false)
+
+        residents =
+          People.Resident
+          |> Ash.read!(tenant: facility.id, authorize?: false)
+          |> Enum.take(aud_n)
+
+        Enum.each(residents, fn resident ->
+          Feed.PostAudience
+          |> Ash.Changeset.for_create(
+            :create,
+            %{facility_id: facility.id, post_id: post.id, resident_id: resident.id},
+            tenant: facility.id,
+            authorize?: false
+          )
+          |> Ash.create!(tenant: facility.id, authorize?: false)
+
+          Feed.ResidentTagOnPost
+          |> Ash.Changeset.for_create(
+            :create,
+            %{facility_id: facility.id, post_id: post.id, resident_id: resident.id},
+            tenant: facility.id,
+            authorize?: false
+          )
+          |> Ash.create!(tenant: facility.id, authorize?: false)
+        end)
+
+        seed_demo_attachments(facility, post, n)
+    end
+  end
+
   defp seed_demo_attachments(facility, post, count) do
     existing =
       Feed.Attachment
@@ -128,8 +205,6 @@ defmodule Caredeck.Release.Seeds do
       for i <- 0..(count - 1) do
         key = Feed.S3.generate_key("photos", "seed-#{post.id}-#{i}.jpg")
         {:ok, _} = Feed.S3.put_object(key, @placeholder_jpeg, "image/jpeg")
-        thumbnail_key = Feed.S3.generate_key("thumbnails", "seed-#{post.id}-#{i}-thumb.jpg")
-        {:ok, _} = Feed.S3.put_object(thumbnail_key, @placeholder_jpeg, "image/jpeg")
 
         Feed.Attachment
         |> Ash.Changeset.for_create(
@@ -139,7 +214,6 @@ defmodule Caredeck.Release.Seeds do
             post_id: post.id,
             kind: :photo,
             s3_key: key,
-            thumbnail_s3_key: thumbnail_key,
             mime_type: "image/jpeg",
             bytes: byte_size(@placeholder_jpeg),
             position: i
