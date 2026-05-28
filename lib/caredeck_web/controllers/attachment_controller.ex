@@ -46,3 +46,8 @@ defmodule CaredeckWeb.AttachmentController do
     end
   end
 end
+
+# NOTE: Authz is centralised in the LoadCurrentFacility plug (already proves the
+# requester is a member of `facility.id`). Looking up the row tenant-scoped is
+# sufficient — running the Attachment policy here would also need to load the
+# parent post via Ash, which is an extra query for no security gain.

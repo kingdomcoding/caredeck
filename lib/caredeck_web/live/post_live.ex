@@ -20,12 +20,13 @@ defmodule CaredeckWeb.PostLive do
   @impl true
   def mount(%{"post_id" => id}, _session, socket) do
     facility = socket.assigns.current_facility
+    actor = current_actor(socket)
 
     if connected?(socket) and facility do
       Endpoint.subscribe("facility:#{facility.id}:feed")
     end
 
-    post = load_post(facility, id)
+    post = load_post(facility, id, actor)
 
     if post do
       relationships = load_relationships(facility, post)
@@ -68,11 +69,11 @@ defmodule CaredeckWeb.PostLive do
             body: body
           },
           tenant: facility.id,
-          authorize?: false
+          actor: user
         )
-        |> Ash.create!(tenant: facility.id, authorize?: false)
+        |> Ash.create!(tenant: facility.id, actor: user)
 
-        post = load_post(facility, socket.assigns.post.id)
+        post = load_post(facility, socket.assigns.post.id, user)
         relationships = load_relationships(facility, post)
 
         {:noreply,
@@ -87,13 +88,14 @@ defmodule CaredeckWeb.PostLive do
   def handle_info(%Phoenix.Socket.Broadcast{event: event, payload: payload}, socket)
       when event in ["post_updated", "post_deleted"] do
     facility = socket.assigns.current_facility
+    actor = current_actor(socket)
 
     cond do
       event == "post_deleted" and payload[:id] == socket.assigns.post.id ->
         {:noreply, push_navigate(socket, to: ~p"/feed")}
 
       event == "post_updated" ->
-        post = load_post(facility, socket.assigns.post.id)
+        post = load_post(facility, socket.assigns.post.id, actor)
         {:noreply, assign(socket, :post, post)}
 
       true ->
@@ -103,10 +105,15 @@ defmodule CaredeckWeb.PostLive do
 
   def handle_info(%Phoenix.Socket.Broadcast{}, socket), do: {:noreply, socket}
 
-  defp load_post(nil, _id), do: nil
+  defp current_actor(socket) do
+    socket.assigns[:current_user] || socket.assigns[:current_team]
+  end
 
-  defp load_post(facility, id) do
-    case Ash.get(Post, id, tenant: Tenancy.to_tenant(facility), load: @load, authorize?: false) do
+  defp load_post(nil, _id, _actor), do: nil
+  defp load_post(_facility, _id, nil), do: nil
+
+  defp load_post(facility, id, actor) do
+    case Ash.get(Post, id, tenant: Tenancy.to_tenant(facility), load: @load, actor: actor) do
       {:ok, post} -> post
       _ -> nil
     end

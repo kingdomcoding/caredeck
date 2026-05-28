@@ -49,8 +49,24 @@ defmodule Caredeck.Feed.Reaction do
   end
 
   policies do
-    policy always() do
-      forbid_if always()
+    policy action_type(:read) do
+      authorize_if expr(
+                     exists(post.audience.relative_links.relative, user_id == ^actor(:id))
+                   )
+
+      authorize_if expr(post.team_identity_id == ^actor(:id))
+
+      authorize_if expr(
+                     post.is_internal == false and
+                       ^actor(:__struct__) == Caredeck.Accounts.User
+                   )
+    end
+
+    policy action_type([:create, :destroy]) do
+      authorize_if expr(
+                     ^actor(:__struct__) == Caredeck.Accounts.User and
+                       user_id == ^actor(:id)
+                   )
     end
   end
 end

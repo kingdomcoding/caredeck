@@ -24,21 +24,27 @@ defmodule CaredeckWeb.FeedLive do
     {:ok,
      socket
      |> assign(:page_title, "Feed")
-     |> assign(:posts, load_posts(facility))}
+     |> assign(:posts, load_posts(facility, current_actor(socket)))}
   end
 
   @impl true
   def handle_info(%Phoenix.Socket.Broadcast{event: event}, socket)
       when event in ["post_created", "post_updated", "post_deleted"] do
-    {:noreply, assign(socket, posts: load_posts(socket.assigns.current_facility))}
+    {:noreply,
+     assign(socket, posts: load_posts(socket.assigns.current_facility, current_actor(socket)))}
   end
 
-  defp load_posts(nil), do: []
+  defp current_actor(socket) do
+    socket.assigns[:current_user] || socket.assigns[:current_team]
+  end
 
-  defp load_posts(facility) do
+  defp load_posts(nil, _actor), do: []
+  defp load_posts(_facility, nil), do: []
+
+  defp load_posts(facility, actor) do
     Post
     |> Ash.Query.sort(inserted_at: :desc)
-    |> Ash.read!(tenant: Tenancy.to_tenant(facility), load: @load, authorize?: false)
+    |> Ash.read!(tenant: Tenancy.to_tenant(facility), load: @load, actor: actor)
   end
 
   @impl true

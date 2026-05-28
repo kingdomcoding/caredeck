@@ -84,6 +84,7 @@ defmodule CaredeckWeb.PostComposeLive do
     end
   end
 
+
   @impl true
   def handle_event("validate", params, socket) do
     body = Map.get(params, "body", socket.assigns.body)
@@ -130,9 +131,9 @@ defmodule CaredeckWeb.PostComposeLive do
 
       true ->
         post = persist_post(socket, body, is_internal?, facility, team)
-        sync_audience(post, socket.assigns.audience_ids, facility)
-        sync_tags(post, socket.assigns.tag_ids, facility)
-        upload_attachments(socket, post, facility)
+        sync_audience(post, socket.assigns.audience_ids, facility, team)
+        sync_tags(post, socket.assigns.tag_ids, facility, team)
+        upload_attachments(socket, post, facility, team)
 
         {:noreply,
          socket
@@ -152,28 +153,28 @@ defmodule CaredeckWeb.PostComposeLive do
         is_internal: is_internal?
       },
       tenant: facility.id,
-      authorize?: false
+      actor: team
     )
-    |> Ash.create!(tenant: facility.id, authorize?: false)
+    |> Ash.create!(tenant: facility.id, actor: team)
   end
 
-  defp persist_post(%{assigns: %{mode: :edit, post: post}}, body, is_internal?, facility, _team) do
+  defp persist_post(%{assigns: %{mode: :edit, post: post}}, body, is_internal?, facility, team) do
     post
     |> Ash.Changeset.for_update(:update, %{body: body, is_internal: is_internal?},
       tenant: facility.id,
-      authorize?: false
+      actor: team
     )
-    |> Ash.update!(tenant: facility.id, authorize?: false)
+    |> Ash.update!(tenant: facility.id, actor: team)
   end
 
-  defp sync_audience(post, audience_ids, facility) do
+  defp sync_audience(post, audience_ids, facility, team) do
     existing =
       PostAudience
       |> Ash.Query.filter(post_id == ^post.id)
-      |> Ash.read!(tenant: facility.id, authorize?: false)
+      |> Ash.read!(tenant: facility.id, actor: team)
 
     Enum.each(existing, fn link ->
-      Ash.destroy!(link, tenant: facility.id, authorize?: false)
+      Ash.destroy!(link, tenant: facility.id, actor: team)
     end)
 
     Enum.each(audience_ids, fn rid ->
@@ -182,20 +183,20 @@ defmodule CaredeckWeb.PostComposeLive do
         :create,
         %{facility_id: facility.id, post_id: post.id, resident_id: rid},
         tenant: facility.id,
-        authorize?: false
+        actor: team
       )
-      |> Ash.create!(tenant: facility.id, authorize?: false)
+      |> Ash.create!(tenant: facility.id, actor: team)
     end)
   end
 
-  defp sync_tags(post, tag_ids, facility) do
+  defp sync_tags(post, tag_ids, facility, team) do
     existing =
       ResidentTagOnPost
       |> Ash.Query.filter(post_id == ^post.id)
-      |> Ash.read!(tenant: facility.id, authorize?: false)
+      |> Ash.read!(tenant: facility.id, actor: team)
 
     Enum.each(existing, fn tag ->
-      Ash.destroy!(tag, tenant: facility.id, authorize?: false)
+      Ash.destroy!(tag, tenant: facility.id, actor: team)
     end)
 
     Enum.each(tag_ids, fn rid ->
@@ -204,13 +205,13 @@ defmodule CaredeckWeb.PostComposeLive do
         :create,
         %{facility_id: facility.id, post_id: post.id, resident_id: rid},
         tenant: facility.id,
-        authorize?: false
+        actor: team
       )
-      |> Ash.create!(tenant: facility.id, authorize?: false)
+      |> Ash.create!(tenant: facility.id, actor: team)
     end)
   end
 
-  defp upload_attachments(socket, post, facility) do
+  defp upload_attachments(socket, post, facility, team) do
     Application.put_env(:caredeck, :thumbnailer_mode, :sync)
 
     uploaded =
@@ -239,9 +240,9 @@ defmodule CaredeckWeb.PostComposeLive do
           position: idx
         },
         tenant: facility.id,
-        authorize?: false
+        actor: team
       )
-      |> Ash.create!(tenant: facility.id, authorize?: false)
+      |> Ash.create!(tenant: facility.id, actor: team)
     end)
   end
 

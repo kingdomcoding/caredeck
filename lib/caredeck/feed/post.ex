@@ -93,8 +93,26 @@ defmodule Caredeck.Feed.Post do
   end
 
   policies do
-    policy always() do
-      forbid_if always()
+    policy action_type(:read) do
+      authorize_if relates_to_actor_via([:team_identity])
+      authorize_if expr(exists(audience.relative_links.relative, user_id == ^actor(:id)))
+
+      authorize_if expr(
+                     is_internal == false and
+                       ^actor(:__struct__) == Caredeck.Accounts.User
+                   )
+    end
+
+    policy action_type(:create) do
+      authorize_if expr(
+                     ^actor(:__struct__) == Caredeck.Accounts.TeamIdentity and
+                       team_identity_id == ^actor(:id) and
+                       facility_id == ^actor(:facility_id)
+                   )
+    end
+
+    policy action_type([:update, :destroy]) do
+      authorize_if expr(team_identity_id == ^actor(:id))
     end
   end
 end

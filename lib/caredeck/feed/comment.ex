@@ -47,13 +47,53 @@ defmodule Caredeck.Feed.Comment do
     update :update do
       primary? true
       accept [:body]
+      require_atomic? false
       change set_attribute(:edited_at, &DateTime.utc_now/0)
+
+      validate fn changeset, _ctx ->
+        case changeset.data do
+          %{inserted_at: %DateTime{} = inserted_at} ->
+            age = DateTime.diff(DateTime.utc_now(), inserted_at, :second)
+
+            if age <= 300 do
+              :ok
+            else
+              {:error,
+               field: :body,
+               message: "Comments can only be edited within 5 minutes of posting."}
+            end
+
+          _ ->
+            :ok
+        end
+      end
     end
   end
 
   policies do
-    policy always() do
-      forbid_if always()
+    policy action_type(:read) do
+      authorize_if expr(
+                     exists(post.audience.relative_links.relative, user_id == ^actor(:id))
+                   )
+
+      authorize_if expr(post.team_identity_id == ^actor(:id))
+
+      authorize_if expr(
+                     post.is_internal == false and
+                       ^actor(:__struct__) == Caredeck.Accounts.User
+                   )
+    end
+
+    policy action_type(:create) do
+      authorize_if expr(
+                     ^actor(:__struct__) == Caredeck.Accounts.User and
+                       author_user_id == ^actor(:id) and
+                       exists(post.audience.relative_links.relative, user_id == ^actor(:id))
+                   )
+    end
+
+    policy action_type([:update, :destroy]) do
+      authorize_if expr(author_user_id == ^actor(:id))
     end
   end
 end

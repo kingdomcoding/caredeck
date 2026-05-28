@@ -80,7 +80,11 @@ defmodule Caredeck.Accounts.TeamIdentity do
       authorize_if always()
     end
 
-    policy always() do
+    policy action_type(:read) do
+      authorize_if actor_present()
+    end
+
+    policy action_type([:create, :update, :destroy]) do
       forbid_if always()
     end
   end
