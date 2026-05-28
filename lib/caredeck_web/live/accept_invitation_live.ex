@@ -264,7 +264,7 @@ defmodule CaredeckWeb.AcceptInvitationLive do
               type="email"
               value={to_string(@invitation.email)}
               readonly
-              class="mt-1 block w-full rounded-input border border-divider px-3 py-2 bg-page text-ink-500"
+              class="mt-1 block w-full rounded-input border border-divider px-3 py-2 text-ink-900 bg-page text-ink-500"
             />
           </label>
 
@@ -276,7 +276,7 @@ defmodule CaredeckWeb.AcceptInvitationLive do
                   type="text"
                   name="first_name"
                   required
-                  class="mt-1 block w-full rounded-input border border-divider px-3 py-2"
+                  class="mt-1 block w-full rounded-input border border-divider px-3 py-2 text-ink-900"
                 />
               </label>
               <label class="block">
@@ -285,7 +285,7 @@ defmodule CaredeckWeb.AcceptInvitationLive do
                   type="text"
                   name="family_name"
                   required
-                  class="mt-1 block w-full rounded-input border border-divider px-3 py-2"
+                  class="mt-1 block w-full rounded-input border border-divider px-3 py-2 text-ink-900"
                 />
               </label>
             </div>
@@ -297,7 +297,7 @@ defmodule CaredeckWeb.AcceptInvitationLive do
                 name="password"
                 required
                 minlength="8"
-                class="mt-1 block w-full rounded-input border border-divider px-3 py-2"
+                class="mt-1 block w-full rounded-input border border-divider px-3 py-2 text-ink-900"
               />
             </label>
 
@@ -306,7 +306,7 @@ defmodule CaredeckWeb.AcceptInvitationLive do
               <input
                 type="tel"
                 name="phone"
-                class="mt-1 block w-full rounded-input border border-divider px-3 py-2"
+                class="mt-1 block w-full rounded-input border border-divider px-3 py-2 text-ink-900"
               />
             </label>
           </div>
@@ -320,7 +320,7 @@ defmodule CaredeckWeb.AcceptInvitationLive do
             <select
               name="relationship"
               required
-              class="mt-1 block w-full rounded-input border border-divider px-3 py-2 bg-card"
+              class="mt-1 block w-full rounded-input border border-divider px-3 py-2 text-ink-900 bg-card"
             >
               <%= for {value, label} <- relationship_options() do %>
                 <option value={value} selected={@relationship == value}>{label}</option>

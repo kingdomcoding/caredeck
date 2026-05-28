@@ -164,7 +164,7 @@ defmodule CaredeckWeb.EditProfileLive do
                 type="text"
                 name="first_name"
                 value={@first_name}
-                class="mt-1 block w-full rounded-input border border-divider px-3 py-2"
+                class="mt-1 block w-full rounded-input border border-divider px-3 py-2 text-ink-900"
               />
             </label>
             <label class="block">
@@ -173,7 +173,7 @@ defmodule CaredeckWeb.EditProfileLive do
                 type="text"
                 name="family_name"
                 value={@family_name}
-                class="mt-1 block w-full rounded-input border border-divider px-3 py-2"
+                class="mt-1 block w-full rounded-input border border-divider px-3 py-2 text-ink-900"
               />
             </label>
           </div>
@@ -184,7 +184,7 @@ defmodule CaredeckWeb.EditProfileLive do
               type="tel"
               name="phone"
               value={@phone}
-              class="mt-1 block w-full rounded-input border border-divider px-3 py-2"
+              class="mt-1 block w-full rounded-input border border-divider px-3 py-2 text-ink-900"
             />
           </label>
 
@@ -192,7 +192,7 @@ defmodule CaredeckWeb.EditProfileLive do
             <span class="text-ink-900 text-sm font-medium">Relationship to resident</span>
             <select
               name="relationship"
-              class="mt-1 block w-full rounded-input border border-divider px-3 py-2 bg-card"
+              class="mt-1 block w-full rounded-input border border-divider px-3 py-2 text-ink-900 bg-card"
             >
               <option value="">— choose —</option>
               <%= for {value, label} <- relationship_options() do %>

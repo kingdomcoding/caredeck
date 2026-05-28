@@ -126,7 +126,7 @@ defmodule CaredeckWeb.InviteRelativeLive do
               name="email"
               required
               value={@email}
-              class="mt-1 block w-full rounded-input border border-divider px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
+              class="mt-1 block w-full rounded-input border border-divider px-3 py-2 text-ink-900 focus:outline-none focus:ring-2 focus:ring-brand"
             />
           </label>
 
@@ -134,7 +134,7 @@ defmodule CaredeckWeb.InviteRelativeLive do
             <span class="text-ink-900 text-sm font-medium">Relationship (suggested)</span>
             <select
               name="relationship"
-              class="mt-1 block w-full rounded-input border border-divider px-3 py-2 bg-card"
+              class="mt-1 block w-full rounded-input border border-divider px-3 py-2 text-ink-900 bg-card"
             >
               <option value="">— choose —</option>
               <%= for {value, label} <- relationship_options() do %>
