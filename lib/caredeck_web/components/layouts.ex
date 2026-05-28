@@ -13,7 +13,12 @@ defmodule CaredeckWeb.Layouts do
 
   def app(assigns) do
     profile_rid = profile_resident_id(assigns[:current_user])
-    assigns = assign(assigns, :profile_rid, profile_rid)
+    unread = unread_count(assigns[:current_user])
+
+    assigns =
+      assigns
+      |> assign(:profile_rid, profile_rid)
+      |> assign(:unread, unread)
 
     ~H"""
     <header class="border-b border-divider bg-card">
@@ -27,6 +32,20 @@ defmodule CaredeckWeb.Layouts do
           </.link>
           <.link :if={@current_user} navigate={~p"/profile/edit"} class="hover:text-ink-900">
             Edit
+          </.link>
+          <.link
+            :if={@current_user}
+            navigate={~p"/notifications"}
+            class="relative hover:text-ink-900"
+            aria-label="Notifications"
+          >
+            <span aria-hidden="true">🔔</span>
+            <span
+              :if={@unread > 0}
+              class="absolute -top-1 -right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-like-red text-white text-[10px] font-bold flex items-center justify-center"
+            >
+              {format_count(@unread)}
+            </span>
           </.link>
           <span :if={@current_user} class="text-ink-900">{@current_user.email}</span>
           <.link
@@ -64,6 +83,33 @@ defmodule CaredeckWeb.Layouts do
     </div>
     """
   end
+
+  defp unread_count(nil), do: 0
+
+  defp unread_count(user) do
+    case Ash.read(
+           Caredeck.Org.FacilityMembership
+           |> Ash.Query.filter(user_id == ^user.id),
+           authorize?: false
+         ) do
+      {:ok, [_ | _] = memberships} ->
+        Enum.reduce(memberships, 0, fn m, acc ->
+          n =
+            Caredeck.Notifications.Notification
+            |> Ash.Query.filter(user_id == ^user.id and is_nil(read_at))
+            |> Ash.read!(tenant: m.facility_id, authorize?: false)
+            |> length()
+
+          acc + n
+        end)
+
+      _ ->
+        0
+    end
+  end
+
+  defp format_count(n) when n > 99, do: "99+"
+  defp format_count(n), do: to_string(n)
 
   defp profile_resident_id(nil), do: nil
 
