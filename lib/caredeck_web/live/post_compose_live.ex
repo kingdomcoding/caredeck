@@ -448,9 +448,21 @@ defmodule CaredeckWeb.PostComposeLive do
           <button
             type="submit"
             form="compose-form"
-            class="rounded-button bg-brand text-white px-4 py-2 text-sm"
+            phx-disable-with="Sending…"
+            class="rounded-button bg-brand text-white px-4 py-2 text-sm inline-flex items-center gap-2 disabled:opacity-70 disabled:cursor-wait"
           >
-            Send post
+            <svg
+              class="hidden phx-submit-loading:inline-block h-4 w-4 animate-spin"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="3"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="12" r="9" stroke-opacity="0.25" />
+              <path stroke-linecap="round" d="M21 12a9 9 0 0 0-9-9" />
+            </svg>
+            <span>Send post</span>
           </button>
         </div>
 
