@@ -51,6 +51,11 @@ defmodule CaredeckWeb.Router do
       live "/password-reset-request", Auth.ResetRequestLive
     end
 
+    live_session :invitation,
+      on_mount: {CaredeckWeb.LiveUserAuth, :live_signed_in_optional} do
+      live "/invitations/:token", AcceptInvitationLive
+    end
+
     reset_route(auth_routes_prefix: "/auth")
     confirm_route(Caredeck.Accounts.User, :confirm_new_user, auth_routes_prefix: "/auth")
 
