@@ -101,6 +101,18 @@ defmodule Caredeck.People.RelativeInvitation do
       accept []
       require_atomic? false
       change set_attribute(:accepted_at, &DateTime.utc_now/0)
+
+      change after_action(fn _changeset, invitation, _ctx ->
+               %{
+                 event: "invitation_accepted",
+                 invitation_id: invitation.id,
+                 facility_id: invitation.facility_id
+               }
+               |> Caredeck.Workers.NotificationFanout.new()
+               |> Oban.insert()
+
+               {:ok, invitation}
+             end)
     end
   end
 

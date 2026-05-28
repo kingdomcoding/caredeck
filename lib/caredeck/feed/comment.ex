@@ -42,6 +42,18 @@ defmodule Caredeck.Feed.Comment do
     create :create do
       primary? true
       accept [:facility_id, :post_id, :author_user_id, :body]
+
+      change after_action(fn _changeset, comment, _ctx ->
+               %{
+                 event: "comment_created",
+                 comment_id: comment.id,
+                 facility_id: comment.facility_id
+               }
+               |> Caredeck.Workers.NotificationFanout.new()
+               |> Oban.insert()
+
+               {:ok, comment}
+             end)
     end
 
     update :update do

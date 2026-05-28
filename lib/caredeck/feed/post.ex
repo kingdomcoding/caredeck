@@ -68,7 +68,7 @@ defmodule Caredeck.Feed.Post do
       accept [:facility_id, :team_identity_id, :body, :is_internal]
 
       change after_action(fn _changeset, post, _ctx ->
-               %{post_id: post.id, facility_id: post.facility_id}
+               %{event: "post_created", post_id: post.id, facility_id: post.facility_id}
                |> Caredeck.Workers.NotificationFanout.new()
                |> Oban.insert()
 

@@ -48,6 +48,18 @@ defmodule Caredeck.Feed.Reaction do
     create :create do
       primary? true
       accept [:facility_id, :post_id, :user_id, :kind]
+
+      change after_action(fn _changeset, reaction, _ctx ->
+               %{
+                 event: "reaction_created",
+                 reaction_id: reaction.id,
+                 facility_id: reaction.facility_id
+               }
+               |> Caredeck.Workers.NotificationFanout.new()
+               |> Oban.insert()
+
+               {:ok, reaction}
+             end)
     end
 
     action :toggle, :map do
