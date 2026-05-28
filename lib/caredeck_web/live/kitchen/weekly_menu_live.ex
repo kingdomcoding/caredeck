@@ -2,7 +2,7 @@ defmodule CaredeckWeb.Kitchen.WeeklyMenuLive do
   use CaredeckWeb, :live_view
 
   alias Caredeck.Kitchen
-  alias Caredeck.Kitchen.{DayMenu, MealCategory}
+  alias Caredeck.Kitchen.{DayMenu, MealCategory, MenuTemplate}
 
   require Ash.Query
 
@@ -19,7 +19,21 @@ defmodule CaredeckWeb.Kitchen.WeeklyMenuLive do
      |> assign(:week_start, week_start)
      |> assign(:today, today)
      |> assign(:week, week)
+     |> assign(:has_active_template?, has_active_template?(facility))
      |> assign(:menus, load_week(facility, week))}
+  end
+
+  defp has_active_template?(nil), do: false
+
+  defp has_active_template?(facility) do
+    case Ash.read_one(
+           MenuTemplate |> Ash.Query.filter(is_active == true),
+           tenant: facility.id,
+           authorize?: false
+         ) do
+      {:ok, %{}} -> true
+      _ -> false
+    end
   end
 
   defp load_week(nil, _week), do: %{}
@@ -51,6 +65,13 @@ defmodule CaredeckWeb.Kitchen.WeeklyMenuLive do
         <p class="text-ink-500 text-sm mb-4">
           Week of {Calendar.strftime(@week_start, "%d %b %Y")}
         </p>
+
+        <div
+          :if={!@has_active_template?}
+          class="bg-card border border-divider rounded-card px-4 py-3 mb-4 text-ink-500 text-sm"
+        >
+          Set up a default week first by activating a menu template (no active template yet for this facility).
+        </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-7 gap-3">
           <article
