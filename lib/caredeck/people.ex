@@ -10,5 +10,7 @@ defmodule Caredeck.People do
     resource Caredeck.People.RelativeOfResident.Version
     resource Caredeck.People.CaregiverProfile
     resource Caredeck.People.CaregiverProfile.Version
+    resource Caredeck.People.RelativeInvitation
+    resource Caredeck.People.RelativeInvitation.Version
   end
 end

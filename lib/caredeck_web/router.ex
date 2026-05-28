@@ -64,6 +64,7 @@ defmodule CaredeckWeb.Router do
       on_mount: {CaredeckWeb.LiveUserAuth, :live_user_or_team_required} do
       live "/feed", FeedLive
       live "/feed/:post_id", PostLive
+      live "/residents/:resident_id/invite", InviteRelativeLive
     end
   end
 

@@ -85,7 +85,10 @@ if config_env() == :prod do
     queues: oban_queues,
     plugins: [
       Oban.Plugins.Pruner,
-      {Oban.Plugins.Cron, crontab: []}
+      {Oban.Plugins.Cron,
+       crontab: [
+         {"0 3 * * *", Caredeck.Workers.ExpireStaleInvitations}
+       ]}
     ]
 
   s3_endpoint = System.get_env("S3_ENDPOINT")
