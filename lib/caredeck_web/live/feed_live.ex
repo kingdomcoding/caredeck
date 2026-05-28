@@ -26,7 +26,7 @@ defmodule CaredeckWeb.FeedLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash}>
+    <Layouts.app flash={@flash} current_user={@current_user} current_team={@current_team}>
       <div class="mx-auto max-w-3xl px-6 py-12">
         <h1 class="text-display-md text-ink-900 mb-2">Feed</h1>
         <p class="text-ink-500 mb-8">

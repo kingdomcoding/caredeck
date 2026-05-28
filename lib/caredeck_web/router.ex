@@ -34,7 +34,7 @@ defmodule CaredeckWeb.Router do
     live "/design-system", DesignSystemLive
 
     auth_routes(AuthController, Caredeck.Accounts.User, path: "/auth")
-    sign_out_route(AuthController)
+    delete "/sign-out", AuthController, :sign_out
 
     live_session :no_user, on_mount: {CaredeckWeb.LiveUserAuth, :live_no_user} do
       live "/sign-in", Auth.SignInLive

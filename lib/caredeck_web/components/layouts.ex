@@ -5,6 +5,8 @@ defmodule CaredeckWeb.Layouts do
 
   attr :flash, :map, required: true
   attr :current_scope, :map, default: nil
+  attr :current_user, :map, default: nil
+  attr :current_team, :map, default: nil
   slot :inner_block, required: true
 
   def app(assigns) do
@@ -16,6 +18,19 @@ defmodule CaredeckWeb.Layouts do
         </a>
         <nav class="flex items-center gap-6 text-sm text-ink-500">
           <a href="/design-system" class="hover:text-ink-900">Design System</a>
+          <span :if={@current_user} class="text-ink-900">{@current_user.email}</span>
+          <.link
+            :if={@current_user}
+            href={~p"/sign-out"}
+            method="delete"
+            class="hover:text-ink-900"
+          >
+            Sign out
+          </.link>
+          <span :if={@current_team} class="text-ink-900">{@current_team.name}</span>
+          <.link :if={@current_team} href={~p"/team/sign-out"} class="hover:text-ink-900">
+            Sign out
+          </.link>
         </nav>
       </div>
     </header>
