@@ -34,6 +34,7 @@ defmodule CaredeckWeb.PostComposeLive do
          |> assign(:audience_ids, MapSet.new(Enum.map(post.audience, & &1.id)))
          |> assign(:tag_ids, MapSet.new(Enum.map(post.resident_tags, & &1.id)))
          |> assign(:existing_attachments, post.attachments)
+         |> assign(:pending_audio, nil)
          |> assign(:page_title, "Edit post")
          |> allow_upload(:photos, @upload_opts)}
 
@@ -59,6 +60,7 @@ defmodule CaredeckWeb.PostComposeLive do
      |> assign(:audience_ids, MapSet.new())
      |> assign(:tag_ids, MapSet.new())
      |> assign(:existing_attachments, [])
+     |> assign(:pending_audio, nil)
      |> assign(:page_title, "New post")
      |> allow_upload(:photos, @upload_opts)}
   end
@@ -140,6 +142,42 @@ defmodule CaredeckWeb.PostComposeLive do
     end
   end
 
+  def handle_event("request_audio_url", %{"filename" => filename}, socket) do
+    facility = socket.assigns.current_facility
+
+    case facility do
+      nil ->
+        {:reply, %{error: "no_facility"}, socket}
+
+      _ ->
+        {:ok, presigned} =
+          Attachment
+          |> Ash.ActionInput.for_action(
+            :request_upload_url,
+            %{facility_id: facility.id, kind: :audio, filename: filename},
+            authorize?: false
+          )
+          |> Ash.run_action()
+
+        {:reply, %{presigned: presigned}, socket}
+    end
+  end
+
+  def handle_event("audio_uploaded", params, socket) do
+    pending = %{
+      s3_key: params["s3_key"],
+      mime_type: params["mime_type"],
+      bytes: params["bytes"] || 0,
+      duration_sec: params["duration_sec"] || 0
+    }
+
+    {:noreply, assign(socket, :pending_audio, pending)}
+  end
+
+  def handle_event("discard_audio", _params, socket) do
+    {:noreply, assign(socket, :pending_audio, nil)}
+  end
+
   def handle_event("toggle_tag", %{"id" => id}, socket) do
     if MapSet.member?(socket.assigns.audience_ids, id) do
       tag_ids =
@@ -173,6 +211,7 @@ defmodule CaredeckWeb.PostComposeLive do
         sync_audience(post, socket.assigns.audience_ids, facility, team)
         sync_tags(post, socket.assigns.tag_ids, facility, team)
         upload_attachments(socket, post, facility, team)
+        attach_audio(socket.assigns.pending_audio, post, facility, team)
         enqueue_post_fanout(socket, post)
 
         {:noreply,
@@ -189,6 +228,28 @@ defmodule CaredeckWeb.PostComposeLive do
   end
 
   defp enqueue_post_fanout(_, _), do: :ok
+
+  defp attach_audio(nil, _post, _facility, _team), do: :ok
+
+  defp attach_audio(audio, post, facility, team) do
+    Attachment
+    |> Ash.Changeset.for_create(
+      :create,
+      %{
+        facility_id: facility.id,
+        post_id: post.id,
+        kind: :audio,
+        s3_key: audio.s3_key,
+        mime_type: audio.mime_type,
+        bytes: audio.bytes,
+        duration_sec: audio.duration_sec,
+        position: 99
+      },
+      tenant: facility.id,
+      actor: team
+    )
+    |> Ash.create!(tenant: facility.id, actor: team)
+  end
 
   defp persist_post(%{assigns: %{mode: :new}}, body, is_internal?, facility, team) do
     Post
@@ -440,6 +501,42 @@ defmodule CaredeckWeb.PostComposeLive do
             </div>
             <p :for={err <- upload_errors(@uploads.photos)} class="text-red-600 text-xs mt-1">
               {error_to_string(err)}
+            </p>
+          </section>
+
+          <section class="mb-4">
+            <h2 class="text-ink-900 font-medium mb-2">Voice note</h2>
+            <div
+              id="audio-recorder"
+              phx-hook="AudioRecorder"
+              phx-update="ignore"
+              class="border border-divider rounded-card p-3 bg-card"
+            >
+              <p class="text-ink-500 text-xs mb-2">
+                Max 60 seconds. Stay in this tab while recording.
+              </p>
+              <div class="flex items-center gap-3">
+                <button
+                  type="button"
+                  data-role="record-toggle"
+                  class="px-3 py-2 rounded-button bg-brand text-white text-sm hover:bg-brand-strong"
+                >
+                  Record voice note
+                </button>
+                <span data-role="timer" class="text-ink-500 text-sm">0:00</span>
+                <button
+                  type="button"
+                  data-role="discard"
+                  class="text-like-red text-sm underline hidden"
+                >
+                  Discard
+                </button>
+              </div>
+              <audio data-role="preview" controls class="w-full mt-3 hidden"></audio>
+              <p data-role="status" class="text-ink-300 text-xs mt-2"></p>
+            </div>
+            <p :if={@pending_audio} class="text-ink-500 text-xs mt-2">
+              Voice note attached ({@pending_audio.duration_sec}s). Hit Send post to publish.
             </p>
           </section>
         </form>
