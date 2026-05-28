@@ -5,8 +5,6 @@ defmodule CaredeckWeb.FeedLive do
   alias Caredeck.Tenancy
   alias CaredeckWeb.Endpoint
 
-  require Ash.Query
-
   @load [
     :team_identity,
     :attachments,
