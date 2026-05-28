@@ -1,6 +1,8 @@
 defmodule CaredeckWeb.Layouts do
   use CaredeckWeb, :html
 
+  require Ash.Query
+
   embed_templates "layouts/*"
 
   attr :flash, :map, required: true
@@ -10,6 +12,9 @@ defmodule CaredeckWeb.Layouts do
   slot :inner_block, required: true
 
   def app(assigns) do
+    profile_rid = profile_resident_id(assigns[:current_user])
+    assigns = assign(assigns, :profile_rid, profile_rid)
+
     ~H"""
     <header class="border-b border-divider bg-card">
       <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
@@ -18,6 +23,12 @@ defmodule CaredeckWeb.Layouts do
         </a>
         <nav class="flex items-center gap-6 text-sm text-ink-500">
           <a href="/design-system" class="hover:text-ink-900">Design System</a>
+          <.link :if={@current_user && @profile_rid} navigate={~p"/residents/#{@profile_rid}"} class="hover:text-ink-900">
+            Profile
+          </.link>
+          <.link :if={@current_user} navigate={~p"/profile/edit"} class="hover:text-ink-900">
+            Edit
+          </.link>
           <span :if={@current_user} class="text-ink-900">{@current_user.email}</span>
           <.link
             :if={@current_user}
@@ -53,5 +64,34 @@ defmodule CaredeckWeb.Layouts do
       <.flash kind={:error} flash={@flash} />
     </div>
     """
+  end
+
+  defp profile_resident_id(nil), do: nil
+
+  defp profile_resident_id(user) do
+    case Ash.read(
+           Caredeck.People.Relative
+           |> Ash.Query.filter(user_id == ^user.id),
+           authorize?: false
+         ) do
+      {:ok, [_ | _] = relatives} ->
+        relative_ids = Enum.map(relatives, & &1.id)
+        facility_id = hd(relatives).facility_id
+
+        case Ash.read(
+               Caredeck.People.RelativeOfResident
+               |> Ash.Query.filter(relative_id in ^relative_ids)
+               |> Ash.Query.sort(inserted_at: :asc)
+               |> Ash.Query.limit(1),
+               tenant: facility_id,
+               authorize?: false
+             ) do
+          {:ok, [%{resident_id: rid} | _]} -> rid
+          _ -> nil
+        end
+
+      _ ->
+        nil
+    end
   end
 end

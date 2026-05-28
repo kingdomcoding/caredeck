@@ -81,4 +81,4 @@
 - **Write policies on upstream resources** (Phase 5+) — `Accounts.User`, `People.{Resident, Relative}` writes still raise. Phase 5 introduces real policies when the Profile graph adds invite + edit flows.
 - **Optimistic UI on like toggles** (Phase 5 polish) — current implementation does a server round-trip per click.
 - **Notification fan-out wiring for reaction events** (Phase 6) — `reaction_changed` PubSub topic exists but no Oban worker reads it yet.
-- **Avatar URLs in the named-likers modal** (Phase 5) — currently shows `user.email` because no `Relative.display_name` join yet.
+- ~~**Avatar URLs in the named-likers modal**~~ — shipped in Phase 5: `Relative.avatar_url` storage, `/attachments/*key` proxy now serves avatars, `Relative.display_name` editable via `/profile/edit`.
