@@ -22,25 +22,29 @@ defmodule CaredeckWeb.Layouts do
 
     ~H"""
     <header class="border-b border-divider bg-card">
-      <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+      <div class="mx-auto flex max-w-6xl items-center justify-between px-4 sm:px-6 py-4">
         <a href="/" class="flex items-center">
           <img src={~p"/images/brand/caredeck-lockup.svg"} alt="Caredeck" height="32" class="h-8" />
         </a>
-        <nav class="flex items-center gap-6 text-sm text-ink-500">
+        <nav class="flex items-center gap-3 sm:gap-6 text-sm text-ink-500">
           <.link
             :if={@current_user && @profile_rid}
             navigate={~p"/residents/#{@profile_rid}"}
-            class="hover:text-ink-900"
+            class="hidden md:inline-block hover:text-ink-900"
           >
             Profile
           </.link>
-          <.link :if={@current_user} navigate={~p"/profile/edit"} class="hover:text-ink-900">
+          <.link
+            :if={@current_user}
+            navigate={~p"/profile/edit"}
+            class="hidden md:inline-block hover:text-ink-900"
+          >
             Edit
           </.link>
           <.link
             :if={@current_user}
             navigate={~p"/notifications"}
-            class="relative hover:text-ink-900"
+            class="relative hidden md:inline-block hover:text-ink-900"
             aria-label="Notifications"
           >
             <span aria-hidden="true">🔔</span>
@@ -51,16 +55,20 @@ defmodule CaredeckWeb.Layouts do
               {format_count(@unread)}
             </span>
           </.link>
-          <span :if={@current_user} class="text-ink-900">{@current_user.email}</span>
+          <span :if={@current_user} class="hidden lg:inline-block text-ink-900 truncate max-w-[18ch]">
+            {@current_user.email}
+          </span>
           <.link
             :if={@current_user}
             href={~p"/sign-out"}
             method="delete"
-            class="hover:text-ink-900"
+            class="hidden md:inline-block hover:text-ink-900"
           >
             Sign out
           </.link>
-          <span :if={@current_team} class="text-ink-900">{@current_team.name}</span>
+          <span :if={@current_team} class="text-ink-900 truncate max-w-[14ch]">
+            {@current_team.name}
+          </span>
           <.link :if={@current_team} href={~p"/team/sign-out"} class="hover:text-ink-900">
             Sign out
           </.link>
