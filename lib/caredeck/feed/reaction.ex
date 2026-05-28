@@ -1,7 +1,10 @@
 defmodule Caredeck.Feed.Reaction do
   use Caredeck.Resource,
     domain: Caredeck.Feed,
+    default_pub_sub: false,
     paper_trail: [attributes_as_attributes: [:facility_id]]
+
+  require Ash.Query
 
   postgres do
     table "reactions"
@@ -46,6 +49,55 @@ defmodule Caredeck.Feed.Reaction do
       primary? true
       accept [:facility_id, :post_id, :user_id, :kind]
     end
+
+    action :toggle, :map do
+      argument :facility_id, :uuid, allow_nil?: false
+      argument :post_id, :uuid, allow_nil?: false
+
+      argument :kind, :atom,
+        constraints: [one_of: [:like, :heart]],
+        default: :like
+
+      run fn input, ctx ->
+        tenant = input.arguments.facility_id
+        actor = ctx.actor
+
+        query =
+          __MODULE__
+          |> Ash.Query.filter(
+            post_id == ^input.arguments.post_id and user_id == ^actor.id
+          )
+
+        case Ash.read_one(query, tenant: tenant, authorize?: false) do
+          {:ok, %{} = existing} ->
+            Ash.destroy!(existing, tenant: tenant, actor: actor)
+            {:ok, %{action: :removed}}
+
+          {:ok, nil} ->
+            Ash.create!(
+              __MODULE__,
+              %{
+                facility_id: tenant,
+                post_id: input.arguments.post_id,
+                user_id: actor.id,
+                kind: input.arguments.kind
+              },
+              tenant: tenant,
+              actor: actor
+            )
+
+            {:ok, %{action: :added}}
+        end
+      end
+    end
+  end
+
+  pub_sub do
+    module CaredeckWeb.Endpoint
+    prefix "facility"
+
+    publish :create, [:facility_id, "feed"], event: "reaction_changed"
+    publish :destroy, [:facility_id, "feed"], event: "reaction_changed"
   end
 
   policies do
@@ -67,6 +119,10 @@ defmodule Caredeck.Feed.Reaction do
                      ^actor(:__struct__) == Caredeck.Accounts.User and
                        user_id == ^actor(:id)
                    )
+    end
+
+    policy action(:toggle) do
+      authorize_if actor_attribute_equals(:__struct__, Caredeck.Accounts.User)
     end
   end
 end

@@ -29,9 +29,28 @@ defmodule CaredeckWeb.FeedLive do
 
   @impl true
   def handle_info(%Phoenix.Socket.Broadcast{event: event}, socket)
-      when event in ["post_created", "post_updated", "post_deleted"] do
+      when event in ["post_created", "post_updated", "post_deleted", "reaction_changed"] do
     {:noreply,
      assign(socket, posts: load_posts(socket.assigns.current_facility, current_actor(socket)))}
+  end
+
+  @impl true
+  def handle_event("toggle_reaction", %{"post-id" => post_id}, socket) do
+    user = socket.assigns[:current_user]
+    facility = socket.assigns.current_facility
+
+    if user && facility do
+      Caredeck.Feed.Reaction
+      |> Ash.ActionInput.for_action(
+        :toggle,
+        %{facility_id: facility.id, post_id: post_id},
+        actor: user,
+        tenant: facility.id
+      )
+      |> Ash.run_action()
+    end
+
+    {:noreply, assign(socket, posts: load_posts(facility, current_actor(socket)))}
   end
 
   defp current_actor(socket) do
@@ -69,7 +88,7 @@ defmodule CaredeckWeb.FeedLive do
           <.post_body post={post} />
           <.attachment_grid attachments={post.attachments} />
           <.tag_chips tags={post.resident_tags} />
-          <.engagement_line post={post} />
+          <.engagement_line post={post} current_user={@current_user} />
         </article>
       </div>
 
@@ -181,20 +200,43 @@ defmodule CaredeckWeb.FeedLive do
   end
 
   attr :post, :map, required: true
+  attr :current_user, :map, default: nil
 
   defp engagement_line(assigns) do
     likes = length(assigns.post.reactions)
     comments = length(assigns.post.comments)
-    assigns = assign(assigns, likes: likes, comments: comments)
+    liked = liked_by_actor?(assigns.post, assigns.current_user)
+    assigns = assign(assigns, likes: likes, comments: comments, liked: liked)
 
     ~H"""
     <div class="px-4 py-3 flex items-center gap-4 text-ink-500 text-sm border-t border-divider">
-      <span>&#x2764; {@likes} {if @likes == 1, do: "like", else: "likes"}</span>
-      <.link navigate={~p"/feed/#{@post.id}"} class="hover:text-ink-900">
-        &#x1F4AC; {@comments} {if @comments == 1, do: "comment", else: "comments"}
+      <button
+        :if={@current_user}
+        type="button"
+        phx-click="toggle_reaction"
+        phx-value-post-id={@post.id}
+        class={[
+          "flex items-center gap-1 hover:text-like-red transition",
+          @liked && "text-like-red"
+        ]}
+      >
+        {if @liked, do: "❤", else: "♡"}
+        <span>{@likes} {if @likes == 1, do: "like", else: "likes"}</span>
+      </button>
+      <span :if={!@current_user} class="flex items-center gap-1">
+        ♡ <span>{@likes} {if @likes == 1, do: "like", else: "likes"}</span>
+      </span>
+      <.link navigate={~p"/feed/#{@post.id}"} class="hover:text-ink-900 flex items-center gap-1">
+        💬 <span>{@comments} {if @comments == 1, do: "comment", else: "comments"}</span>
       </.link>
     </div>
     """
+  end
+
+  defp liked_by_actor?(_post, nil), do: false
+
+  defp liked_by_actor?(post, user) do
+    Enum.any?(post.reactions, &(&1.user_id == user.id))
   end
 
   defp team_initials(name) do

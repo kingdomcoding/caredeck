@@ -36,7 +36,9 @@ defmodule CaredeckWeb.PostLive do
        |> assign(:page_title, "Post")
        |> assign(:post, post)
        |> assign(:relationships, relationships)
-       |> assign(:body, "")}
+       |> assign(:body, "")
+       |> assign(:show_likers, false)
+       |> assign(:likers, [])}
     else
       {:ok,
        socket
@@ -85,8 +87,41 @@ defmodule CaredeckWeb.PostLive do
   end
 
   @impl true
+  def handle_event("toggle_reaction", %{"post-id" => post_id}, socket) do
+    user = socket.assigns[:current_user]
+    facility = socket.assigns.current_facility
+
+    if user && facility do
+      Caredeck.Feed.Reaction
+      |> Ash.ActionInput.for_action(
+        :toggle,
+        %{facility_id: facility.id, post_id: post_id},
+        actor: user,
+        tenant: facility.id
+      )
+      |> Ash.run_action()
+    end
+
+    post = load_post(facility, socket.assigns.post.id, current_actor(socket))
+    relationships = load_relationships(facility, post)
+    {:noreply, socket |> assign(:post, post) |> assign(:relationships, relationships)}
+  end
+
+  def handle_event("show_likers", _params, socket) do
+    facility = socket.assigns.current_facility
+    actor = current_actor(socket)
+    post = Ash.load!(socket.assigns.post, [reactions: [:user]], tenant: facility.id, actor: actor)
+    likers = Enum.map(post.reactions, & &1.user)
+    {:noreply, socket |> assign(:show_likers, true) |> assign(:likers, likers)}
+  end
+
+  def handle_event("hide_likers", _params, socket) do
+    {:noreply, assign(socket, :show_likers, false)}
+  end
+
+  @impl true
   def handle_info(%Phoenix.Socket.Broadcast{event: event, payload: payload}, socket)
-      when event in ["post_updated", "post_deleted"] do
+      when event in ["post_updated", "post_deleted", "reaction_changed"] do
     facility = socket.assigns.current_facility
     actor = current_actor(socket)
 
@@ -94,7 +129,7 @@ defmodule CaredeckWeb.PostLive do
       event == "post_deleted" and payload[:id] == socket.assigns.post.id ->
         {:noreply, push_navigate(socket, to: ~p"/feed")}
 
-      event == "post_updated" ->
+      event in ["post_updated", "reaction_changed"] ->
         post = load_post(facility, socket.assigns.post.id, actor)
         {:noreply, assign(socket, :post, post)}
 
@@ -182,6 +217,29 @@ defmodule CaredeckWeb.PostLive do
               <img src={"/attachments/" <> att.s3_key} class="h-full w-full object-cover" alt="" />
             </div>
           </div>
+
+          <div class="px-4 py-3 flex items-center gap-4 text-ink-500 text-sm border-t border-divider">
+            <button
+              :if={@current_user}
+              type="button"
+              phx-click="toggle_reaction"
+              phx-value-post-id={@post.id}
+              class={[
+                "flex items-center gap-1 hover:text-like-red transition",
+                liked_by_actor?(@post, @current_user) && "text-like-red"
+              ]}
+            >
+              {if liked_by_actor?(@post, @current_user), do: "❤", else: "♡"}
+              <span>{length(@post.reactions)} likes</span>
+            </button>
+            <button
+              type="button"
+              phx-click="show_likers"
+              class="hover:text-ink-900"
+            >
+              View likes
+            </button>
+          </div>
         </article>
 
         <section class="bg-card rounded-card shadow-card p-4 mb-4">
@@ -219,6 +277,18 @@ defmodule CaredeckWeb.PostLive do
               class="flex-1 rounded-input border border-divider px-3 py-2 text-sm text-ink-900 focus:outline-none focus:ring-2 focus:ring-brand"
             >{@body}</textarea>
             <button
+              type="button"
+              phx-click="toggle_reaction"
+              phx-value-post-id={@post.id}
+              class={[
+                "rounded-button bg-card border border-divider px-3 py-2 text-lg hover:text-like-red",
+                liked_by_actor?(@post, @current_user) && "text-like-red"
+              ]}
+              aria-label="Toggle like"
+            >
+              {if liked_by_actor?(@post, @current_user), do: "❤", else: "♡"}
+            </button>
+            <button
               type="submit"
               class="rounded-button bg-brand text-white px-4 py-2 text-sm"
             >
@@ -226,9 +296,38 @@ defmodule CaredeckWeb.PostLive do
             </button>
           </form>
         </section>
+
+        <div
+          :if={@show_likers}
+          phx-click-away="hide_likers"
+          class="fixed inset-0 bg-black/40 flex items-center justify-center z-20"
+        >
+          <div class="bg-card rounded-card shadow-card p-6 max-w-sm w-full mx-4">
+            <h2 class="text-display-sm text-ink-900 mb-3">Liked by</h2>
+            <p :if={@likers == []} class="text-ink-500 text-sm">No likes yet.</p>
+            <ul class="divide-y divide-divider max-h-80 overflow-y-auto">
+              <li :for={user <- @likers} class="py-2 text-ink-900 text-sm">
+                {user.email}
+              </li>
+            </ul>
+            <button
+              type="button"
+              phx-click="hide_likers"
+              class="mt-4 rounded-button bg-brand text-white px-4 py-2 text-sm w-full"
+            >
+              Close
+            </button>
+          </div>
+        </div>
       </div>
     </Layouts.app>
     """
+  end
+
+  defp liked_by_actor?(_post, nil), do: false
+
+  defp liked_by_actor?(post, user) do
+    Enum.any?(post.reactions, &(&1.user_id == user.id))
   end
 
   defp grid_classes(1), do: "grid-cols-1 aspect-square"
