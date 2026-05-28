@@ -46,7 +46,8 @@ defmodule Caredeck.Repo.Migrations.InstallRelativeInvitations do
             name: "relative_invitations_facility_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :inviter_user_id,
           references(:users,
@@ -54,7 +55,8 @@ defmodule Caredeck.Repo.Migrations.InstallRelativeInvitations do
             name: "relative_invitations_inviter_user_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :resident_id,
           references(:residents,
@@ -62,7 +64,8 @@ defmodule Caredeck.Repo.Migrations.InstallRelativeInvitations do
             name: "relative_invitations_resident_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :email, :citext, null: false
       add :suggested_relationship, :text

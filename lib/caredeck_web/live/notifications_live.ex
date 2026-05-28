@@ -119,58 +119,99 @@ defmodule CaredeckWeb.NotificationsLive do
 
   @impl true
   def render(assigns) do
+    recent = Enum.filter(assigns.notifications, &within_week?(&1.inserted_at))
+    older = Enum.reject(assigns.notifications, &within_week?(&1.inserted_at))
+
+    assigns = assign(assigns, recent: recent, older: older)
+
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user} current_team={@current_team}>
       <div class="mx-auto max-w-2xl px-4 py-6">
         <header class="flex items-center justify-between mb-4">
           <h1 class="text-display-md text-ink-900">Notifications</h1>
           <button
+            :if={Enum.any?(@notifications, &is_nil(&1.read_at))}
             type="button"
             phx-click="mark_all_read"
-            :if={Enum.any?(@notifications, &is_nil(&1.read_at))}
             class="text-brand text-sm hover:text-brand-strong"
           >
             Mark all read
           </button>
         </header>
 
-        <p :if={@notifications == []} class="text-ink-500 text-sm text-center py-12">
-          No notifications yet.
-        </p>
-
-        <ul :if={@notifications != []} class="bg-card rounded-card shadow-card divide-y divide-divider">
-          <li
-            :for={n <- @notifications}
-            phx-click="open"
-            phx-value-id={n.id}
-            class="px-4 py-3 flex items-start gap-3 cursor-pointer hover:bg-page transition"
+        <div :if={@notifications == []} class="text-center py-16">
+          <svg
+            viewBox="0 0 64 64"
+            class="mx-auto h-16 w-16 text-ink-300"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            aria-hidden="true"
           >
-            <span :if={is_nil(n.read_at)} class="mt-2 h-2 w-2 rounded-full bg-brand" />
-            <span :if={n.read_at} class="mt-2 h-2 w-2" />
-
-            <div class="h-10 w-10 rounded-full bg-brand-soft text-brand text-sm font-semibold flex items-center justify-center shrink-0">
-              {actor_initials(n, @lookup)}
-            </div>
-
-            <div class="flex-1 min-w-0">
-              <p class="text-ink-900 text-sm">
-                {sentence(n, @lookup)}
-              </p>
-              <p class="text-ink-500 text-xs mt-1">{relative_time(n.inserted_at)}</p>
-            </div>
-
-            <img
-              :if={n.thumbnail_url}
-              src={"/attachments/" <> n.thumbnail_url}
-              class="h-12 w-12 object-cover rounded-input shrink-0"
-              alt=""
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M16 26a16 16 0 0 1 32 0v10l4 6H12l4-6V26Z"
             />
-          </li>
-        </ul>
+            <path stroke-linecap="round" d="M26 48a6 6 0 0 0 12 0" />
+          </svg>
+          <p class="text-ink-500 text-sm mt-4">No notifications yet.</p>
+          <p class="text-ink-300 text-xs mt-1">We'll let you know when there's family news.</p>
+        </div>
+
+        <section :if={@recent != []}>
+          <p class="text-ink-500 text-xs uppercase tracking-wide mb-2">Recent</p>
+          <ul class="bg-card rounded-card shadow-card divide-y divide-divider mb-6">
+            <.notification_row :for={n <- @recent} n={n} lookup={@lookup} />
+          </ul>
+        </section>
+
+        <section :if={@older != []}>
+          <p class="text-ink-500 text-xs uppercase tracking-wide mb-2">Older</p>
+          <ul class="bg-card rounded-card shadow-card divide-y divide-divider">
+            <.notification_row :for={n <- @older} n={n} lookup={@lookup} />
+          </ul>
+        </section>
       </div>
     </Layouts.app>
     """
   end
+
+  attr :n, :map, required: true
+  attr :lookup, :map, required: true
+
+  defp notification_row(assigns) do
+    ~H"""
+    <li
+      phx-click="open"
+      phx-value-id={@n.id}
+      class="px-4 py-3 flex items-start gap-3 cursor-pointer hover:bg-page transition"
+    >
+      <span :if={is_nil(@n.read_at)} class="mt-2 h-2 w-2 rounded-full bg-brand" />
+      <span :if={@n.read_at} class="mt-2 h-2 w-2" />
+
+      <div class="h-10 w-10 rounded-full bg-brand-soft text-brand text-sm font-semibold flex items-center justify-center shrink-0">
+        {actor_initials(@n, @lookup)}
+      </div>
+
+      <div class="flex-1 min-w-0">
+        <p class="text-ink-900 text-sm">
+          {sentence(@n, @lookup)}
+        </p>
+        <p class="text-ink-500 text-xs mt-1">{relative_time(@n.inserted_at)}</p>
+      </div>
+
+      <img
+        :if={@n.thumbnail_url}
+        src={"/attachments/" <> @n.thumbnail_url}
+        class="h-12 w-12 object-cover rounded-input shrink-0"
+        alt=""
+      />
+    </li>
+    """
+  end
+
+  defp within_week?(dt), do: DateTime.diff(DateTime.utc_now(), dt, :day) < 7
 
   defp sentence(n, lookup) do
     Phrasebook.render(%{

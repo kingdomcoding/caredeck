@@ -116,9 +116,9 @@ defmodule Caredeck.Workers.NotificationFanout do
 
     new_joiner =
       joiner_user &&
-        (People.Relative
-         |> Ash.Query.filter(facility_id == ^facility_id and user_id == ^joiner_user.id)
-         |> Ash.read_one!(tenant: facility_id, authorize?: false))
+        People.Relative
+        |> Ash.Query.filter(facility_id == ^facility_id and user_id == ^joiner_user.id)
+        |> Ash.read_one!(tenant: facility_id, authorize?: false)
 
     recipients = Recipients.for_resident(invitation.resident_id, facility_id)
     joiner_user_id = joiner_user && joiner_user.id

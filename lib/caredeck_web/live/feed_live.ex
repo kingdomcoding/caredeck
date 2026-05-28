@@ -214,7 +214,10 @@ defmodule CaredeckWeb.FeedLive do
         &#x2764;
         <%= for {r, idx} <- Enum.with_index(@visible) do %>
           <span :if={idx > 0}>, </span>
-          <.link navigate={~p"/residents/#{r.id}"} class="text-ink-900 hover:text-brand underline-offset-2 hover:underline">
+          <.link
+            navigate={~p"/residents/#{r.id}"}
+            class="text-ink-900 hover:text-brand underline-offset-2 hover:underline"
+          >
             {r.first_name} {r.last_name}
           </.link>
         <% end %>

@@ -87,7 +87,8 @@ if config_env() == :prod do
       Oban.Plugins.Pruner,
       {Oban.Plugins.Cron,
        crontab: [
-         {"0 3 * * *", Caredeck.Workers.ExpireStaleInvitations}
+         {"0 3 * * *", Caredeck.Workers.ExpireStaleInvitations},
+         {"15 3 * * *", Caredeck.Workers.PruneOldNotifications}
        ]}
     ]
 

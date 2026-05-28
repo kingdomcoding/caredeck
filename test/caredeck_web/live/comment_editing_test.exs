@@ -98,7 +98,9 @@ defmodule CaredeckWeb.CommentEditingTest do
     })
     |> render_submit()
 
-    {:ok, reloaded} = Ash.get(Feed.Comment, ctx.comment.id, tenant: ctx.facility.id, authorize?: false)
+    {:ok, reloaded} =
+      Ash.get(Feed.Comment, ctx.comment.id, tenant: ctx.facility.id, authorize?: false)
+
     assert reloaded.body == "edited body"
     assert reloaded.edited_at != nil
   end

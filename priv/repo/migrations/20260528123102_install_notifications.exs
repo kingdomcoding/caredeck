@@ -46,7 +46,8 @@ defmodule Caredeck.Repo.Migrations.InstallNotifications do
             name: "notifications_facility_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :user_id,
           references(:users,
@@ -54,7 +55,8 @@ defmodule Caredeck.Repo.Migrations.InstallNotifications do
             name: "notifications_user_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :actor_kind, :text, null: false
       add :actor_id, :uuid, null: false
@@ -97,7 +99,9 @@ defmodule Caredeck.Repo.Migrations.InstallNotifications do
                        :verb,
                        :target_kind,
                        :target_id
-                     ], name: "notifications_unique_event_per_user_index")
+                     ],
+                     name: "notifications_unique_event_per_user_index"
+                   )
 
     alter table(:notifications) do
       remove :archived_at

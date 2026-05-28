@@ -316,7 +316,9 @@ defmodule CaredeckWeb.AcceptInvitationLive do
           </p>
 
           <label class="block">
-            <span class="text-ink-900 text-sm font-medium">Relationship to {@resident.first_name}</span>
+            <span class="text-ink-900 text-sm font-medium">
+              Relationship to {@resident.first_name}
+            </span>
             <select
               name="relationship"
               required

@@ -169,6 +169,7 @@ defmodule Caredeck.Notifications.FanoutTest do
 
     rows = list_notifications(ctx.facility.id) |> Enum.filter(&(&1.verb == :posted))
     assert length(rows) == 2
+
     assert rows |> Enum.map(& &1.user_id) |> Enum.sort() ==
              Enum.sort([ctx.user_a.id, ctx.user_b.id])
   end

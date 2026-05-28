@@ -56,7 +56,14 @@ defmodule CaredeckWeb.AcceptInvitationTest do
   end
 
   test "valid token renders the registration form for a new email", ctx do
-    inv = create_invitation(ctx.facility, ctx.inviter, ctx.resident, "newbie-#{ctx.suffix}@example.test", :daughter)
+    inv =
+      create_invitation(
+        ctx.facility,
+        ctx.inviter,
+        ctx.resident,
+        "newbie-#{ctx.suffix}@example.test",
+        :daughter
+      )
 
     {:ok, _view, html} = live(ctx.conn, ~p"/invitations/#{inv.token}")
     assert html =~ "Anna Becker"
@@ -139,7 +146,9 @@ defmodule CaredeckWeb.AcceptInvitationTest do
 
     link =
       People.RelativeOfResident
-      |> Ash.Query.filter(relative_id == ^existing_relative.id and resident_id == ^ctx.resident.id)
+      |> Ash.Query.filter(
+        relative_id == ^existing_relative.id and resident_id == ^ctx.resident.id
+      )
       |> Ash.read_one!(tenant: ctx.facility.id, authorize?: false)
 
     assert link.relationship == :niece
@@ -156,7 +165,8 @@ defmodule CaredeckWeb.AcceptInvitationTest do
     )
     |> Ash.update!(tenant: ctx.facility.id, authorize?: false)
 
-    assert {:error, {:redirect, %{to: "/sign-in"}}} = live(ctx.conn, ~p"/invitations/#{inv.token}")
+    assert {:error, {:redirect, %{to: "/sign-in"}}} =
+             live(ctx.conn, ~p"/invitations/#{inv.token}")
   end
 
   defp create_user(email) do

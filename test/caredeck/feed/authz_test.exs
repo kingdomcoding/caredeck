@@ -141,7 +141,8 @@ defmodule Caredeck.Feed.AuthzTest do
     end
 
     test "another team cannot update someone else's post", ctx do
-      other_team = create_team(ctx.facility_a, "other-team-#{:erlang.unique_integer([:positive])}")
+      other_team =
+        create_team(ctx.facility_a, "other-team-#{:erlang.unique_integer([:positive])}")
 
       assert {:error, _} =
                ctx.post_public_a

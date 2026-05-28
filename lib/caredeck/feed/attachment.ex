@@ -108,9 +108,7 @@ defmodule Caredeck.Feed.Attachment do
 
   policies do
     policy action_type(:read) do
-      authorize_if expr(
-                     exists(post.audience.relative_links.relative, user_id == ^actor(:id))
-                   )
+      authorize_if expr(exists(post.audience.relative_links.relative, user_id == ^actor(:id)))
 
       authorize_if expr(post.team_identity_id == ^actor(:id))
 

@@ -42,7 +42,7 @@ defmodule CaredeckWeb.EditProfileLive do
              |> assign(:phone, relative.phone || "")
              |> assign(
                :relationship,
-               primary_link && to_string(primary_link.relationship) || ""
+               (primary_link && to_string(primary_link.relationship)) || ""
              )
              |> assign(:page_title, "Edit profile")
              |> allow_upload(:avatar,

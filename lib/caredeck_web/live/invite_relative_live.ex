@@ -28,7 +28,10 @@ defmodule CaredeckWeb.InviteRelativeLive do
             else
               {:ok,
                socket
-               |> put_flash(:error, "You can only invite relatives for residents you're connected to.")
+               |> put_flash(
+                 :error,
+                 "You can only invite relatives for residents you're connected to."
+               )
                |> push_navigate(to: ~p"/feed")}
             end
 

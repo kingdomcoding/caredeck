@@ -71,4 +71,4 @@
 - **Avatar cropping / preview UX** (Phase 7 polish) — current upload accepts any image up to 5MB without client-side cropping.
 - **Multi-resident relative landing page** (Phase 6) — currently the header "Profile" link picks the first connected resident by `inserted_at`.
 - **Token resend / expiry warning** (Phase 6) — current invite UI just sends once; no UI to resend or check expiry status.
-- **Notification fan-out for "family member joined"** (Phase 6 mainline) — `accept` sets `accepted_at` but no Oban job yet uses that signal.
+- ~~**Notification fan-out for "family member joined"** (Phase 6 mainline) — `accept` sets `accepted_at` but no Oban job yet uses that signal.~~ ✅ Closed in Phase 6.

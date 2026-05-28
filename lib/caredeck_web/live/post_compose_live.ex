@@ -5,7 +5,6 @@ defmodule CaredeckWeb.PostComposeLive do
   alias Caredeck.Feed.{Attachment, Post, PostAudience, ResidentTagOnPost}
   alias Caredeck.People
 
-
   @upload_opts [
     accept: ~w(.jpg .jpeg .png),
     max_entries: 9,
@@ -84,7 +83,6 @@ defmodule CaredeckWeb.PostComposeLive do
       _ -> nil
     end
   end
-
 
   @impl true
   def handle_event("validate", params, socket) do

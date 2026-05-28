@@ -27,7 +27,11 @@ defmodule CaredeckWeb.Layouts do
           <img src={~p"/images/brand/caredeck-lockup.svg"} alt="Caredeck" height="32" class="h-8" />
         </a>
         <nav class="flex items-center gap-6 text-sm text-ink-500">
-          <.link :if={@current_user && @profile_rid} navigate={~p"/residents/#{@profile_rid}"} class="hover:text-ink-900">
+          <.link
+            :if={@current_user && @profile_rid}
+            navigate={~p"/residents/#{@profile_rid}"}
+            class="hover:text-ink-900"
+          >
             Profile
           </.link>
           <.link :if={@current_user} navigate={~p"/profile/edit"} class="hover:text-ink-900">
