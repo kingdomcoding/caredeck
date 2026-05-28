@@ -132,10 +132,7 @@ defmodule CaredeckWeb.PostComposeLive do
 
     case Ash.get(Attachment, attachment_id, tenant: facility.id, actor: team) do
       {:ok, attachment} ->
-        import Ecto.Query
-
-        from(a in Attachment, where: a.id == ^attachment.id)
-        |> Caredeck.Repo.delete_all()
+        hard_delete(Attachment, "attachments_versions", [attachment.id])
 
         existing = Enum.reject(socket.assigns.existing_attachments, &(&1.id == attachment_id))
         {:noreply, assign(socket, :existing_attachments, existing)}
@@ -217,17 +214,16 @@ defmodule CaredeckWeb.PostComposeLive do
     existing =
       from(a in PostAudience, where: a.post_id == ^post.id) |> Caredeck.Repo.all()
 
-    existing_ids = MapSet.new(existing, & &1.resident_id)
+    existing_by_resident = Map.new(existing, &{&1.resident_id, &1.id})
+    existing_ids = MapSet.new(Map.keys(existing_by_resident))
     desired_ids = audience_ids
 
-    to_remove = MapSet.difference(existing_ids, desired_ids)
-    to_add = MapSet.difference(desired_ids, existing_ids)
+    to_remove = MapSet.difference(existing_ids, desired_ids) |> MapSet.to_list()
+    to_add = MapSet.difference(desired_ids, existing_ids) |> MapSet.to_list()
 
-    if MapSet.size(to_remove) > 0 do
-      ids = MapSet.to_list(to_remove)
-
-      from(a in PostAudience, where: a.post_id == ^post.id and a.resident_id in ^ids)
-      |> Caredeck.Repo.delete_all()
+    if to_remove != [] do
+      removed_row_ids = Enum.map(to_remove, &Map.fetch!(existing_by_resident, &1))
+      hard_delete(PostAudience, "post_audiences_versions", removed_row_ids)
     end
 
     Enum.each(to_add, fn rid ->
@@ -248,17 +244,16 @@ defmodule CaredeckWeb.PostComposeLive do
     existing =
       from(t in ResidentTagOnPost, where: t.post_id == ^post.id) |> Caredeck.Repo.all()
 
-    existing_ids = MapSet.new(existing, & &1.resident_id)
+    existing_by_resident = Map.new(existing, &{&1.resident_id, &1.id})
+    existing_ids = MapSet.new(Map.keys(existing_by_resident))
     desired_ids = tag_ids
 
-    to_remove = MapSet.difference(existing_ids, desired_ids)
-    to_add = MapSet.difference(desired_ids, existing_ids)
+    to_remove = MapSet.difference(existing_ids, desired_ids) |> MapSet.to_list()
+    to_add = MapSet.difference(desired_ids, existing_ids) |> MapSet.to_list()
 
-    if MapSet.size(to_remove) > 0 do
-      ids = MapSet.to_list(to_remove)
-
-      from(t in ResidentTagOnPost, where: t.post_id == ^post.id and t.resident_id in ^ids)
-      |> Caredeck.Repo.delete_all()
+    if to_remove != [] do
+      removed_row_ids = Enum.map(to_remove, &Map.fetch!(existing_by_resident, &1))
+      hard_delete(ResidentTagOnPost, "resident_tags_on_posts_versions", removed_row_ids)
     end
 
     Enum.each(to_add, fn rid ->
@@ -271,6 +266,20 @@ defmodule CaredeckWeb.PostComposeLive do
       )
       |> Ash.create!(tenant: facility.id, actor: team)
     end)
+  end
+
+  defp hard_delete(_schema, _versions_table, []), do: :ok
+
+  defp hard_delete(schema, versions_table, ids) do
+    import Ecto.Query
+
+    from(v in versions_table, where: v.version_source_id in ^ids)
+    |> Caredeck.Repo.delete_all()
+
+    from(r in schema, where: r.id in ^ids)
+    |> Caredeck.Repo.delete_all()
+
+    :ok
   end
 
   defp upload_attachments(socket, post, facility, team) do
