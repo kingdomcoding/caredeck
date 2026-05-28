@@ -132,7 +132,7 @@ defmodule CaredeckWeb.PostComposeLive do
 
     case Ash.get(Attachment, attachment_id, tenant: facility.id, actor: team) do
       {:ok, attachment} ->
-        hard_delete(Attachment, "attachments_versions", [attachment.id])
+        hard_delete(Attachment, Attachment.Version, [attachment.id])
 
         existing = Enum.reject(socket.assigns.existing_attachments, &(&1.id == attachment_id))
         {:noreply, assign(socket, :existing_attachments, existing)}
@@ -223,7 +223,7 @@ defmodule CaredeckWeb.PostComposeLive do
 
     if to_remove != [] do
       removed_row_ids = Enum.map(to_remove, &Map.fetch!(existing_by_resident, &1))
-      hard_delete(PostAudience, "post_audiences_versions", removed_row_ids)
+      hard_delete(PostAudience, PostAudience.Version, removed_row_ids)
     end
 
     Enum.each(to_add, fn rid ->
@@ -253,7 +253,7 @@ defmodule CaredeckWeb.PostComposeLive do
 
     if to_remove != [] do
       removed_row_ids = Enum.map(to_remove, &Map.fetch!(existing_by_resident, &1))
-      hard_delete(ResidentTagOnPost, "resident_tags_on_posts_versions", removed_row_ids)
+      hard_delete(ResidentTagOnPost, ResidentTagOnPost.Version, removed_row_ids)
     end
 
     Enum.each(to_add, fn rid ->
@@ -268,12 +268,12 @@ defmodule CaredeckWeb.PostComposeLive do
     end)
   end
 
-  defp hard_delete(_schema, _versions_table, []), do: :ok
+  defp hard_delete(_schema, _version_schema, []), do: :ok
 
-  defp hard_delete(schema, versions_table, ids) do
+  defp hard_delete(schema, version_schema, ids) do
     import Ecto.Query
 
-    from(v in versions_table, where: v.version_source_id in ^ids)
+    from(v in version_schema, where: v.version_source_id in ^ids)
     |> Caredeck.Repo.delete_all()
 
     from(r in schema, where: r.id in ^ids)
