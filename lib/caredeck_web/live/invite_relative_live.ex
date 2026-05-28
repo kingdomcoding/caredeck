@@ -91,7 +91,7 @@ defmodule CaredeckWeb.InviteRelativeLive do
         {:noreply,
          socket
          |> put_flash(:info, "Invitation sent to #{email}.")
-         |> push_navigate(to: profile_path(resident))}
+         |> push_navigate(to: ~p"/residents/#{resident.id}")}
 
       {:error, %{errors: errors}} ->
         message =
@@ -160,10 +160,6 @@ defmodule CaredeckWeb.InviteRelativeLive do
       </div>
     </Layouts.app>
     """
-  end
-
-  defp profile_path(_resident) do
-    "/feed"
   end
 
   defp relationship_options do

@@ -70,6 +70,8 @@ defmodule CaredeckWeb.Router do
       live "/feed", FeedLive
       live "/feed/:post_id", PostLive
       live "/residents/:resident_id/invite", InviteRelativeLive
+      live "/residents/:resident_id", ProfileLive
+      live "/profile/edit", EditProfileLive
     end
   end
 

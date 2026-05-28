@@ -49,6 +49,7 @@ defmodule Caredeck.People.Relative do
     update :update do
       primary? true
       accept [:display_name, :phone, :avatar_url]
+      require_atomic? false
     end
   end
 
@@ -57,7 +58,11 @@ defmodule Caredeck.People.Relative do
       authorize_if actor_present()
     end
 
-    policy action_type([:create, :update, :destroy]) do
+    policy action_type(:update) do
+      authorize_if expr(user_id == ^actor(:id))
+    end
+
+    policy action_type([:create, :destroy]) do
       forbid_if always()
     end
   end

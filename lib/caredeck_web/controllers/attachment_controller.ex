@@ -36,11 +36,35 @@ defmodule CaredeckWeb.AttachmentController do
   end
 
   defp attachment_in_facility?(key, facility_id) do
-    query =
-      Caredeck.Feed.Attachment
-      |> Ash.Query.filter(s3_key == ^key or thumbnail_s3_key == ^key)
+    attachment_match?(key, facility_id) or relative_avatar_match?(key, facility_id) or
+      caregiver_avatar_match?(key, facility_id)
+  end
 
-    case Ash.read_one(query, tenant: facility_id, authorize?: false) do
+  defp attachment_match?(key, facility_id) do
+    Caredeck.Feed.Attachment
+    |> Ash.Query.filter(s3_key == ^key or thumbnail_s3_key == ^key)
+    |> Ash.read_one(tenant: facility_id, authorize?: false)
+    |> case do
+      {:ok, %{}} -> true
+      _ -> false
+    end
+  end
+
+  defp relative_avatar_match?(key, facility_id) do
+    Caredeck.People.Relative
+    |> Ash.Query.filter(avatar_url == ^key)
+    |> Ash.read_one(tenant: facility_id, authorize?: false)
+    |> case do
+      {:ok, %{}} -> true
+      _ -> false
+    end
+  end
+
+  defp caregiver_avatar_match?(key, facility_id) do
+    Caredeck.People.CaregiverProfile
+    |> Ash.Query.filter(avatar_url == ^key)
+    |> Ash.read_one(tenant: facility_id, authorize?: false)
+    |> case do
       {:ok, %{}} -> true
       _ -> false
     end

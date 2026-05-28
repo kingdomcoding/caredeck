@@ -237,8 +237,10 @@ defmodule CaredeckWeb.FeedLive do
       >
         <p class="text-ink-500 text-xs uppercase tracking-wide mb-2">Tagged residents</p>
         <ul class="divide-y divide-divider">
-          <li :for={r <- @tags} class="py-1 text-ink-900 text-sm">
-            {r.first_name} {r.last_name}
+          <li :for={r <- @tags} class="py-1 text-sm">
+            <.link navigate={~p"/residents/#{r.id}"} class="text-ink-900 hover:text-brand">
+              {r.first_name} {r.last_name}
+            </.link>
           </li>
         </ul>
       </div>
