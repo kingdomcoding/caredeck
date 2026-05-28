@@ -102,7 +102,7 @@ defmodule CaredeckWeb.PostComposeLiveTest do
     conn = ctx.conn |> sign_in_team(ctx.team)
     {:ok, view, _html} = live(conn, ~p"/feed/compose")
 
-    view |> element("input[phx-click=toggle_audience]") |> render_click()
+    view |> element("button[phx-click=toggle_audience]") |> render_click()
 
     view
     |> form("#compose-form", %{"body" => "Hello world"})

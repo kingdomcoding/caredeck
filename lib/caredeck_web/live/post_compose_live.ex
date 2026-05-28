@@ -289,14 +289,17 @@ defmodule CaredeckWeb.PostComposeLive do
             class="w-full rounded-input border border-divider px-3 py-2 text-ink-900 mb-4 focus:outline-none focus:ring-2 focus:ring-brand"
           >{@body}</textarea>
 
-          <label class="flex items-center gap-2 mb-4 text-ink-900">
+          <label class="flex items-center gap-2 mb-4 text-ink-900 cursor-pointer select-none">
             <input
               type="checkbox"
               name="is_internal"
               value="true"
               checked={@is_internal}
-              class="h-5 w-5 rounded border-divider text-brand focus:ring-brand"
+              class="sr-only peer"
             />
+            <span class="h-5 w-5 rounded-input border-2 border-divider flex items-center justify-center text-white text-xs font-bold transition peer-checked:bg-brand peer-checked:border-brand peer-checked:[&>span]:opacity-100">
+              <span class="opacity-0">&#x2713;</span>
+            </span>
             <span class="text-sm">Internal post (team only)</span>
           </label>
 
@@ -333,15 +336,26 @@ defmodule CaredeckWeb.PostComposeLive do
                 {audience_indicator(@audience_state)}
               </button>
             </li>
-            <li :for={r <- @residents} class="px-4 py-3 flex items-center justify-between">
-              <span class="text-ink-900">{r.first_name} {r.last_name}</span>
-              <input
-                type="checkbox"
+            <li
+              :for={r <- @residents}
+              class="px-4 py-3 flex items-center justify-between hover:bg-page transition"
+            >
+              <label class="flex-1 text-ink-900 cursor-pointer">{r.first_name} {r.last_name}</label>
+              <button
+                type="button"
                 phx-click="toggle_audience"
                 phx-value-id={r.id}
-                checked={MapSet.member?(@audience_ids, r.id)}
-                class="h-5 w-5 rounded border-divider text-brand focus:ring-brand cursor-pointer"
-              />
+                aria-pressed={MapSet.member?(@audience_ids, r.id)}
+                class={[
+                  "h-5 w-5 rounded-input border-2 flex items-center justify-center text-xs font-bold transition",
+                  if(MapSet.member?(@audience_ids, r.id),
+                    do: "bg-brand border-brand text-white",
+                    else: "bg-card border-divider text-transparent hover:border-brand"
+                  )
+                ]}
+              >
+                &#x2713;
+              </button>
             </li>
           </ul>
         </section>
