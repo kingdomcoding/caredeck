@@ -12,9 +12,7 @@ defmodule Caredeck.Application do
       Caredeck.Repo,
       {DNSCluster, query: Application.get_env(:caredeck, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Caredeck.PubSub},
-      # Start a worker by calling: Caredeck.Worker.start_link(arg)
-      # {Caredeck.Worker, arg},
-      # Start to serve requests, typically the last entry
+      {Oban, Application.fetch_env!(:caredeck, Oban)},
       CaredeckWeb.Endpoint
     ]
 

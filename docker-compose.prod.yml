@@ -42,6 +42,20 @@ services:
     environment:
       ROLE: "worker"
 
+  minio:
+    image: minio/minio:latest
+    env_file: .env.prod
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio-data:/data
+    networks:
+      - default
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 15s
+      retries: 6
+
 networks:
   default:
   npm_default:
@@ -49,3 +63,4 @@ networks:
 
 volumes:
   prod_db:
+  minio-data:

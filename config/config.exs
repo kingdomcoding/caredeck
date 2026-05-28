@@ -38,6 +38,20 @@ config :ash, :include_embedded_source_by_default?, false
 config :ash, :default_page_type, :keyset
 config :spark, formatter: [remove_parens?: true]
 
+config :ex_aws,
+  json_codec: Jason,
+  http_client: ExAws.Request.Req,
+  access_key_id: [{:system, "S3_ACCESS_KEY_ID"}, "minioadmin"],
+  secret_access_key: [{:system, "S3_SECRET_ACCESS_KEY"}, "minioadmin"]
+
+config :ex_aws, :s3,
+  scheme: "http://",
+  host: "localhost",
+  port: 9000,
+  region: "us-east-1"
+
+config :caredeck, :s3_bucket, "caredeck-attachments"
+
 config :swoosh, :api_client, Swoosh.ApiClient.Req
 
 config :caredeck, Caredeck.Mailer, adapter: Swoosh.Adapters.Local

@@ -76,6 +76,7 @@ defmodule Caredeck.MixProject do
       {:image, "~> 0.54"},
       {:ex_aws, "~> 2.5"},
       {:ex_aws_s3, "~> 2.5"},
+      {:sweet_xml, "~> 0.7"},
       {:mime, "~> 2.0"},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},

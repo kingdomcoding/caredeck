@@ -48,6 +48,10 @@ defmodule Caredeck.Feed.Post do
     has_many :comments, Caredeck.Feed.Comment, destination_attribute: :post_id
     has_many :reactions, Caredeck.Feed.Reaction, destination_attribute: :post_id
 
+    has_many :attachments, Caredeck.Feed.Attachment,
+      destination_attribute: :post_id,
+      sort: [position: :asc]
+
     has_many :resident_tag_links, Caredeck.Feed.ResidentTagOnPost,
       destination_attribute: :post_id
 

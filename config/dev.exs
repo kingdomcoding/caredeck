@@ -71,6 +71,15 @@ config :caredeck, CaredeckWeb.Endpoint,
 # Enable dev routes for dashboard and mailbox
 config :caredeck, dev_routes: true
 
+# Local Oban with all the worker-side queues so dev mirrors prod's worker container.
+config :caredeck, Oban,
+  repo: Caredeck.Repo,
+  queues: [default: 10, mailers: 5, thumbnails: 4, fanout: 8, aid: 4],
+  plugins: [
+    Oban.Plugins.Pruner,
+    {Oban.Plugins.Cron, crontab: []}
+  ]
+
 # Do not include metadata nor timestamps in development logs
 config :logger, :default_formatter, format: "[$level] $message\n"
 

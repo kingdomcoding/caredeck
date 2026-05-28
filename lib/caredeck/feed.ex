@@ -12,5 +12,7 @@ defmodule Caredeck.Feed do
     resource Caredeck.Feed.Reaction.Version
     resource Caredeck.Feed.ResidentTagOnPost
     resource Caredeck.Feed.ResidentTagOnPost.Version
+    resource Caredeck.Feed.Attachment
+    resource Caredeck.Feed.Attachment.Version
   end
 end

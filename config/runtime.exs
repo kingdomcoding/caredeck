@@ -88,6 +88,24 @@ if config_env() == :prod do
       {Oban.Plugins.Cron, crontab: []}
     ]
 
+  s3_endpoint = System.get_env("S3_ENDPOINT")
+
+  if s3_endpoint && s3_endpoint != "" do
+    uri = URI.parse(s3_endpoint)
+
+    config :ex_aws, :s3,
+      scheme: "#{uri.scheme}://",
+      host: uri.host,
+      port: uri.port,
+      region: System.get_env("S3_REGION", "us-east-1")
+  end
+
+  config :ex_aws,
+    access_key_id: System.fetch_env!("S3_ACCESS_KEY_ID"),
+    secret_access_key: System.fetch_env!("S3_SECRET_ACCESS_KEY")
+
+  config :caredeck, :s3_bucket, System.fetch_env!("S3_BUCKET")
+
   smtp_relay = System.get_env("SMTP_RELAY")
 
   if smtp_relay && smtp_relay != "" do

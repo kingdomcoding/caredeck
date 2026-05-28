@@ -17,6 +17,14 @@ config :caredeck, :token_signing_secret, "test-token-signing-secret"
 
 config :bcrypt_elixir, log_rounds: 4
 
+config :caredeck, Oban,
+  repo: Caredeck.Repo,
+  testing: :manual,
+  plugins: false,
+  queues: false
+
+config :caredeck, :s3_bucket, "caredeck-test"
+
 # We don't run a server during test. If one is required,
 # you can enable the server option below.
 config :caredeck, CaredeckWeb.Endpoint,

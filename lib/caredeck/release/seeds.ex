@@ -28,7 +28,28 @@ defmodule Caredeck.Release.Seeds do
     "Please pass along our love."
   ]
 
+  @placeholder_jpeg <<0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 0x4A, 0x46, 0x49, 0x46, 0x00, 0x01,
+                      0x01, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0xFF, 0xDB, 0x00, 0x43,
+                      0x00, 0x08, 0x06, 0x06, 0x07, 0x06, 0x05, 0x08, 0x07, 0x07, 0x07, 0x09,
+                      0x09, 0x08, 0x0A, 0x0C, 0x14, 0x0D, 0x0C, 0x0B, 0x0B, 0x0C, 0x19, 0x12,
+                      0x13, 0x0F, 0x14, 0x1D, 0x1A, 0x1F, 0x1E, 0x1D, 0x1A, 0x1C, 0x1C, 0x20,
+                      0x24, 0x2E, 0x27, 0x20, 0x22, 0x2C, 0x23, 0x1C, 0x1C, 0x28, 0x37, 0x29,
+                      0x2C, 0x30, 0x31, 0x34, 0x34, 0x34, 0x1F, 0x27, 0x39, 0x3D, 0x38, 0x32,
+                      0x3C, 0x2E, 0x33, 0x34, 0x32, 0xFF, 0xC0, 0x00, 0x0B, 0x08, 0x00, 0x01,
+                      0x00, 0x01, 0x01, 0x01, 0x11, 0x00, 0xFF, 0xC4, 0x00, 0x1F, 0x00, 0x00,
+                      0x01, 0x05, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00,
+                      0x00, 0x00, 0x00, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
+                      0x09, 0x0A, 0x0B, 0xFF, 0xC4, 0x00, 0xB5, 0x10, 0x00, 0x02, 0x01, 0x03,
+                      0x03, 0x02, 0x04, 0x03, 0x05, 0x05, 0x04, 0x04, 0x00, 0x00, 0x01, 0x7D,
+                      0x01, 0x02, 0x03, 0x00, 0x04, 0x11, 0x05, 0x12, 0x21, 0x31, 0x41, 0x06,
+                      0x13, 0x51, 0x61, 0x07, 0x22, 0x71, 0x14, 0x32, 0x81, 0x91, 0xA1, 0x08,
+                      0x23, 0x42, 0xB1, 0xC1, 0x15, 0x52, 0xD1, 0xF0, 0x24, 0x33, 0x62, 0x72,
+                      0x82, 0xFF, 0xDA, 0x00, 0x08, 0x01, 0x01, 0x00, 0x00, 0x3F, 0x00, 0xFB,
+                      0xD0, 0xFF, 0xD9>>
+
   def run do
+    Application.put_env(:caredeck, :thumbnailer_mode, :sync)
+
     district = find_or_create_district()
     facility = find_or_create_facility(district)
     primary_ward = find_or_create_primary_ward(facility)
@@ -38,10 +59,12 @@ defmodule Caredeck.Release.Seeds do
     find_or_create_membership(relative, facility)
     find_or_create_residents(facility, primary_ward, secondary_ward)
     find_or_create_relatives_and_links(facility)
+    Feed.S3.ensure_bucket!()
     post = find_or_create_demo_post(facility)
 
     if post do
       seed_demo_interactions(facility, post)
+      seed_demo_attachments(facility, post, 3)
     end
 
     resident_count =
@@ -74,19 +97,59 @@ defmodule Caredeck.Release.Seeds do
       |> Ash.read!(tenant: facility.id, authorize?: false)
       |> length()
 
+    attachment_count =
+      Feed.Attachment
+      |> Ash.read!(tenant: facility.id, authorize?: false)
+      |> length()
+
     IO.puts("")
     IO.puts("Sandbox facility ready.")
     IO.puts("  Relative: #{@relative_email} / #{@demo_password}")
     IO.puts("  Teams:    team-care · team-activities · team-therapy / #{@demo_password}")
-    IO.puts("  Residents: #{resident_count}")
-    IO.puts("  Relatives: #{relative_count}")
-    IO.puts("  Posts:     #{post_count}")
-    IO.puts("  Comments:  #{comment_count}")
-    IO.puts("  Reactions: #{reaction_count}")
-    IO.puts("  Tags:      #{tag_count}")
+    IO.puts("  Residents:   #{resident_count}")
+    IO.puts("  Relatives:   #{relative_count}")
+    IO.puts("  Posts:       #{post_count}")
+    IO.puts("  Comments:    #{comment_count}")
+    IO.puts("  Reactions:   #{reaction_count}")
+    IO.puts("  Tags:        #{tag_count}")
+    IO.puts("  Attachments: #{attachment_count}")
     IO.puts("")
 
     :ok
+  end
+
+  defp seed_demo_attachments(facility, post, count) do
+    existing =
+      Feed.Attachment
+      |> Ash.Query.filter(post_id == ^post.id)
+      |> Ash.read!(tenant: facility.id, authorize?: false)
+
+    if existing == [] do
+      for i <- 0..(count - 1) do
+        key = Feed.S3.generate_key("photos", "seed-#{post.id}-#{i}.jpg")
+        {:ok, _} = Feed.S3.put_object(key, @placeholder_jpeg, "image/jpeg")
+        thumbnail_key = Feed.S3.generate_key("thumbnails", "seed-#{post.id}-#{i}-thumb.jpg")
+        {:ok, _} = Feed.S3.put_object(thumbnail_key, @placeholder_jpeg, "image/jpeg")
+
+        Feed.Attachment
+        |> Ash.Changeset.for_create(
+          :create,
+          %{
+            facility_id: facility.id,
+            post_id: post.id,
+            kind: :photo,
+            s3_key: key,
+            thumbnail_s3_key: thumbnail_key,
+            mime_type: "image/jpeg",
+            bytes: byte_size(@placeholder_jpeg),
+            position: i
+          },
+          tenant: facility.id,
+          authorize?: false
+        )
+        |> Ash.create!(tenant: facility.id, authorize?: false)
+      end
+    end
   end
 
   defp find_or_create_demo_post(facility) do
