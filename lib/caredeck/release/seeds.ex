@@ -23,6 +23,11 @@ defmodule Caredeck.Release.Seeds do
 
   @demo_post_body "Good news! Mr Hungsinger had a very good report from his physiotherapist today."
 
+  @demo_comments [
+    "Wonderful to hear, thank you for the update.",
+    "Please pass along our love."
+  ]
+
   def run do
     district = find_or_create_district()
     facility = find_or_create_facility(district)
@@ -33,7 +38,11 @@ defmodule Caredeck.Release.Seeds do
     find_or_create_membership(relative, facility)
     find_or_create_residents(facility, primary_ward, secondary_ward)
     find_or_create_relatives_and_links(facility)
-    find_or_create_demo_post(facility)
+    post = find_or_create_demo_post(facility)
+
+    if post do
+      seed_demo_interactions(facility, post)
+    end
 
     resident_count =
       People.Resident
@@ -50,6 +59,21 @@ defmodule Caredeck.Release.Seeds do
       |> Ash.read!(tenant: facility.id, authorize?: false)
       |> length()
 
+    comment_count =
+      Feed.Comment
+      |> Ash.read!(tenant: facility.id, authorize?: false)
+      |> length()
+
+    reaction_count =
+      Feed.Reaction
+      |> Ash.read!(tenant: facility.id, authorize?: false)
+      |> length()
+
+    tag_count =
+      Feed.ResidentTagOnPost
+      |> Ash.read!(tenant: facility.id, authorize?: false)
+      |> length()
+
     IO.puts("")
     IO.puts("Sandbox facility ready.")
     IO.puts("  Relative: #{@relative_email} / #{@demo_password}")
@@ -57,6 +81,9 @@ defmodule Caredeck.Release.Seeds do
     IO.puts("  Residents: #{resident_count}")
     IO.puts("  Relatives: #{relative_count}")
     IO.puts("  Posts:     #{post_count}")
+    IO.puts("  Comments:  #{comment_count}")
+    IO.puts("  Reactions: #{reaction_count}")
+    IO.puts("  Tags:      #{tag_count}")
     IO.puts("")
 
     :ok
@@ -75,8 +102,8 @@ defmodule Caredeck.Release.Seeds do
       |> Ash.read!(tenant: facility.id, authorize?: false)
 
     case existing do
-      [_ | _] ->
-        :ok
+      [post | _] ->
+        post
 
       [] ->
         post =
@@ -112,6 +139,103 @@ defmodule Caredeck.Release.Seeds do
           )
           |> Ash.create!(tenant: facility.id, authorize?: false)
         end)
+
+        post
+    end
+  end
+
+  defp seed_demo_interactions(facility, post) do
+    relatives =
+      People.Relative
+      |> Ash.read!(tenant: facility.id, authorize?: false)
+      |> Enum.take(3)
+
+    if length(relatives) >= 3 do
+      seed_comments_once(facility, post, relatives)
+      seed_reactions_once(facility, post, relatives)
+      seed_tags_once(facility, post)
+    end
+  end
+
+  defp seed_comments_once(facility, post, relatives) do
+    existing =
+      Feed.Comment
+      |> Ash.Query.filter(post_id == ^post.id)
+      |> Ash.read!(tenant: facility.id, authorize?: false)
+
+    if existing == [] do
+      relatives
+      |> Enum.take(length(@demo_comments))
+      |> Enum.zip(@demo_comments)
+      |> Enum.each(fn {relative, body} ->
+        Feed.Comment
+        |> Ash.Changeset.for_create(
+          :create,
+          %{
+            facility_id: facility.id,
+            post_id: post.id,
+            author_user_id: relative.user_id,
+            body: body
+          },
+          tenant: facility.id,
+          authorize?: false
+        )
+        |> Ash.create!(tenant: facility.id, authorize?: false)
+      end)
+    end
+  end
+
+  defp seed_reactions_once(facility, post, relatives) do
+    existing =
+      Feed.Reaction
+      |> Ash.Query.filter(post_id == ^post.id)
+      |> Ash.read!(tenant: facility.id, authorize?: false)
+
+    if existing == [] do
+      Enum.each(relatives, fn relative ->
+        Feed.Reaction
+        |> Ash.Changeset.for_create(
+          :create,
+          %{
+            facility_id: facility.id,
+            post_id: post.id,
+            user_id: relative.user_id,
+            kind: :like
+          },
+          tenant: facility.id,
+          authorize?: false
+        )
+        |> Ash.create!(tenant: facility.id, authorize?: false)
+      end)
+    end
+  end
+
+  defp seed_tags_once(facility, post) do
+    existing =
+      Feed.ResidentTagOnPost
+      |> Ash.Query.filter(post_id == ^post.id)
+      |> Ash.read!(tenant: facility.id, authorize?: false)
+
+    if existing == [] do
+      residents =
+        People.Resident
+        |> Ash.read!(tenant: facility.id, authorize?: false)
+        |> Enum.take(3)
+
+      Enum.each(residents, fn resident ->
+        Feed.ResidentTagOnPost
+        |> Ash.Changeset.for_create(
+          :create,
+          %{
+            facility_id: facility.id,
+            post_id: post.id,
+            resident_id: resident.id
+          },
+          tenant: facility.id,
+          authorize?: false
+        )
+        |> Ash.create!(tenant: facility.id, authorize?: false)
+      end)
     end
   end
 

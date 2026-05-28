@@ -44,6 +44,18 @@ defmodule Caredeck.Feed.Post do
       source_attribute_on_join_resource :post_id
       destination_attribute_on_join_resource :resident_id
     end
+
+    has_many :comments, Caredeck.Feed.Comment, destination_attribute: :post_id
+    has_many :reactions, Caredeck.Feed.Reaction, destination_attribute: :post_id
+
+    has_many :resident_tag_links, Caredeck.Feed.ResidentTagOnPost,
+      destination_attribute: :post_id
+
+    many_to_many :resident_tags, Caredeck.People.Resident do
+      through Caredeck.Feed.ResidentTagOnPost
+      source_attribute_on_join_resource :post_id
+      destination_attribute_on_join_resource :resident_id
+    end
   end
 
   actions do

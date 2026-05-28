@@ -56,6 +56,9 @@ defmodule Caredeck.People.Resident do
 
     has_many :post_audiences, Caredeck.Feed.PostAudience,
       destination_attribute: :resident_id
+
+    has_many :tag_links, Caredeck.Feed.ResidentTagOnPost,
+      destination_attribute: :resident_id
   end
 
   state_machine do
