@@ -97,6 +97,7 @@ defmodule CaredeckWeb.FeedLive do
           <.post_header post={post} current_team={@current_team} />
           <.post_body post={post} />
           <.attachment_grid attachments={post.attachments} />
+          <.video_attachments attachments={post.attachments} />
           <.audio_attachments attachments={post.attachments} />
           <.tag_chips
             tags={post.resident_tags}
@@ -152,6 +153,27 @@ defmodule CaredeckWeb.FeedLive do
   defp post_body(assigns) do
     ~H"""
     <p class="px-4 py-3 text-ink-900 whitespace-pre-wrap">{@post.body}</p>
+    """
+  end
+
+  attr :attachments, :list, required: true
+
+  defp video_attachments(assigns) do
+    videos = Enum.filter(assigns.attachments, &(&1.kind == :video))
+    assigns = assign(assigns, :videos, videos)
+
+    ~H"""
+    <div :if={@videos != []} class="px-4 py-3 space-y-2 bg-card">
+      <video
+        :for={v <- @videos}
+        src={"/attachments/" <> v.s3_key}
+        controls
+        preload="metadata"
+        playsinline
+        class="w-full rounded-input bg-black"
+      >
+      </video>
+    </div>
     """
   end
 

@@ -17,6 +17,12 @@ defmodule CaredeckWeb.PostComposeLive do
     max_file_size: 8_000_000
   ]
 
+  @video_upload_opts [
+    accept: ~w(.mp4 .mov .webm),
+    max_entries: 2,
+    max_file_size: 50_000_000
+  ]
+
   @impl true
   def mount(%{"edit_post_id" => id}, _session, socket) do
     facility = socket.assigns.current_facility
@@ -43,7 +49,8 @@ defmodule CaredeckWeb.PostComposeLive do
          |> assign(:audio_duration_sec, 0)
          |> assign(:page_title, "Edit post")
          |> allow_upload(:photos, @upload_opts)
-         |> allow_upload(:audio_notes, @audio_upload_opts)}
+         |> allow_upload(:audio_notes, @audio_upload_opts)
+         |> allow_upload(:videos, @video_upload_opts)}
 
       _ ->
         {:ok,
@@ -70,7 +77,8 @@ defmodule CaredeckWeb.PostComposeLive do
      |> assign(:audio_duration_sec, 0)
      |> assign(:page_title, "New post")
      |> allow_upload(:photos, @upload_opts)
-     |> allow_upload(:audio_notes, @audio_upload_opts)}
+     |> allow_upload(:audio_notes, @audio_upload_opts)
+     |> allow_upload(:videos, @video_upload_opts)}
   end
 
   defp residents(nil), do: []
@@ -150,6 +158,10 @@ defmodule CaredeckWeb.PostComposeLive do
     end
   end
 
+  def handle_event("cancel_video", %{"ref" => ref}, socket) do
+    {:noreply, cancel_upload(socket, :videos, ref)}
+  end
+
   def handle_event("audio_recorded", %{"duration_sec" => seconds}, socket) do
     {:noreply, assign(socket, :audio_duration_sec, seconds)}
   end
@@ -197,6 +209,7 @@ defmodule CaredeckWeb.PostComposeLive do
         sync_tags(post, socket.assigns.tag_ids, facility, team)
         upload_attachments(socket, post, facility, team)
         upload_audio(socket, post, facility, team)
+        upload_videos(socket, post, facility, team)
         enqueue_post_fanout(socket, post)
 
         {:noreply,
@@ -213,6 +226,33 @@ defmodule CaredeckWeb.PostComposeLive do
   end
 
   defp enqueue_post_fanout(_, _), do: :ok
+
+  defp upload_videos(socket, post, facility, team) do
+    consume_uploaded_entries(socket, :videos, fn %{path: path}, entry ->
+      key = Feed.S3.generate_key("videos", entry.client_name)
+      {:ok, body} = File.read(path)
+      {:ok, _} = Feed.S3.put_object(key, body, entry.client_type)
+
+      Attachment
+      |> Ash.Changeset.for_create(
+        :create,
+        %{
+          facility_id: facility.id,
+          post_id: post.id,
+          kind: :video,
+          s3_key: key,
+          mime_type: entry.client_type,
+          bytes: entry.client_size,
+          position: 50
+        },
+        tenant: facility.id,
+        actor: team
+      )
+      |> Ash.create!(tenant: facility.id, actor: team)
+
+      {:ok, key}
+    end)
+  end
 
   defp upload_audio(socket, post, facility, team) do
     duration = socket.assigns.audio_duration_sec
@@ -493,6 +533,56 @@ defmodule CaredeckWeb.PostComposeLive do
               </article>
             </div>
             <p :for={err <- upload_errors(@uploads.photos)} class="text-red-600 text-xs mt-1">
+              {error_to_string(err)}
+            </p>
+          </section>
+
+          <section class="mb-4">
+            <h2 class="text-ink-900 font-medium mb-2">Videos</h2>
+
+            <div class="flex gap-2 flex-wrap">
+              <label
+                for={@uploads.videos.ref}
+                class="px-3 py-2 rounded-button bg-brand-soft text-brand text-sm font-medium hover:bg-brand hover:text-white cursor-pointer"
+              >
+                Add video from gallery
+              </label>
+              <.live_file_input upload={@uploads.videos} class="sr-only" />
+
+              <label
+                for="video-camera-input"
+                class="px-3 py-2 rounded-button bg-brand-soft text-brand text-sm font-medium hover:bg-brand hover:text-white cursor-pointer"
+              >
+                Take video
+              </label>
+              <input
+                type="file"
+                id="video-camera-input"
+                accept="video/*"
+                capture="environment"
+                class="sr-only"
+                phx-hook="ShareCameraInput"
+                data-target={@uploads.videos.ref}
+              />
+            </div>
+
+            <ul :if={@uploads.videos.entries != []} class="mt-3 space-y-1">
+              <li
+                :for={entry <- @uploads.videos.entries}
+                class="text-ink-900 text-sm flex items-center justify-between bg-card border border-divider rounded-input px-3 py-2"
+              >
+                <span class="truncate">{entry.client_name}</span>
+                <button
+                  type="button"
+                  phx-click="cancel_video"
+                  phx-value-ref={entry.ref}
+                  class="text-like-red text-xs hover:underline ml-2"
+                >
+                  Remove
+                </button>
+              </li>
+            </ul>
+            <p :for={err <- upload_errors(@uploads.videos)} class="text-red-600 text-xs mt-1">
               {error_to_string(err)}
             </p>
           </section>

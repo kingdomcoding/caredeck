@@ -2,7 +2,10 @@ defmodule Caredeck.Repo.Migrations.DropUserPasskeys do
   use Ecto.Migration
 
   def up do
-    drop_if_exists index(:user_passkeys, [:credential_id], name: :user_passkeys_unique_credential_index)
+    drop_if_exists index(:user_passkeys, [:credential_id],
+                     name: :user_passkeys_unique_credential_index
+                   )
+
     drop_if_exists table(:user_passkeys)
   end
 
@@ -20,6 +23,8 @@ defmodule Caredeck.Repo.Migrations.DropUserPasskeys do
       add :updated_at, :utc_datetime_usec, null: false, default: fragment("now()")
     end
 
-    create unique_index(:user_passkeys, [:credential_id], name: :user_passkeys_unique_credential_index)
+    create unique_index(:user_passkeys, [:credential_id],
+             name: :user_passkeys_unique_credential_index
+           )
   end
 end

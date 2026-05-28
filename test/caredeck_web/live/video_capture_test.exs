@@ -1,4 +1,4 @@
-defmodule CaredeckWeb.AudioCaptureTest do
+defmodule CaredeckWeb.VideoCaptureTest do
   use CaredeckWeb.ConnCase, async: false
 
   import Phoenix.LiveViewTest
@@ -13,7 +13,7 @@ defmodule CaredeckWeb.AudioCaptureTest do
       Org.District
       |> Ash.Changeset.for_create(
         :create,
-        %{name: "AC #{suffix}", slug: "ac-#{suffix}"},
+        %{name: "VC #{suffix}", slug: "vc-#{suffix}"},
         authorize?: false
       )
       |> Ash.create!(authorize?: false)
@@ -22,7 +22,7 @@ defmodule CaredeckWeb.AudioCaptureTest do
       Org.Facility
       |> Ash.Changeset.for_create(
         :create,
-        %{district_id: district.id, name: "AC Home", slug: "ac-home-#{suffix}"},
+        %{district_id: district.id, name: "VC Home", slug: "vc-home-#{suffix}"},
         authorize?: false
       )
       |> Ash.create!(authorize?: false)
@@ -32,8 +32,8 @@ defmodule CaredeckWeb.AudioCaptureTest do
       |> Ash.Changeset.for_create(
         :register_with_password,
         %{
-          handle: "team-ac-#{suffix}",
-          name: "Team AC",
+          handle: "team-vc-#{suffix}",
+          name: "Team VC",
           role_kind: :care,
           facility_id: facility.id,
           password: "phase7-test-pass"
@@ -46,7 +46,7 @@ defmodule CaredeckWeb.AudioCaptureTest do
       People.Resident
       |> Ash.Changeset.for_create(
         :create,
-        %{facility_id: facility.id, first_name: "Anna", last_name: "Becker"},
+        %{facility_id: facility.id, first_name: "Hans", last_name: "Klein"},
         tenant: facility.id,
         authorize?: false
       )
@@ -55,62 +55,63 @@ defmodule CaredeckWeb.AudioCaptureTest do
     %{facility: facility, team: team, resident: resident}
   end
 
-  test "uploading an audio_notes entry + submit creates an Attachment of kind :audio", ctx do
-    audio_bytes = <<0::size(2000)-unit(8)>>
+  test "uploading a video + submit creates an Attachment of kind :video", ctx do
+    video_bytes = <<0::size(5000)-unit(8)>>
 
     conn = sign_in_team(ctx.conn, ctx.team)
     {:ok, view, _html} = live(conn, ~p"/feed/compose")
 
     upload =
-      file_input(view, "form", :audio_notes, [
-        %{name: "voice-test.webm", content: audio_bytes, type: "audio/webm"}
+      file_input(view, "form", :videos, [
+        %{name: "clip.mp4", content: video_bytes, type: "video/mp4"}
       ])
 
-    render_upload(upload, "voice-test.webm")
+    render_upload(upload, "clip.mp4")
 
     view
-    |> element("#audio-recorder")
-    |> render_hook("audio_recorded", %{"duration_sec" => 7})
-
-    view
-    |> form("#compose-form", %{"body" => "Voice note attached"})
+    |> form("#compose-form", %{"body" => "Watch this"})
     |> render_submit()
 
-    audios =
+    videos =
       Feed.Attachment
       |> Ash.read!(tenant: ctx.facility.id, authorize?: false)
-      |> Enum.filter(&(&1.kind == :audio))
+      |> Enum.filter(&(&1.kind == :video))
 
-    assert [audio] = audios
-    assert audio.mime_type == "audio/webm"
-    assert audio.duration_sec == 7
-    assert audio.position == 99
-    assert String.starts_with?(audio.s3_key, "audios/")
+    assert [video] = videos
+    assert video.mime_type == "video/mp4"
+    assert video.position == 50
+    assert String.starts_with?(video.s3_key, "videos/")
   end
 
-  test "discard_audio clears the pending upload entry", ctx do
-    audio_bytes = <<0::size(1000)-unit(8)>>
+  test "cancel_video drops the queued upload entry", ctx do
+    video_bytes = <<0::size(3000)-unit(8)>>
     conn = sign_in_team(ctx.conn, ctx.team)
     {:ok, view, _html} = live(conn, ~p"/feed/compose")
 
     upload =
-      file_input(view, "form", :audio_notes, [
-        %{name: "voice-discard.webm", content: audio_bytes, type: "audio/webm"}
+      file_input(view, "form", :videos, [
+        %{name: "drop.mp4", content: video_bytes, type: "video/mp4"}
       ])
 
-    render_upload(upload, "voice-discard.webm")
-    view |> element("#audio-recorder [data-role=discard]") |> render_click()
+    render_upload(upload, "drop.mp4")
+
+    html = render(view)
+    [_, ref] = Regex.run(~r/phx-value-ref="([^"]+)"/, html)
+
+    view
+    |> element("button[phx-click=cancel_video][phx-value-ref='#{ref}']")
+    |> render_click()
 
     view
     |> form("#compose-form", %{"body" => "Nothing attached"})
     |> render_submit()
 
-    audios =
+    videos =
       Feed.Attachment
       |> Ash.read!(tenant: ctx.facility.id, authorize?: false)
-      |> Enum.filter(&(&1.kind == :audio))
+      |> Enum.filter(&(&1.kind == :video))
 
-    assert audios == []
+    assert videos == []
   end
 
   defp sign_in_team(conn, team) do

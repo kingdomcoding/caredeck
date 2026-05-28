@@ -276,12 +276,25 @@ defmodule CaredeckWeb.PostLive do
           <p class="px-4 py-3 text-ink-900 whitespace-pre-wrap">{@post.body}</p>
 
           <% photos = Enum.filter(@post.attachments, &(&1.kind == :photo)) %>
+          <% videos = Enum.filter(@post.attachments, &(&1.kind == :video)) %>
           <% audios = Enum.filter(@post.attachments, &(&1.kind == :audio)) %>
 
           <div :if={photos != []} class={["grid gap-1 bg-page", grid_classes(length(photos))]}>
             <div :for={att <- Enum.take(photos, 4)} class="relative overflow-hidden">
               <img src={"/attachments/" <> att.s3_key} class="h-full w-full object-cover" alt="" />
             </div>
+          </div>
+
+          <div :if={videos != []} class="px-4 py-3 space-y-2 bg-card border-t border-divider">
+            <video
+              :for={v <- videos}
+              src={"/attachments/" <> v.s3_key}
+              controls
+              preload="metadata"
+              playsinline
+              class="w-full rounded-input bg-black"
+            >
+            </video>
           </div>
 
           <div :if={audios != []} class="px-4 py-3 space-y-2 bg-card border-t border-divider">
