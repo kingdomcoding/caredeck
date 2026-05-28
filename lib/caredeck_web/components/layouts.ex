@@ -22,7 +22,6 @@ defmodule CaredeckWeb.Layouts do
           <img src={~p"/images/brand/caredeck-lockup.svg"} alt="Caredeck" height="32" class="h-8" />
         </a>
         <nav class="flex items-center gap-6 text-sm text-ink-500">
-          <a href="/design-system" class="hover:text-ink-900">Design System</a>
           <.link :if={@current_user && @profile_rid} navigate={~p"/residents/#{@profile_rid}"} class="hover:text-ink-900">
             Profile
           </.link>
@@ -70,13 +69,29 @@ defmodule CaredeckWeb.Layouts do
 
   defp profile_resident_id(user) do
     case Ash.read(
-           Caredeck.People.Relative
+           Caredeck.Org.FacilityMembership
            |> Ash.Query.filter(user_id == ^user.id),
+           authorize?: false
+         ) do
+      {:ok, memberships} ->
+        Enum.find_value(memberships, nil, fn membership ->
+          first_relative_link(user.id, membership.facility_id)
+        end)
+
+      _ ->
+        nil
+    end
+  end
+
+  defp first_relative_link(user_id, facility_id) do
+    case Ash.read(
+           Caredeck.People.Relative
+           |> Ash.Query.filter(user_id == ^user_id),
+           tenant: facility_id,
            authorize?: false
          ) do
       {:ok, [_ | _] = relatives} ->
         relative_ids = Enum.map(relatives, & &1.id)
-        facility_id = hd(relatives).facility_id
 
         case Ash.read(
                Caredeck.People.RelativeOfResident
