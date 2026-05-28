@@ -88,12 +88,23 @@ defmodule CaredeckWeb.Layouts do
       <ul class="grid grid-cols-4">
         <.nav_tab navigate={~p"/feed"} label="Home" icon={:home} />
         <.nav_tab
-          :if={@profile_rid}
+          :if={@current_team}
+          navigate={~p"/kitchen/weekly-menu"}
+          label="Kitchen"
+          icon={:plate}
+        />
+        <.nav_tab
+          :if={!@current_team and @profile_rid}
           navigate={~p"/residents/#{@profile_rid}"}
           label="Profile"
           icon={:user}
         />
-        <.nav_tab :if={!@profile_rid} navigate={~p"/profile/edit"} label="Profile" icon={:user} />
+        <.nav_tab
+          :if={!@current_team and !@profile_rid}
+          navigate={~p"/profile/edit"}
+          label="Profile"
+          icon={:user}
+        />
         <.nav_tab navigate={~p"/notifications"} label="Inbox" icon={:bell} badge={@unread} />
         <.nav_tab href={~p"/sign-out"} method={:delete} label="Sign out" icon={:logout} />
       </ul>
@@ -181,6 +192,22 @@ defmodule CaredeckWeb.Layouts do
     >
       <path stroke-linecap="round" stroke-linejoin="round" d="M6 8a6 6 0 0 1 12 0v5l2 2H4l2-2z" />
       <path stroke-linecap="round" d="M10 19a2 2 0 0 0 4 0" />
+    </svg>
+    """
+  end
+
+  defp nav_icon(%{name: :plate} = assigns) do
+    ~H"""
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      class="h-6 w-6"
+      aria-hidden="true"
+    >
+      <circle cx="12" cy="12" r="9" />
+      <circle cx="12" cy="12" r="5" />
     </svg>
     """
   end
