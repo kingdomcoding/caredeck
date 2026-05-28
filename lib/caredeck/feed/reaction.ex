@@ -82,21 +82,26 @@ defmodule Caredeck.Feed.Reaction do
             )
             |> Caredeck.Repo.one()
 
-          if archived, do: Caredeck.Repo.delete!(archived)
+          if archived do
+            from(r in __MODULE__, where: r.id == ^archived.id)
+            |> Caredeck.Repo.update_all(set: [archived_at: nil])
 
-          Ash.create!(
-            __MODULE__,
-            %{
-              facility_id: tenant,
-              post_id: input.arguments.post_id,
-              user_id: actor.id,
-              kind: input.arguments.kind
-            },
-            tenant: tenant,
-            actor: actor
-          )
+            {:ok, %{action: :added}}
+          else
+            Ash.create!(
+              __MODULE__,
+              %{
+                facility_id: tenant,
+                post_id: input.arguments.post_id,
+                user_id: actor.id,
+                kind: input.arguments.kind
+              },
+              tenant: tenant,
+              actor: actor
+            )
 
-          {:ok, %{action: :added}}
+            {:ok, %{action: :added}}
+          end
         end
       end
     end
