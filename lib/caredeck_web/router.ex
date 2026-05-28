@@ -45,6 +45,13 @@ defmodule CaredeckWeb.Router do
     auth_routes(AuthController, Caredeck.Accounts.User, path: "/auth")
     delete "/sign-out", AuthController, :sign_out
 
+    scope "/auth/passkey" do
+      post "/register/options", PasskeyController, :register_options
+      post "/register/finish", PasskeyController, :register_finish
+      post "/sign-in/options", PasskeyController, :sign_in_options
+      post "/sign-in/finish", PasskeyController, :sign_in_finish
+    end
+
     live_session :no_user, on_mount: {CaredeckWeb.LiveUserAuth, :live_no_user} do
       live "/sign-in", Auth.SignInLive
       live "/register", Auth.RegisterLive
