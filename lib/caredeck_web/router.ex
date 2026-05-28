@@ -79,6 +79,8 @@ defmodule CaredeckWeb.Router do
       live "/residents/:resident_id", ProfileLive
       live "/profile/edit", EditProfileLive
       live "/notifications", NotificationsLive
+      live "/kitchen/order/:resident_id", Kitchen.ResidentOrderLive
+      live "/residents/:resident_id/diet", Kitchen.DietProfileLive
     end
   end
 
