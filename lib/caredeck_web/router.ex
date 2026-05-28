@@ -69,6 +69,7 @@ defmodule CaredeckWeb.Router do
       on_mount: {CaredeckWeb.LiveUserAuth, :live_team_required} do
       live "/kitchen/weekly-menu", Kitchen.WeeklyMenuLive
       live "/kitchen/weekly-menu/:date", Kitchen.DayEditorLive
+      live "/kitchen/summary", Kitchen.SummaryLive
     end
 
     live_session :authenticated,
