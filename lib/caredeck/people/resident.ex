@@ -53,6 +53,9 @@ defmodule Caredeck.People.Resident do
       source_attribute_on_join_resource :resident_id
       destination_attribute_on_join_resource :relative_id
     end
+
+    has_many :post_audiences, Caredeck.Feed.PostAudience,
+      destination_attribute: :resident_id
   end
 
   state_machine do

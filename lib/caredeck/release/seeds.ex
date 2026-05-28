@@ -1,5 +1,6 @@
 defmodule Caredeck.Release.Seeds do
   alias Caredeck.Accounts
+  alias Caredeck.Feed
   alias Caredeck.Org
   alias Caredeck.People
   alias Caredeck.Release.NamePool
@@ -20,6 +21,8 @@ defmodule Caredeck.Release.Seeds do
   @relative_count_target 80
   @relationship_pool ~w(daughter son niece nephew granddaughter grandson spouse sibling)a
 
+  @demo_post_body "Good news! Mr Hungsinger had a very good report from his physiotherapist today."
+
   def run do
     district = find_or_create_district()
     facility = find_or_create_facility(district)
@@ -30,6 +33,7 @@ defmodule Caredeck.Release.Seeds do
     find_or_create_membership(relative, facility)
     find_or_create_residents(facility, primary_ward, secondary_ward)
     find_or_create_relatives_and_links(facility)
+    find_or_create_demo_post(facility)
 
     resident_count =
       People.Resident
@@ -41,15 +45,74 @@ defmodule Caredeck.Release.Seeds do
       |> Ash.read!(tenant: facility.id, authorize?: false)
       |> length()
 
+    post_count =
+      Feed.Post
+      |> Ash.read!(tenant: facility.id, authorize?: false)
+      |> length()
+
     IO.puts("")
     IO.puts("Sandbox facility ready.")
     IO.puts("  Relative: #{@relative_email} / #{@demo_password}")
     IO.puts("  Teams:    team-care · team-activities · team-therapy / #{@demo_password}")
     IO.puts("  Residents: #{resident_count}")
     IO.puts("  Relatives: #{relative_count}")
+    IO.puts("  Posts:     #{post_count}")
     IO.puts("")
 
     :ok
+  end
+
+  defp find_or_create_demo_post(facility) do
+    {:ok, team_care} =
+      Ash.read_one(
+        Accounts.TeamIdentity |> Ash.Query.filter(handle == "team-care"),
+        authorize?: false
+      )
+
+    existing =
+      Feed.Post
+      |> Ash.Query.filter(team_identity_id == ^team_care.id and body == ^@demo_post_body)
+      |> Ash.read!(tenant: facility.id, authorize?: false)
+
+    case existing do
+      [_ | _] ->
+        :ok
+
+      [] ->
+        post =
+          Feed.Post
+          |> Ash.Changeset.for_create(
+            :create,
+            %{
+              facility_id: facility.id,
+              team_identity_id: team_care.id,
+              body: @demo_post_body
+            },
+            tenant: facility.id,
+            authorize?: false
+          )
+          |> Ash.create!(tenant: facility.id, authorize?: false)
+
+        audience =
+          People.Resident
+          |> Ash.read!(tenant: facility.id, authorize?: false)
+          |> Enum.take(3)
+
+        Enum.each(audience, fn resident ->
+          Feed.PostAudience
+          |> Ash.Changeset.for_create(
+            :create,
+            %{
+              facility_id: facility.id,
+              post_id: post.id,
+              resident_id: resident.id
+            },
+            tenant: facility.id,
+            authorize?: false
+          )
+          |> Ash.create!(tenant: facility.id, authorize?: false)
+        end)
+    end
   end
 
   defp find_or_create_residents(facility, primary_ward, secondary_ward) do
