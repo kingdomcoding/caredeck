@@ -75,8 +75,8 @@
 - **`Notification` resource + push delivery** (Phase 6) — `NotificationFanout` already computes the recipient set; just needs the resource to write into and the push dispatch job.
 - **Pre-signed PUT direct uploads** (Phase 7) — `:request_upload_url` action exists; native shell from Phase 5+ wires it up.
 - **Video transcoding** (Phase 7+) — `Attachment.kind == :video` is accepted but stored raw; Phase 7+ transcodes via Oban.
-- **Real policies on `Feed.Post` / `Comment` / `Reaction`** (Phase 4) — currently deny-all.
-- **Comment edit window + thumbs-up shortcut** (Phase 4) — composer renders Send button only.
+- ~~**Real policies on `Feed.Post` / `Comment` / `Reaction`**~~ — shipped in Phase 4 (see `docs/checkpoints/phase-4/README.md`).
+- ~~**Comment edit window + thumbs-up shortcut**~~ — shipped in Phase 4.
 
 ## What Phase 4 inherits
 

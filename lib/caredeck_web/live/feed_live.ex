@@ -24,6 +24,7 @@ defmodule CaredeckWeb.FeedLive do
     {:ok,
      socket
      |> assign(:page_title, "Feed")
+     |> assign(:open_popover_for, nil)
      |> assign(:posts, load_posts(facility, current_actor(socket)))}
   end
 
@@ -35,6 +36,15 @@ defmodule CaredeckWeb.FeedLive do
   end
 
   @impl true
+  def handle_event("toggle_tag_popover", %{"post-id" => id}, socket) do
+    next = if socket.assigns.open_popover_for == id, do: nil, else: id
+    {:noreply, assign(socket, :open_popover_for, next)}
+  end
+
+  def handle_event("hide_tag_popover", _params, socket) do
+    {:noreply, assign(socket, :open_popover_for, nil)}
+  end
+
   def handle_event("toggle_reaction", %{"post-id" => post_id}, socket) do
     user = socket.assigns[:current_user]
     facility = socket.assigns.current_facility
@@ -87,7 +97,11 @@ defmodule CaredeckWeb.FeedLive do
           <.post_header post={post} current_team={@current_team} />
           <.post_body post={post} />
           <.attachment_grid attachments={post.attachments} />
-          <.tag_chips tags={post.resident_tags} />
+          <.tag_chips
+            tags={post.resident_tags}
+            post_id={post.id}
+            open_popover_for={@open_popover_for}
+          />
           <.engagement_line post={post} current_user={@current_user} />
         </article>
       </div>
@@ -186,6 +200,8 @@ defmodule CaredeckWeb.FeedLive do
   defp photo_layout(_n), do: %{classes: "grid-cols-2 grid-rows-2 aspect-square", visible: 4}
 
   attr :tags, :list, required: true
+  attr :post_id, :string, required: true
+  attr :open_popover_for, :string, default: nil
 
   defp tag_chips(assigns) do
     {first, second, overflow} =
@@ -199,14 +215,34 @@ defmodule CaredeckWeb.FeedLive do
     assigns = assign(assigns, first: first, second: second, overflow: overflow)
 
     ~H"""
-    <p :if={@tags != []} class="px-4 pt-3 text-ink-500 text-sm">
-      &#x2764;
-      <span :if={@first} class="text-ink-900">{@first.first_name} {@first.last_name}</span><span :if={
-        @second
-      }>, <span class="text-ink-900">{@second.first_name} {@second.last_name}</span></span><span :if={
-        @overflow > 0
-      }> and {@overflow} more</span>
-    </p>
+    <div :if={@tags != []} class="px-4 pt-3 relative">
+      <button
+        type="button"
+        phx-click="toggle_tag_popover"
+        phx-value-post-id={@post_id}
+        class="text-ink-500 text-sm hover:text-ink-900 text-left"
+      >
+        &#x2764;
+        <span :if={@first} class="text-ink-900">{@first.first_name} {@first.last_name}</span><span :if={
+          @second
+        }>, <span class="text-ink-900">{@second.first_name} {@second.last_name}</span></span><span :if={
+          @overflow > 0
+        }> and {@overflow} more</span>
+      </button>
+
+      <div
+        :if={@open_popover_for == @post_id}
+        phx-click-away="hide_tag_popover"
+        class="absolute top-full left-4 mt-1 bg-card rounded-card shadow-card border border-divider p-3 z-10 min-w-[200px]"
+      >
+        <p class="text-ink-500 text-xs uppercase tracking-wide mb-2">Tagged residents</p>
+        <ul class="divide-y divide-divider">
+          <li :for={r <- @tags} class="py-1 text-ink-900 text-sm">
+            {r.first_name} {r.last_name}
+          </li>
+        </ul>
+      </div>
+    </div>
     """
   end
 

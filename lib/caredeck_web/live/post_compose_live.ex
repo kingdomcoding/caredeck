@@ -102,7 +102,14 @@ defmodule CaredeckWeb.PostComposeLive do
         all
       end
 
-    {:noreply, assign(socket, audience_ids: next, tag_ids: next)}
+    tag_ids =
+      if MapSet.equal?(socket.assigns.tag_ids, socket.assigns.audience_ids) do
+        next
+      else
+        MapSet.intersection(socket.assigns.tag_ids, next)
+      end
+
+    {:noreply, assign(socket, audience_ids: next, tag_ids: tag_ids)}
   end
 
   def handle_event("toggle_audience", %{"id" => id}, socket) do
@@ -113,7 +120,24 @@ defmodule CaredeckWeb.PostComposeLive do
         MapSet.put(socket.assigns.audience_ids, id)
       end
 
-    {:noreply, assign(socket, audience_ids: audience_ids, tag_ids: audience_ids)}
+    tag_ids = MapSet.intersection(socket.assigns.tag_ids, audience_ids)
+
+    {:noreply, assign(socket, audience_ids: audience_ids, tag_ids: tag_ids)}
+  end
+
+  def handle_event("toggle_tag", %{"id" => id}, socket) do
+    if MapSet.member?(socket.assigns.audience_ids, id) do
+      tag_ids =
+        if MapSet.member?(socket.assigns.tag_ids, id) do
+          MapSet.delete(socket.assigns.tag_ids, id)
+        else
+          MapSet.put(socket.assigns.tag_ids, id)
+        end
+
+      {:noreply, assign(socket, tag_ids: tag_ids)}
+    else
+      {:noreply, socket}
+    end
   end
 
   def handle_event("send", params, socket) do
@@ -360,9 +384,50 @@ defmodule CaredeckWeb.PostComposeLive do
             </li>
           </ul>
         </section>
+
+        <section class="mt-6">
+          <h2 class="text-ink-900 font-medium mb-1">Tag in the post header</h2>
+          <p class="text-ink-500 text-sm mb-2">
+            Tagged residents' names appear publicly under the post. Untag to keep someone in the audience without showing their name.
+          </p>
+
+          <ul
+            :if={MapSet.size(@audience_ids) > 0}
+            class="divide-y divide-divider bg-card rounded-card shadow-card"
+          >
+            <li
+              :for={r <- audience_residents(@residents, @audience_ids)}
+              class="px-4 py-3 flex items-center justify-between hover:bg-page transition"
+            >
+              <span class="text-ink-900">{r.first_name} {r.last_name}</span>
+              <button
+                type="button"
+                phx-click="toggle_tag"
+                phx-value-id={r.id}
+                class={[
+                  "h-5 w-5 rounded-input border-2 flex items-center justify-center text-xs font-bold transition",
+                  if(MapSet.member?(@tag_ids, r.id),
+                    do: "bg-brand border-brand text-white",
+                    else: "bg-card border-divider text-transparent hover:border-brand"
+                  )
+                ]}
+              >
+                &#x2713;
+              </button>
+            </li>
+          </ul>
+
+          <p :if={MapSet.size(@audience_ids) == 0} class="text-ink-500 text-sm">
+            Add residents to the audience first; tags are chosen from that pool.
+          </p>
+        </section>
       </div>
     </Layouts.app>
     """
+  end
+
+  defp audience_residents(residents, audience_ids) do
+    Enum.filter(residents, &MapSet.member?(audience_ids, &1.id))
   end
 
   defp audience_indicator(:all), do: "✓"
