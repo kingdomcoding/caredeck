@@ -1,6 +1,6 @@
 # ADR 005: Mobile delivery via thin native shell
 
-**Status:** Accepted
+**Status:** Superseded by [ADR-011](011-mobile-via-responsive-web.md) on 2026-05-28
 **Date:** 2026-05-26
 
 ## Context
