@@ -27,7 +27,6 @@ Build on **Ash 3.x** with the full first-party extension suite:
 - `AshPaperTrail` for GDPR audit trails
 - `AshArchival` for soft delete with 30-day retention
 - `AshStateMachine` for the Aid application lifecycle and post moderation states
-- `AshAdmin` for the baseline back-office UI
 
 Every resource uses `Caredeck.Resource`, a base macro that wires `AshPaperTrail`, `AshArchival`, `Ash.Notifier.PubSub`, and `Ash.Policy.Authorizer` by default — so the safety defaults can't be forgotten.
 

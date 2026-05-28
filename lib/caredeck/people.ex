@@ -1,9 +1,5 @@
 defmodule Caredeck.People do
-  use Ash.Domain, otp_app: :caredeck, extensions: [AshAdmin.Domain]
-
-  admin do
-    show? true
-  end
+  use Ash.Domain, otp_app: :caredeck
 
   resources do
     resource Caredeck.People.Resident

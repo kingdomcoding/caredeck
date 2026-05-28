@@ -12,7 +12,6 @@
 - **`Caredeck.Accounts.UserNotifier`** — confirmation + password-reset emails with original prose.
 - **Auth routes** — `/sign-in`, `/register`, `/password-reset-request`, `/password-reset/:token`, `/confirm_new_user/:token`, `/sign-out`, plus `/auth/user/*` POST endpoints.
 - **Team auth routes** — `/team/sign-in`, `/team/sign-out`, `/team/auth/team_identity/*`.
-- **`/admin` (AshAdmin)** — both Accounts + Org domains browsable.
 - **`CaredeckWeb.LiveUserAuth`** — 5 `on_mount` callbacks (`:live_user_required`, `:live_team_required`, `:live_no_user`, `:live_no_team`, `:live_signed_in_optional`).
 - **`CaredeckWeb.AuthOverrides`** — branded styling that consumes the Phase 0 design tokens (`rounded-button`, `bg-brand`, `focus:ring-teal-300`, `bg-page`, `border-divider`, etc.).
 - **`Caredeck.Release.migrate/0`** — production-safe migration helper (already from Phase 0).
@@ -44,7 +43,6 @@
 | `/register` | ✅ HTTP 200 |
 | `/password-reset-request` | ✅ HTTP 200 |
 | `/team/sign-in` | ✅ HTTP 200 |
-| `/admin` | ✅ HTTP 200, lists Accounts + Org domains |
 | `/healthz` | ✅ HTTP 200, `text/plain`, body `ok` |
 | ≥ 11 ADRs | ✅ 11 (Phase 0 set; Phase 1 fits inside ADR-002 and ADR-003) |
 | Checkpoint screenshots | ✅ 5 PNGs in this directory |
@@ -55,7 +53,6 @@
 - `team-sign-in.png` — team sign-in variant
 - `register.png` — registration form
 - `password-reset-request.png` — password reset request form
-- `admin.png` — AshAdmin showing Accounts + Org domains
 
 ## What Phase 2 inherits
 

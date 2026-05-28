@@ -22,7 +22,7 @@ The posture has to cover:
 - **AshArchival on every user-data resource.** Soft delete writes `archived_at`; a nightly Oban cron sweeps rows older than 30 days into hard delete.
 - **Data export endpoint** `/my-data` (Phase 13). Returns a JSON dump of every paper-trail Version row plus current rows tied to the requesting user. Authenticated, rate-limited.
 - **Data deletion request** flows through `Caredeck.Accounts.request_deletion/1`. Marks the user account `pending_deletion: true`; a 30-day Oban job hard-deletes once the window elapses unless cancelled.
-- **Subject lookup** is an AshAdmin-only query (Phase 13 hardens auth on AshAdmin).
+- **Subject lookup** is an internal IEx-only query against the Repo (Phase 13 introduces a hardened admin LiveView for this).
 - **Data residency** — production database lives on this box, which is geographically in Germany. No third-party data processors except where contractually bound (email relay).
 
 ## Consequences

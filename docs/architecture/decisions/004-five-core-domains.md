@@ -5,7 +5,7 @@
 
 ## Context
 
-Ash projects benefit from grouping resources into domain modules — each domain is one source of code interfaces, one place to find the resources, and one boundary for downstream tooling (AshAdmin, AshGraphql, AshJsonApi).
+Ash projects benefit from grouping resources into domain modules — each domain is one source of code interfaces, one place to find the resources, and one boundary for downstream tooling (AshGraphql, AshJsonApi).
 
 The product surface has clear clusters:
 

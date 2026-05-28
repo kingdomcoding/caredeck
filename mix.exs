@@ -68,7 +68,6 @@ defmodule Caredeck.MixProject do
       {:ash_paper_trail, "~> 0.5"},
       {:ash_archival, "~> 2.0"},
       {:ash_state_machine, "~> 0.2"},
-      {:ash_admin, "~> 1.1"},
       {:oban, "~> 2.18"},
       {:swoosh, "~> 1.16"},
       {:gen_smtp, "~> 1.2"},

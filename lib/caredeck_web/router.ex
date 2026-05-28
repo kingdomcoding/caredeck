@@ -1,7 +1,6 @@
 defmodule CaredeckWeb.Router do
   use CaredeckWeb, :router
   use AshAuthentication.Phoenix.Router
-  import AshAdmin.Router
 
   @csp_header %{
     "content-security-policy" =>
@@ -61,11 +60,6 @@ defmodule CaredeckWeb.Router do
     end
 
     get "/sign-out", TeamAuthController, :sign_out
-  end
-
-  scope "/" do
-    pipe_through :browser
-    ash_admin("/admin")
   end
 
   if Application.compile_env(:caredeck, :dev_routes) do
