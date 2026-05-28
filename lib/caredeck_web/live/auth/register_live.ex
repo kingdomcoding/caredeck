@@ -85,7 +85,10 @@ defmodule CaredeckWeb.Auth.RegisterLive do
             </div>
 
             <div>
-              <label for="reg_password_confirmation" class="block text-sm font-medium text-ink-700 mb-1">
+              <label
+                for="reg_password_confirmation"
+                class="block text-sm font-medium text-ink-700 mb-1"
+              >
                 Confirm password
               </label>
               <input

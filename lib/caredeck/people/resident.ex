@@ -54,22 +54,20 @@ defmodule Caredeck.People.Resident do
       destination_attribute_on_join_resource :relative_id
     end
 
-    has_many :post_audiences, Caredeck.Feed.PostAudience,
-      destination_attribute: :resident_id
+    has_many :post_audiences, Caredeck.Feed.PostAudience, destination_attribute: :resident_id
 
-    has_many :tag_links, Caredeck.Feed.ResidentTagOnPost,
-      destination_attribute: :resident_id
+    has_many :tag_links, Caredeck.Feed.ResidentTagOnPost, destination_attribute: :resident_id
   end
 
   state_machine do
-    state_attribute :lifecycle_state
-    initial_states [:admitted]
-    default_initial_state :admitted
+    state_attribute(:lifecycle_state)
+    initial_states([:admitted])
+    default_initial_state(:admitted)
 
     transitions do
-      transition :discharge, from: :admitted, to: :discharged
-      transition :mark_deceased, from: [:admitted, :discharged], to: :deceased
-      transition :readmit, from: :discharged, to: :admitted
+      transition(:discharge, from: :admitted, to: :discharged)
+      transition(:mark_deceased, from: [:admitted, :discharged], to: :deceased)
+      transition(:readmit, from: :discharged, to: :admitted)
     end
   end
 
@@ -78,6 +76,7 @@ defmodule Caredeck.People.Resident do
 
     create :create do
       primary? true
+
       accept [
         :facility_id,
         :ward_id,

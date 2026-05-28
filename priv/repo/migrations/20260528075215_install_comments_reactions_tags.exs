@@ -46,7 +46,8 @@ defmodule Caredeck.Repo.Migrations.InstallCommentsReactionsTags do
             name: "resident_tags_on_posts_facility_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :post_id,
           references(:posts,
@@ -54,7 +55,8 @@ defmodule Caredeck.Repo.Migrations.InstallCommentsReactionsTags do
             name: "resident_tags_on_posts_post_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :resident_id,
           references(:residents,
@@ -62,7 +64,8 @@ defmodule Caredeck.Repo.Migrations.InstallCommentsReactionsTags do
             name: "resident_tags_on_posts_resident_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :inserted_at, :utc_datetime_usec,
         null: false,
@@ -113,7 +116,8 @@ defmodule Caredeck.Repo.Migrations.InstallCommentsReactionsTags do
             name: "reactions_facility_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :post_id,
           references(:posts,
@@ -121,7 +125,8 @@ defmodule Caredeck.Repo.Migrations.InstallCommentsReactionsTags do
             name: "reactions_post_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :user_id,
           references(:users,
@@ -129,7 +134,8 @@ defmodule Caredeck.Repo.Migrations.InstallCommentsReactionsTags do
             name: "reactions_user_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :kind, :text, null: false, default: "like"
 
@@ -182,7 +188,8 @@ defmodule Caredeck.Repo.Migrations.InstallCommentsReactionsTags do
             name: "comments_facility_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :post_id,
           references(:posts,
@@ -190,7 +197,8 @@ defmodule Caredeck.Repo.Migrations.InstallCommentsReactionsTags do
             name: "comments_post_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :author_user_id,
           references(:users,
@@ -198,7 +206,8 @@ defmodule Caredeck.Repo.Migrations.InstallCommentsReactionsTags do
             name: "comments_author_user_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :body, :text, null: false
       add :edited_at, :utc_datetime_usec

@@ -139,7 +139,12 @@ defmodule Caredeck.Release.Seeds do
     Enum.each(extras, &find_or_create_extra_post(facility, &1))
   end
 
-  defp find_or_create_extra_post(facility, %{team: handle, body: body, photo_count: n, audience: aud_n}) do
+  defp find_or_create_extra_post(facility, %{
+         team: handle,
+         body: body,
+         photo_count: n,
+         audience: aud_n
+       }) do
     {:ok, team} =
       Ash.read_one(
         Accounts.TeamIdentity |> Ash.Query.filter(handle == ^handle),

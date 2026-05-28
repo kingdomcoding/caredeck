@@ -167,7 +167,10 @@ defmodule CaredeckWeb.PostLive do
           </header>
           <p class="px-4 py-3 text-ink-900 whitespace-pre-wrap">{@post.body}</p>
 
-          <div :if={@post.attachments != []} class={["grid gap-1 bg-page", grid_classes(length(@post.attachments))]}>
+          <div
+            :if={@post.attachments != []}
+            class={["grid gap-1 bg-page", grid_classes(length(@post.attachments))]}
+          >
             <div :for={att <- Enum.take(@post.attachments, 4)} class="relative overflow-hidden">
               <img src={~p"/attachments/#{att.s3_key}"} class="h-full w-full object-cover" alt="" />
             </div>
@@ -185,7 +188,10 @@ defmodule CaredeckWeb.PostLive do
             <li :for={comment <- @post.comments} class="py-3">
               <p class="text-ink-900 text-sm font-medium">
                 {comment.author.email}
-                <span :if={label = relationship_label(@relationships, comment.author_user_id)} class="text-ink-500 font-normal">
+                <span
+                  :if={label = relationship_label(@relationships, comment.author_user_id)}
+                  class="text-ink-500 font-normal"
+                >
                   &middot; {label}
                 </span>
               </p>

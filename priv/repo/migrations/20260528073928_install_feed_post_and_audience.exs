@@ -46,7 +46,8 @@ defmodule Caredeck.Repo.Migrations.InstallFeedPostAndAudience do
             name: "posts_facility_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :team_identity_id,
           references(:team_identities,
@@ -54,7 +55,8 @@ defmodule Caredeck.Repo.Migrations.InstallFeedPostAndAudience do
             name: "posts_team_identity_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :body, :text, null: false
       add :is_internal, :boolean, default: false
@@ -110,7 +112,8 @@ defmodule Caredeck.Repo.Migrations.InstallFeedPostAndAudience do
             name: "post_audiences_facility_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :post_id,
           references(:posts,
@@ -118,7 +121,8 @@ defmodule Caredeck.Repo.Migrations.InstallFeedPostAndAudience do
             name: "post_audiences_post_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :resident_id,
           references(:residents,
@@ -126,7 +130,8 @@ defmodule Caredeck.Repo.Migrations.InstallFeedPostAndAudience do
             name: "post_audiences_resident_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :inserted_at, :utc_datetime_usec,
         null: false,

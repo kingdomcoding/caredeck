@@ -46,7 +46,8 @@ defmodule Caredeck.Repo.Migrations.InstallCaregiverProfile do
             name: "caregiver_profiles_facility_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :user_id,
           references(:users,
@@ -54,7 +55,8 @@ defmodule Caredeck.Repo.Migrations.InstallCaregiverProfile do
             name: "caregiver_profiles_user_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :display_name, :text, null: false
       add :role_label, :text

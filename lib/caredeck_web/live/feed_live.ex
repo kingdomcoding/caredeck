@@ -164,7 +164,12 @@ defmodule CaredeckWeb.FeedLive do
 
     ~H"""
     <p :if={@tags != []} class="px-4 pt-3 text-ink-500 text-sm">
-      &#x2764; <span :if={@first} class="text-ink-900">{@first.first_name} {@first.last_name}</span><span :if={@second}>, <span class="text-ink-900">{@second.first_name} {@second.last_name}</span></span><span :if={@overflow > 0}> and {@overflow} more</span>
+      &#x2764;
+      <span :if={@first} class="text-ink-900">{@first.first_name} {@first.last_name}</span><span :if={
+        @second
+      }>, <span class="text-ink-900">{@second.first_name} {@second.last_name}</span></span><span :if={
+        @overflow > 0
+      }> and {@overflow} more</span>
     </p>
     """
   end

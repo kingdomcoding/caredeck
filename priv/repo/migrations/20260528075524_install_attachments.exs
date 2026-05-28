@@ -46,7 +46,8 @@ defmodule Caredeck.Repo.Migrations.InstallAttachments do
             name: "attachments_facility_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :post_id,
           references(:posts,
@@ -54,7 +55,8 @@ defmodule Caredeck.Repo.Migrations.InstallAttachments do
             name: "attachments_post_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :kind, :text, null: false
       add :s3_key, :text, null: false

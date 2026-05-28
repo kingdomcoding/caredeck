@@ -67,7 +67,8 @@ defmodule Caredeck.Repo.Migrations.InstallRelatives do
             name: "relatives_of_residents_facility_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :resident_id,
           references(:residents,
@@ -75,7 +76,8 @@ defmodule Caredeck.Repo.Migrations.InstallRelatives do
             name: "relatives_of_residents_resident_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :relative_id, :uuid, null: false
       add :relationship, :text, null: false
@@ -127,7 +129,8 @@ defmodule Caredeck.Repo.Migrations.InstallRelatives do
             name: "relatives_facility_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :user_id,
           references(:users,
@@ -135,7 +138,8 @@ defmodule Caredeck.Repo.Migrations.InstallRelatives do
             name: "relatives_user_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :display_name, :text
       add :phone, :text

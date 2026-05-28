@@ -61,8 +61,7 @@ defmodule Caredeck.Feed.Attachment do
       ]
 
       change after_action(fn _changeset, attachment, _ctx ->
-               case {attachment.kind,
-                     Application.get_env(:caredeck, :thumbnailer_mode, :async)} do
+               case {attachment.kind, Application.get_env(:caredeck, :thumbnailer_mode, :async)} do
                  {:photo, :async} ->
                    %{attachment_id: attachment.id, facility_id: attachment.facility_id}
                    |> Caredeck.Workers.Thumbnailer.new()

@@ -36,8 +36,7 @@ defmodule Caredeck.Feed.Post do
     belongs_to :facility, Caredeck.Org.Facility, allow_nil?: false
     belongs_to :team_identity, Caredeck.Accounts.TeamIdentity, allow_nil?: false
 
-    has_many :audience_links, Caredeck.Feed.PostAudience,
-      destination_attribute: :post_id
+    has_many :audience_links, Caredeck.Feed.PostAudience, destination_attribute: :post_id
 
     many_to_many :audience, Caredeck.People.Resident do
       through Caredeck.Feed.PostAudience
@@ -52,8 +51,7 @@ defmodule Caredeck.Feed.Post do
       destination_attribute: :post_id,
       sort: [position: :asc]
 
-    has_many :resident_tag_links, Caredeck.Feed.ResidentTagOnPost,
-      destination_attribute: :post_id
+    has_many :resident_tag_links, Caredeck.Feed.ResidentTagOnPost, destination_attribute: :post_id
 
     many_to_many :resident_tags, Caredeck.People.Resident do
       through Caredeck.Feed.ResidentTagOnPost
@@ -68,6 +66,14 @@ defmodule Caredeck.Feed.Post do
     create :create do
       primary? true
       accept [:facility_id, :team_identity_id, :body, :is_internal]
+
+      change after_action(fn _changeset, post, _ctx ->
+               %{post_id: post.id, facility_id: post.facility_id}
+               |> Caredeck.Workers.NotificationFanout.new()
+               |> Oban.insert()
+
+               {:ok, post}
+             end)
     end
 
     update :update do

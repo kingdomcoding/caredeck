@@ -45,7 +45,8 @@ defmodule Caredeck.Repo.Migrations.InstallResidents do
             name: "residents_facility_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :first_name, :text, null: false
       add :last_name, :text, null: false
