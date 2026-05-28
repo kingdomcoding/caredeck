@@ -38,7 +38,8 @@ defmodule CaredeckWeb.PostLive do
        |> assign(:relationships, relationships)
        |> assign(:body, "")
        |> assign(:show_likers, false)
-       |> assign(:likers, [])}
+       |> assign(:likers, [])
+       |> assign(:editing_comment_id, nil)}
     else
       {:ok,
        socket
@@ -105,6 +106,71 @@ defmodule CaredeckWeb.PostLive do
     post = load_post(facility, socket.assigns.post.id, current_actor(socket))
     relationships = load_relationships(facility, post)
     {:noreply, socket |> assign(:post, post) |> assign(:relationships, relationships)}
+  end
+
+  def handle_event("edit_comment", %{"id" => id}, socket) do
+    {:noreply, assign(socket, :editing_comment_id, id)}
+  end
+
+  def handle_event("cancel_edit", _params, socket) do
+    {:noreply, assign(socket, :editing_comment_id, nil)}
+  end
+
+  def handle_event("save_comment", %{"comment_id" => id, "body" => body}, socket) do
+    facility = socket.assigns.current_facility
+    user = socket.assigns.current_user
+
+    case Ash.get(Caredeck.Feed.Comment, id, tenant: facility.id, actor: user) do
+      {:ok, comment} ->
+        result =
+          comment
+          |> Ash.Changeset.for_update(:update, %{body: String.trim(body)},
+            tenant: facility.id,
+            actor: user
+          )
+          |> Ash.update()
+
+        case result do
+          {:ok, _} ->
+            post = load_post(facility, socket.assigns.post.id, user)
+            relationships = load_relationships(facility, post)
+
+            {:noreply,
+             socket
+             |> assign(:post, post)
+             |> assign(:relationships, relationships)
+             |> assign(:editing_comment_id, nil)}
+
+          {:error, _err} ->
+            {:noreply,
+             socket
+             |> put_flash(:error, "Edit window has closed.")
+             |> assign(:editing_comment_id, nil)}
+        end
+
+      _ ->
+        {:noreply, put_flash(socket, :error, "Comment not found.")}
+    end
+  end
+
+  def handle_event("delete_comment", %{"id" => id}, socket) do
+    facility = socket.assigns.current_facility
+    user = socket.assigns.current_user
+
+    case Ash.get(Caredeck.Feed.Comment, id, tenant: facility.id, actor: user) do
+      {:ok, comment} ->
+        Ash.destroy!(comment, tenant: facility.id, actor: user)
+        post = load_post(facility, socket.assigns.post.id, user)
+        relationships = load_relationships(facility, post)
+
+        {:noreply,
+         socket
+         |> assign(:post, post)
+         |> assign(:relationships, relationships)}
+
+      _ ->
+        {:noreply, socket}
+    end
   end
 
   def handle_event("show_likers", _params, socket) do
@@ -260,8 +326,48 @@ defmodule CaredeckWeb.PostLive do
                   &middot; {label}
                 </span>
               </p>
-              <p class="text-ink-900 text-sm mt-1 whitespace-pre-wrap">{comment.body}</p>
-              <p class="text-ink-500 text-xs mt-1">{format_time(comment.inserted_at)}</p>
+
+              <%= if @editing_comment_id == comment.id do %>
+                <form phx-submit="save_comment" class="mt-1 flex items-start gap-2">
+                  <input type="hidden" name="comment_id" value={comment.id} />
+                  <textarea
+                    name="body"
+                    rows="2"
+                    class="flex-1 rounded-input border border-divider px-3 py-2 text-sm text-ink-900 focus:outline-none focus:ring-2 focus:ring-brand"
+                  >{comment.body}</textarea>
+                  <button type="submit" class="rounded-button bg-brand text-white px-3 py-2 text-sm">
+                    Save
+                  </button>
+                  <button type="button" phx-click="cancel_edit" class="text-ink-500 text-sm px-2">
+                    Cancel
+                  </button>
+                </form>
+              <% else %>
+                <p class="text-ink-900 text-sm mt-1 whitespace-pre-wrap">{comment.body}</p>
+                <p class="text-ink-500 text-xs mt-1">
+                  {format_time(comment.inserted_at)}
+                  <span :if={comment.edited_at}>· edited</span>
+                  <button
+                    :if={can_edit_comment?(comment, @current_user)}
+                    type="button"
+                    phx-click="edit_comment"
+                    phx-value-id={comment.id}
+                    class="ml-2 text-brand hover:text-brand-strong"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    :if={can_delete_comment?(comment, @current_user)}
+                    type="button"
+                    phx-click="delete_comment"
+                    phx-value-id={comment.id}
+                    phx-confirm="Delete this comment?"
+                    class="ml-2 text-ink-500 hover:text-like-red"
+                  >
+                    Delete
+                  </button>
+                </p>
+              <% end %>
             </li>
           </ul>
 
@@ -329,6 +435,17 @@ defmodule CaredeckWeb.PostLive do
   defp liked_by_actor?(post, user) do
     Enum.any?(post.reactions, &(&1.user_id == user.id))
   end
+
+  defp can_edit_comment?(_comment, nil), do: false
+
+  defp can_edit_comment?(comment, user) do
+    comment.author_user_id == user.id and
+      DateTime.diff(DateTime.utc_now(), comment.inserted_at, :second) <= 300
+  end
+
+  defp can_delete_comment?(_comment, nil), do: false
+
+  defp can_delete_comment?(comment, user), do: comment.author_user_id == user.id
 
   defp grid_classes(1), do: "grid-cols-1 aspect-square"
   defp grid_classes(2), do: "grid-cols-2 aspect-[2/1]"

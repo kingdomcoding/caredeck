@@ -84,7 +84,7 @@ defmodule CaredeckWeb.FeedLive do
         </p>
 
         <article :for={post <- @posts} class="bg-card rounded-card shadow-card mb-4 overflow-hidden">
-          <.post_header post={post} />
+          <.post_header post={post} current_team={@current_team} />
           <.post_body post={post} />
           <.attachment_grid attachments={post.attachments} />
           <.tag_chips tags={post.resident_tags} />
@@ -104,6 +104,7 @@ defmodule CaredeckWeb.FeedLive do
   end
 
   attr :post, :map, required: true
+  attr :current_team, :map, default: nil
 
   defp post_header(assigns) do
     ~H"""
@@ -114,9 +115,19 @@ defmodule CaredeckWeb.FeedLive do
         </div>
         <div>
           <p class="text-ink-900 font-medium leading-tight">{@post.team_identity.name}</p>
-          <p class="text-ink-500 text-xs">{format_time(@post.inserted_at)}</p>
+          <p class="text-ink-500 text-xs">
+            {format_time(@post.inserted_at)}
+            <span :if={@post.edited_at}>· edited</span>
+          </p>
         </div>
       </div>
+      <.link
+        :if={@current_team && @current_team.id == @post.team_identity_id}
+        navigate={~p"/feed/compose/#{@post.id}"}
+        class="text-brand text-xs hover:text-brand-strong"
+      >
+        Edit
+      </.link>
     </header>
     """
   end
