@@ -172,7 +172,7 @@ defmodule CaredeckWeb.PostLive do
             class={["grid gap-1 bg-page", grid_classes(length(@post.attachments))]}
           >
             <div :for={att <- Enum.take(@post.attachments, 4)} class="relative overflow-hidden">
-              <img src={~p"/attachments/#{att.s3_key}"} class="h-full w-full object-cover" alt="" />
+              <img src={"/attachments/" <> att.s3_key} class="h-full w-full object-cover" alt="" />
             </div>
           </div>
         </article>

@@ -2,7 +2,7 @@ defmodule Caredeck.Repo.Migrations.AddObanJobs do
   use Ecto.Migration
 
   def up do
-    Oban.Migration.up()
+    Oban.Migration.up(version: 12)
   end
 
   def down do

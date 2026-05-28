@@ -126,7 +126,7 @@ defmodule CaredeckWeb.FeedLive do
         :for={{photo, idx} <- Enum.with_index(@visible)}
         class="relative overflow-hidden"
       >
-        <img src={~p"/attachments/#{photo.s3_key}"} class="h-full w-full object-cover" alt="" />
+        <img src={"/attachments/" <> photo.s3_key} class="h-full w-full object-cover" alt="" />
         <div
           :if={@overflow > 0 and idx == @layout.visible - 1}
           class="absolute inset-0 bg-black/40 flex items-center justify-center text-white text-display-sm"
