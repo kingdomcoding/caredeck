@@ -17,7 +17,8 @@ defmodule Caredeck.Repo.Migrations.InstallKitchenDomain do
             name: "kitchen_menu_template_slots_facility_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :menu_template_id, :uuid, null: false
       add :day_of_week, :text, null: false
@@ -62,7 +63,8 @@ defmodule Caredeck.Repo.Migrations.InstallKitchenDomain do
             name: "kitchen_menu_templates_facility_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :name, :text, null: false
       add :is_active, :boolean, default: false
@@ -92,7 +94,8 @@ defmodule Caredeck.Repo.Migrations.InstallKitchenDomain do
             name: "kitchen_resident_diet_profiles_facility_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :resident_id,
           references(:residents,
@@ -100,7 +103,8 @@ defmodule Caredeck.Repo.Migrations.InstallKitchenDomain do
             name: "kitchen_resident_diet_profiles_resident_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :allergens, {:array, :text}, default: []
       add :preferences, {:array, :text}, default: []
@@ -143,7 +147,8 @@ defmodule Caredeck.Repo.Migrations.InstallKitchenDomain do
             name: "kitchen_products_facility_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :name, :text, null: false
       add :category, :text, null: false
@@ -178,7 +183,8 @@ defmodule Caredeck.Repo.Migrations.InstallKitchenDomain do
             name: "kitchen_menu_templates_versions_version_source_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :changes, :map
 
@@ -203,7 +209,8 @@ defmodule Caredeck.Repo.Migrations.InstallKitchenDomain do
             name: "kitchen_products_versions_version_source_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :changes, :map
 
@@ -228,7 +235,8 @@ defmodule Caredeck.Repo.Migrations.InstallKitchenDomain do
             name: "kitchen_resident_diet_profiles_versions_version_source_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :changes, :map
 
@@ -267,7 +275,8 @@ defmodule Caredeck.Repo.Migrations.InstallKitchenDomain do
             name: "kitchen_day_menu_slots_facility_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :day_menu_id, :uuid, null: false
       add :category, :text, null: false
@@ -300,7 +309,8 @@ defmodule Caredeck.Repo.Migrations.InstallKitchenDomain do
             name: "kitchen_day_menu_slots_versions_version_source_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :changes, :map
 
@@ -352,7 +362,8 @@ defmodule Caredeck.Repo.Migrations.InstallKitchenDomain do
             name: "kitchen_day_menus_facility_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :date, :date, null: false
       add :notes, :text
@@ -382,7 +393,8 @@ defmodule Caredeck.Repo.Migrations.InstallKitchenDomain do
             name: "kitchen_resident_meal_orders_facility_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :resident_id,
           references(:residents,
@@ -390,7 +402,8 @@ defmodule Caredeck.Repo.Migrations.InstallKitchenDomain do
             name: "kitchen_resident_meal_orders_resident_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :date, :date, null: false
       add :category, :text, null: false
@@ -401,7 +414,8 @@ defmodule Caredeck.Repo.Migrations.InstallKitchenDomain do
             name: "kitchen_resident_meal_orders_product_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :state, :text, null: false, default: "ordered"
       add :ordered_by_user_id, :uuid
@@ -438,7 +452,8 @@ defmodule Caredeck.Repo.Migrations.InstallKitchenDomain do
             name: "kitchen_menu_template_slots_versions_version_source_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :changes, :map
 
@@ -463,7 +478,8 @@ defmodule Caredeck.Repo.Migrations.InstallKitchenDomain do
             name: "kitchen_resident_meal_orders_versions_version_source_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :changes, :map
 

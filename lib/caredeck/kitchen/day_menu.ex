@@ -32,8 +32,7 @@ defmodule Caredeck.Kitchen.DayMenu do
   relationships do
     belongs_to :facility, Caredeck.Org.Facility, allow_nil?: false
 
-    has_many :slots, Caredeck.Kitchen.DayMenuSlot,
-      destination_attribute: :day_menu_id
+    has_many :slots, Caredeck.Kitchen.DayMenuSlot, destination_attribute: :day_menu_id
   end
 
   actions do

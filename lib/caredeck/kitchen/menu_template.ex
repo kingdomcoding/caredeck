@@ -33,8 +33,7 @@ defmodule Caredeck.Kitchen.MenuTemplate do
   relationships do
     belongs_to :facility, Caredeck.Org.Facility, allow_nil?: false
 
-    has_many :slots, Caredeck.Kitchen.MenuTemplateSlot,
-      destination_attribute: :menu_template_id
+    has_many :slots, Caredeck.Kitchen.MenuTemplateSlot, destination_attribute: :menu_template_id
   end
 
   actions do

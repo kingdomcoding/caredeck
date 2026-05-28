@@ -1,6 +1,7 @@
 defmodule Caredeck.Release.Seeds do
   alias Caredeck.Accounts
   alias Caredeck.Feed
+  alias Caredeck.Kitchen
   alias Caredeck.Org
   alias Caredeck.People
   alias Caredeck.Release.NamePool
@@ -14,7 +15,8 @@ defmodule Caredeck.Release.Seeds do
   @team_seeds [
     %{name: "Team Care", handle: "team-care", role_kind: :care},
     %{name: "Team Activities", handle: "team-activities", role_kind: :activities},
-    %{name: "Team Therapy", handle: "team-therapy", role_kind: :therapy}
+    %{name: "Team Therapy", handle: "team-therapy", role_kind: :therapy},
+    %{name: "Team Kitchen", handle: "team-kitchen", role_kind: :kitchen}
   ]
 
   @resident_count 30
@@ -58,6 +60,7 @@ defmodule Caredeck.Release.Seeds do
     end
 
     seed_extra_posts(facility)
+    seed_kitchen(facility)
 
     resident_count =
       People.Resident
@@ -97,7 +100,11 @@ defmodule Caredeck.Release.Seeds do
     IO.puts("")
     IO.puts("Sandbox facility ready.")
     IO.puts("  Relative: #{@relative_email} / #{@demo_password}")
-    IO.puts("  Teams:    team-care · team-activities · team-therapy / #{@demo_password}")
+
+    IO.puts(
+      "  Teams:    team-care · team-activities · team-therapy · team-kitchen / #{@demo_password}"
+    )
+
     IO.puts("  Residents:   #{resident_count}")
     IO.puts("  Relatives:   #{relative_count}")
     IO.puts("  Posts:       #{post_count}")
@@ -106,6 +113,77 @@ defmodule Caredeck.Release.Seeds do
     IO.puts("  Tags:        #{tag_count}")
     IO.puts("  Attachments: #{attachment_count}")
     IO.puts("")
+
+    :ok
+  end
+
+  @kitchen_products [
+    {:breakfast, ["Granola bowl", "Porridge", "Scrambled eggs"]},
+    {:lunch, ["Schnitzel", "Vegetable curry", "Pasta primavera"]},
+    {:dinner, ["Soup of the day", "Fish & potatoes", "Chickpea stew"]},
+    {:drinks, ["Apple juice", "Herbal tea", "Mineral water"]},
+    {:fruit, ["Apple", "Banana", "Seasonal mix"]},
+    {:snack, ["Yogurt", "Pretzel", "Trail mix"]}
+  ]
+
+  defp seed_kitchen(facility) do
+    existing_count =
+      Kitchen.Product
+      |> Ash.read!(tenant: facility.id, authorize?: false)
+      |> length()
+
+    if existing_count == 0 do
+      products =
+        Enum.flat_map(@kitchen_products, fn {cat, names} ->
+          Enum.map(names, fn name ->
+            Kitchen.Product
+            |> Ash.Changeset.for_create(
+              :create,
+              %{
+                facility_id: facility.id,
+                name: name,
+                category: cat,
+                is_default: true
+              },
+              tenant: facility.id,
+              authorize?: false
+            )
+            |> Ash.create!(tenant: facility.id, authorize?: false)
+          end)
+        end)
+
+      template =
+        Kitchen.MenuTemplate
+        |> Ash.Changeset.for_create(
+          :create,
+          %{facility_id: facility.id, name: "Default week", is_active: true},
+          tenant: facility.id,
+          authorize?: false
+        )
+        |> Ash.create!(tenant: facility.id, authorize?: false)
+
+      product_by_category = Enum.group_by(products, & &1.category)
+
+      for day <- ~w(monday tuesday wednesday thursday friday saturday sunday)a,
+          cat <- Kitchen.MealCategory.all() do
+        product = product_by_category |> Map.fetch!(cat) |> hd()
+
+        Kitchen.MenuTemplateSlot
+        |> Ash.Changeset.for_create(
+          :create,
+          %{
+            facility_id: facility.id,
+            menu_template_id: template.id,
+            day_of_week: day,
+            category: cat,
+            product_id: product.id
+          },
+          tenant: facility.id,
+          authorize?: false
+        )
+        |> Ash.create!(tenant: facility.id, authorize?: false)
+      end
+    end
 
     :ok
   end
