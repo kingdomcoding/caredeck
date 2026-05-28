@@ -295,14 +295,18 @@ defmodule CaredeckWeb.PostComposeLive do
               name="is_internal"
               value="true"
               checked={@is_internal}
+              class="h-5 w-5 rounded border-divider text-brand focus:ring-brand"
             />
             <span class="text-sm">Internal post (team only)</span>
           </label>
 
           <section class="mb-4">
             <h2 class="text-ink-900 font-medium mb-2">Photos</h2>
-            <.live_file_input upload={@uploads.photos} class="text-sm" />
-            <div class="flex gap-2 mt-2 flex-wrap">
+            <.live_file_input
+              upload={@uploads.photos}
+              class="block w-full text-sm text-ink-500 file:mr-4 file:py-2 file:px-4 file:rounded-button file:border-0 file:text-sm file:font-medium file:bg-brand-soft file:text-brand hover:file:bg-brand hover:file:text-white file:cursor-pointer"
+            />
+            <div class="flex gap-2 mt-3 flex-wrap">
               <article :for={entry <- @uploads.photos.entries} class="w-20 h-20">
                 <.live_img_preview entry={entry} class="w-20 h-20 object-cover rounded-input" />
               </article>
@@ -336,6 +340,7 @@ defmodule CaredeckWeb.PostComposeLive do
                 phx-click="toggle_audience"
                 phx-value-id={r.id}
                 checked={MapSet.member?(@audience_ids, r.id)}
+                class="h-5 w-5 rounded border-divider text-brand focus:ring-brand cursor-pointer"
               />
             </li>
           </ul>

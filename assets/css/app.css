@@ -39,6 +39,8 @@
   --color-teal-800: #0f5e54;
   --color-teal-900: #0a3c35;
   --color-brand: var(--color-teal-500);
+  --color-brand-soft: var(--color-teal-100);
+  --color-brand-strong: var(--color-teal-700);
 
   --color-like-red: #ef4444;
 
