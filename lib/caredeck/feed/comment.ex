@@ -88,7 +88,8 @@ defmodule Caredeck.Feed.Comment do
       authorize_if expr(
                      ^actor(:__struct__) == Caredeck.Accounts.User and
                        author_user_id == ^actor(:id) and
-                       exists(post.audience.relative_links.relative, user_id == ^actor(:id))
+                       (post.is_internal == false or
+                          exists(post.audience.relative_links.relative, user_id == ^actor(:id)))
                    )
     end
 
