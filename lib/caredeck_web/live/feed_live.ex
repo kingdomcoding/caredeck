@@ -169,7 +169,8 @@ defmodule CaredeckWeb.FeedLive do
         controls
         preload="metadata"
         class="w-full"
-      ></audio>
+      >
+      </audio>
     </div>
     """
   end

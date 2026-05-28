@@ -291,7 +291,8 @@ defmodule CaredeckWeb.PostLive do
               controls
               preload="metadata"
               class="w-full"
-            ></audio>
+            >
+            </audio>
           </div>
 
           <div class="px-4 py-3 flex items-center gap-4 text-ink-500 text-sm border-t border-divider">
