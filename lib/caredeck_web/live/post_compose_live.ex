@@ -11,6 +11,12 @@ defmodule CaredeckWeb.PostComposeLive do
     max_file_size: 10_000_000
   ]
 
+  @audio_upload_opts [
+    accept: :any,
+    max_entries: 1,
+    max_file_size: 8_000_000
+  ]
+
   @impl true
   def mount(%{"edit_post_id" => id}, _session, socket) do
     facility = socket.assigns.current_facility
@@ -34,9 +40,10 @@ defmodule CaredeckWeb.PostComposeLive do
          |> assign(:audience_ids, MapSet.new(Enum.map(post.audience, & &1.id)))
          |> assign(:tag_ids, MapSet.new(Enum.map(post.resident_tags, & &1.id)))
          |> assign(:existing_attachments, post.attachments)
-         |> assign(:pending_audio, nil)
+         |> assign(:audio_duration_sec, 0)
          |> assign(:page_title, "Edit post")
-         |> allow_upload(:photos, @upload_opts)}
+         |> allow_upload(:photos, @upload_opts)
+         |> allow_upload(:audio_notes, @audio_upload_opts)}
 
       _ ->
         {:ok,
@@ -60,9 +67,10 @@ defmodule CaredeckWeb.PostComposeLive do
      |> assign(:audience_ids, MapSet.new())
      |> assign(:tag_ids, MapSet.new())
      |> assign(:existing_attachments, [])
-     |> assign(:pending_audio, nil)
+     |> assign(:audio_duration_sec, 0)
      |> assign(:page_title, "New post")
-     |> allow_upload(:photos, @upload_opts)}
+     |> allow_upload(:photos, @upload_opts)
+     |> allow_upload(:audio_notes, @audio_upload_opts)}
   end
 
   defp residents(nil), do: []
@@ -142,40 +150,17 @@ defmodule CaredeckWeb.PostComposeLive do
     end
   end
 
-  def handle_event("request_audio_url", %{"filename" => filename}, socket) do
-    facility = socket.assigns.current_facility
-
-    case facility do
-      nil ->
-        {:reply, %{error: "no_facility"}, socket}
-
-      _ ->
-        {:ok, presigned} =
-          Attachment
-          |> Ash.ActionInput.for_action(
-            :request_upload_url,
-            %{facility_id: facility.id, kind: :audio, filename: filename},
-            authorize?: false
-          )
-          |> Ash.run_action()
-
-        {:reply, %{presigned: presigned}, socket}
-    end
-  end
-
-  def handle_event("audio_uploaded", params, socket) do
-    pending = %{
-      s3_key: params["s3_key"],
-      mime_type: params["mime_type"],
-      bytes: params["bytes"] || 0,
-      duration_sec: params["duration_sec"] || 0
-    }
-
-    {:noreply, assign(socket, :pending_audio, pending)}
+  def handle_event("audio_recorded", %{"duration_sec" => seconds}, socket) do
+    {:noreply, assign(socket, :audio_duration_sec, seconds)}
   end
 
   def handle_event("discard_audio", _params, socket) do
-    {:noreply, assign(socket, :pending_audio, nil)}
+    socket =
+      Enum.reduce(socket.assigns.uploads.audio_notes.entries, socket, fn entry, acc ->
+        cancel_upload(acc, :audio_notes, entry.ref)
+      end)
+
+    {:noreply, assign(socket, :audio_duration_sec, 0)}
   end
 
   def handle_event("toggle_tag", %{"id" => id}, socket) do
@@ -211,7 +196,7 @@ defmodule CaredeckWeb.PostComposeLive do
         sync_audience(post, socket.assigns.audience_ids, facility, team)
         sync_tags(post, socket.assigns.tag_ids, facility, team)
         upload_attachments(socket, post, facility, team)
-        attach_audio(socket.assigns.pending_audio, post, facility, team)
+        upload_audio(socket, post, facility, team)
         enqueue_post_fanout(socket, post)
 
         {:noreply,
@@ -229,26 +214,34 @@ defmodule CaredeckWeb.PostComposeLive do
 
   defp enqueue_post_fanout(_, _), do: :ok
 
-  defp attach_audio(nil, _post, _facility, _team), do: :ok
+  defp upload_audio(socket, post, facility, team) do
+    duration = socket.assigns.audio_duration_sec
 
-  defp attach_audio(audio, post, facility, team) do
-    Attachment
-    |> Ash.Changeset.for_create(
-      :create,
-      %{
-        facility_id: facility.id,
-        post_id: post.id,
-        kind: :audio,
-        s3_key: audio.s3_key,
-        mime_type: audio.mime_type,
-        bytes: audio.bytes,
-        duration_sec: audio.duration_sec,
-        position: 99
-      },
-      tenant: facility.id,
-      actor: team
-    )
-    |> Ash.create!(tenant: facility.id, actor: team)
+    consume_uploaded_entries(socket, :audio_notes, fn %{path: path}, entry ->
+      key = Feed.S3.generate_key("audios", entry.client_name)
+      {:ok, body} = File.read(path)
+      {:ok, _} = Feed.S3.put_object(key, body, entry.client_type)
+
+      Attachment
+      |> Ash.Changeset.for_create(
+        :create,
+        %{
+          facility_id: facility.id,
+          post_id: post.id,
+          kind: :audio,
+          s3_key: key,
+          mime_type: entry.client_type,
+          bytes: entry.client_size,
+          duration_sec: duration,
+          position: 99
+        },
+        tenant: facility.id,
+        actor: team
+      )
+      |> Ash.create!(tenant: facility.id, actor: team)
+
+      {:ok, key}
+    end)
   end
 
   defp persist_post(%{assigns: %{mode: :new}}, body, is_internal?, facility, team) do
@@ -510,6 +503,7 @@ defmodule CaredeckWeb.PostComposeLive do
               id="audio-recorder"
               phx-hook="AudioRecorder"
               phx-update="ignore"
+              data-upload-target={@uploads.audio_notes.ref}
               class="border border-divider rounded-card p-3 bg-card"
             >
               <p class="text-ink-500 text-xs mb-2">
@@ -527,6 +521,7 @@ defmodule CaredeckWeb.PostComposeLive do
                 <button
                   type="button"
                   data-role="discard"
+                  phx-click="discard_audio"
                   class="text-like-red text-sm underline hidden"
                 >
                   Discard
@@ -535,8 +530,15 @@ defmodule CaredeckWeb.PostComposeLive do
               <audio data-role="preview" controls class="w-full mt-3 hidden"></audio>
               <p data-role="status" class="text-ink-300 text-xs mt-2"></p>
             </div>
-            <p :if={@pending_audio} class="text-ink-500 text-xs mt-2">
-              Voice note attached ({@pending_audio.duration_sec}s). Hit Send post to publish.
+            <.live_file_input upload={@uploads.audio_notes} class="sr-only" />
+            <p
+              :for={err <- upload_errors(@uploads.audio_notes)}
+              class="text-red-600 text-xs mt-1"
+            >
+              {error_to_string(err)}
+            </p>
+            <p :if={@uploads.audio_notes.entries != []} class="text-ink-500 text-xs mt-2">
+              Voice note attached ({@audio_duration_sec}s). Hit Send post to publish.
             </p>
           </section>
         </form>

@@ -55,30 +55,21 @@ defmodule CaredeckWeb.AudioCaptureTest do
     %{facility: facility, team: team, resident: resident}
   end
 
-  test "request_audio_url replies with an s3_key + presigned PUT URL", ctx do
+  test "uploading an audio_notes entry + submit creates an Attachment of kind :audio", ctx do
+    audio_bytes = <<0::size(2000)-unit(8)>>
+
     conn = sign_in_team(ctx.conn, ctx.team)
     {:ok, view, _html} = live(conn, ~p"/feed/compose")
 
-    rendered =
-      view
-      |> element("#audio-recorder")
-      |> render_hook("request_audio_url", %{"filename" => "voice-test.webm"})
+    upload = file_input(view, "form", :audio_notes, [
+      %{name: "voice-test.webm", content: audio_bytes, type: "audio/webm"}
+    ])
 
-    assert is_binary(rendered)
-  end
-
-  test "audio_uploaded + submit creates an Attachment row of kind :audio", ctx do
-    conn = sign_in_team(ctx.conn, ctx.team)
-    {:ok, view, _html} = live(conn, ~p"/feed/compose")
+    render_upload(upload, "voice-test.webm")
 
     view
     |> element("#audio-recorder")
-    |> render_hook("audio_uploaded", %{
-      "s3_key" => "audios/voice-test.webm",
-      "mime_type" => "audio/webm;codecs=opus",
-      "bytes" => 42_000,
-      "duration_sec" => 7
-    })
+    |> render_hook("audio_recorded", %{"duration_sec" => 7})
 
     view
     |> form("#compose-form", %{"body" => "Voice note attached"})
@@ -90,27 +81,23 @@ defmodule CaredeckWeb.AudioCaptureTest do
       |> Enum.filter(&(&1.kind == :audio))
 
     assert [audio] = audios
+    assert audio.mime_type == "audio/webm"
     assert audio.duration_sec == 7
-    assert audio.mime_type == "audio/webm;codecs=opus"
-    assert audio.s3_key == "audios/voice-test.webm"
-    assert audio.bytes == 42_000
     assert audio.position == 99
+    assert String.starts_with?(audio.s3_key, "audios/")
   end
 
-  test "discard_audio clears pending_audio so no Attachment is created", ctx do
+  test "discard_audio clears the pending upload entry", ctx do
+    audio_bytes = <<0::size(1000)-unit(8)>>
     conn = sign_in_team(ctx.conn, ctx.team)
     {:ok, view, _html} = live(conn, ~p"/feed/compose")
 
-    view
-    |> element("#audio-recorder")
-    |> render_hook("audio_uploaded", %{
-      "s3_key" => "audios/voice-discard.webm",
-      "mime_type" => "audio/webm",
-      "bytes" => 1000,
-      "duration_sec" => 3
-    })
+    upload = file_input(view, "form", :audio_notes, [
+      %{name: "voice-discard.webm", content: audio_bytes, type: "audio/webm"}
+    ])
 
-    view |> element("#audio-recorder") |> render_hook("discard_audio", %{})
+    render_upload(upload, "voice-discard.webm")
+    view |> element("#audio-recorder [data-role=discard]") |> render_click()
 
     view
     |> form("#compose-form", %{"body" => "Nothing attached"})

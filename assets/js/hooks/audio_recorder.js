@@ -53,6 +53,12 @@ const AudioRecorder = {
     return candidates.find((m) => MediaRecorder.isTypeSupported(m)) || "";
   },
 
+  uploadInput() {
+    const ref = this.el.dataset.uploadTarget;
+    if (!ref) return null;
+    return document.querySelector(`input[type=file][data-phx-upload-ref="${ref}"]`);
+  },
+
   async handleToggleClick() {
     if (this.recorder && this.recorder.state === "recording") {
       this.recorder.stop();
@@ -108,10 +114,16 @@ const AudioRecorder = {
     this.setTimerLabel(0);
     this.setStatus("");
     this.chunks = [];
-    this.pushEventTo("#audio-recorder", "discard_audio", {});
+
+    const input = this.uploadInput();
+    if (input) {
+      input.value = "";
+      input.files = new DataTransfer().files;
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+    }
   },
 
-  async handleStop() {
+  handleStop() {
     clearInterval(this.timerInterval);
     this.timerInterval = null;
     this.stopTracks();
@@ -124,45 +136,32 @@ const AudioRecorder = {
       return;
     }
 
-    const url = URL.createObjectURL(blob);
-    this.preview.src = url;
+    const previewUrl = URL.createObjectURL(blob);
+    this.preview.src = previewUrl;
     this.preview.classList.remove("hidden");
     this.discard.classList.remove("hidden");
-    this.setStatus("Uploading…");
 
     const durationSec = Math.max(1, Math.round((Date.now() - this.startedAt) / 1000));
-    const ext = mime.startsWith("audio/webm") ? "webm" : "m4a";
+    const ext = mime.startsWith("audio/webm") ? "webm" : mime.startsWith("audio/mp4") ? "m4a" : "ogg";
     const filename = `voice-${Date.now()}.${ext}`;
+    const file = new File([blob], filename, { type: mime });
 
-    try {
-      const presigned = await this.requestPresignedUrl(filename);
-      if (!presigned) throw new Error("no presigned url");
-
-      const putRes = await fetch(presigned.upload_url, {
-        method: "PUT",
-        headers: { "Content-Type": mime },
-        body: blob
-      });
-      if (!putRes.ok) throw new Error(`PUT failed: ${putRes.status}`);
-
-      this.pushEventTo("#audio-recorder", "audio_uploaded", {
-        s3_key: presigned.s3_key,
-        mime_type: mime,
-        bytes: blob.size,
-        duration_sec: durationSec
-      });
-      this.setStatus(`Voice note attached (${durationSec}s).`);
-    } catch (err) {
-      this.setStatus(`Upload failed: ${err.message}`);
+    const input = this.uploadInput();
+    if (!input) {
+      this.setStatus("Upload field missing — refresh and try again.");
+      return;
     }
-  },
 
-  requestPresignedUrl(filename) {
-    return new Promise((resolve) => {
-      this.pushEventTo("#audio-recorder", "request_audio_url", { filename }, (reply) => {
-        resolve(reply && reply.presigned ? reply.presigned : null);
-      });
-    });
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    input.files = dt.files;
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+
+    if (typeof this.pushEventTo === "function") {
+      this.pushEventTo("#audio-recorder", "audio_recorded", { duration_sec: durationSec });
+    }
+
+    this.setStatus(`Voice note attached (${durationSec}s).`);
   }
 };
 
