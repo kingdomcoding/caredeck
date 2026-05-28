@@ -17,7 +17,8 @@ defmodule Caredeck.Repo.Migrations.InstallUserPasskeys do
             name: "user_passkeys_user_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :credential_id, :binary, null: false
       add :public_key, :binary, null: false

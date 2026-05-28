@@ -17,7 +17,9 @@ defmodule CaredeckWeb.PasskeyController do
           UserPasskey
           |> Ash.Query.filter(user_id == ^user.id)
           |> Ash.read!(authorize?: false)
-          |> Enum.map(&%{type: "public-key", id: Base.url_encode64(&1.credential_id, padding: false)})
+          |> Enum.map(
+            &%{type: "public-key", id: Base.url_encode64(&1.credential_id, padding: false)}
+          )
 
         conn
         |> put_session(:passkey_reg_challenge, :erlang.term_to_binary(challenge))
@@ -58,8 +60,13 @@ defmodule CaredeckWeb.PasskeyController do
           |> :erlang.binary_to_term()
 
         raw_id = Base.url_decode64!(credential["rawId"], padding: false)
-        attestation_object = Base.url_decode64!(credential["response"]["attestationObject"], padding: false)
-        client_data_json = Base.url_decode64!(credential["response"]["clientDataJSON"], padding: false)
+
+        attestation_object =
+          Base.url_decode64!(credential["response"]["attestationObject"], padding: false)
+
+        client_data_json =
+          Base.url_decode64!(credential["response"]["clientDataJSON"], padding: false)
+
         nickname = String.slice(params["nickname"] || "Device", 0, 64)
 
         case Wax.register(attestation_object, client_data_json, challenge) do
@@ -114,9 +121,14 @@ defmodule CaredeckWeb.PasskeyController do
         |> :erlang.binary_to_term()
 
       raw_id = Base.url_decode64!(credential["rawId"], padding: false)
-      auth_data_bin = Base.url_decode64!(credential["response"]["authenticatorData"], padding: false)
+
+      auth_data_bin =
+        Base.url_decode64!(credential["response"]["authenticatorData"], padding: false)
+
       sig = Base.url_decode64!(credential["response"]["signature"], padding: false)
-      client_data_json = Base.url_decode64!(credential["response"]["clientDataJSON"], padding: false)
+
+      client_data_json =
+        Base.url_decode64!(credential["response"]["clientDataJSON"], padding: false)
 
       passkey =
         UserPasskey

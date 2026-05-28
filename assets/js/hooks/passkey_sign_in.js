@@ -38,7 +38,7 @@ const PasskeySignIn = {
 
     let opts;
     try {
-      const res = await fetch("/auth/passkey/sign-in/options", {
+      const res = await fetch("/passkey/sign-in/options", {
         method: "POST",
         credentials: "same-origin",
         headers,
@@ -82,7 +82,7 @@ const PasskeySignIn = {
     };
 
     try {
-      const res = await fetch("/auth/passkey/sign-in/finish", {
+      const res = await fetch("/passkey/sign-in/finish", {
         method: "POST",
         credentials: "same-origin",
         headers,
