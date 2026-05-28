@@ -55,8 +55,15 @@ defmodule CaredeckWeb.Router do
     confirm_route(Caredeck.Accounts.User, :confirm_new_user, auth_routes_prefix: "/auth")
 
     live_session :authenticated,
-      on_mount: {CaredeckWeb.LiveUserAuth, :live_signed_in_optional} do
+      on_mount: {CaredeckWeb.LiveUserAuth, :live_user_or_team_required} do
       live "/feed", FeedLive
+      live "/feed/:post_id", PostLive
+    end
+
+    live_session :team_only,
+      on_mount: {CaredeckWeb.LiveUserAuth, :live_team_required} do
+      live "/feed/compose", PostComposeLive
+      live "/feed/compose/:edit_post_id", PostComposeLive
     end
   end
 

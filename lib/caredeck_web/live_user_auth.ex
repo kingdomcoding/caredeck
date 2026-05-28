@@ -55,6 +55,24 @@ defmodule CaredeckWeb.LiveUserAuth do
     {:cont, resolve(socket, session)}
   end
 
+  def on_mount(:live_user_or_team_required, _params, session, socket) do
+    socket = resolve(socket, session)
+
+    cond do
+      socket.assigns[:current_user] ->
+        {:cont, socket}
+
+      socket.assigns[:current_team] ->
+        {:cont, socket}
+
+      true ->
+        {:halt,
+         socket
+         |> Phoenix.LiveView.put_flash(:error, "Please sign in to continue.")
+         |> Phoenix.LiveView.redirect(to: "/sign-in")}
+    end
+  end
+
   defp resolve(socket, session) do
     socket
     |> AshAuthentication.Plug.Helpers.assign_new_resources(
