@@ -1,23 +1,360 @@
 defmodule CaredeckWeb.PostComposeLive do
   use CaredeckWeb, :live_view
 
+  alias Caredeck.Feed
+  alias Caredeck.Feed.{Attachment, Post, PostAudience, ResidentTagOnPost}
+  alias Caredeck.People
+
+  require Ash.Query
+
+  @upload_opts [
+    accept: ~w(.jpg .jpeg .png),
+    max_entries: 9,
+    max_file_size: 10_000_000
+  ]
+
+  @impl true
+  def mount(%{"edit_post_id" => id}, _session, socket) do
+    facility = socket.assigns.current_facility
+    team = socket.assigns.current_team
+
+    case load_post(facility, id) do
+      nil ->
+        {:ok,
+         socket
+         |> put_flash(:error, "Post not found.")
+         |> push_navigate(to: ~p"/feed")}
+
+      %{team_identity_id: tid} = post when tid != nil and team != nil and tid == team.id ->
+        {:ok,
+         socket
+         |> assign(:mode, :edit)
+         |> assign(:post, post)
+         |> assign(:body, post.body)
+         |> assign(:is_internal, post.is_internal)
+         |> assign(:residents, residents(facility))
+         |> assign(:audience_ids, MapSet.new(Enum.map(post.audience, & &1.id)))
+         |> assign(:tag_ids, MapSet.new(Enum.map(post.resident_tags, & &1.id)))
+         |> assign(:page_title, "Edit post")
+         |> allow_upload(:photos, @upload_opts)}
+
+      _ ->
+        {:ok,
+         socket
+         |> put_flash(:error, "You can only edit your own team's posts.")
+         |> push_navigate(to: ~p"/feed")}
+    end
+  end
+
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, :page_title, "New post")}
+    facility = socket.assigns.current_facility
+
+    {:ok,
+     socket
+     |> assign(:mode, :new)
+     |> assign(:post, nil)
+     |> assign(:body, "")
+     |> assign(:is_internal, false)
+     |> assign(:residents, residents(facility))
+     |> assign(:audience_ids, MapSet.new())
+     |> assign(:tag_ids, MapSet.new())
+     |> assign(:page_title, "New post")
+     |> allow_upload(:photos, @upload_opts)}
+  end
+
+  defp residents(nil), do: []
+
+  defp residents(facility) do
+    People.Resident
+    |> Ash.Query.sort(last_name: :asc, first_name: :asc)
+    |> Ash.read!(tenant: facility.id, authorize?: false)
+  end
+
+  defp load_post(nil, _id), do: nil
+
+  defp load_post(facility, id) do
+    case Ash.get(Post, id,
+           tenant: facility.id,
+           load: [:audience, :resident_tags],
+           authorize?: false
+         ) do
+      {:ok, post} -> post
+      _ -> nil
+    end
+  end
+
+  @impl true
+  def handle_event("validate", params, socket) do
+    body = Map.get(params, "body", socket.assigns.body)
+    is_internal? = Map.get(params, "is_internal") == "true"
+    {:noreply, assign(socket, body: body, is_internal: is_internal?)}
+  end
+
+  def handle_event("toggle_all_audience", _params, socket) do
+    all = MapSet.new(Enum.map(socket.assigns.residents, & &1.id))
+
+    next =
+      if MapSet.equal?(socket.assigns.audience_ids, all) do
+        MapSet.new()
+      else
+        all
+      end
+
+    {:noreply, assign(socket, audience_ids: next, tag_ids: next)}
+  end
+
+  def handle_event("toggle_audience", %{"id" => id}, socket) do
+    audience_ids =
+      if MapSet.member?(socket.assigns.audience_ids, id) do
+        MapSet.delete(socket.assigns.audience_ids, id)
+      else
+        MapSet.put(socket.assigns.audience_ids, id)
+      end
+
+    {:noreply, assign(socket, audience_ids: audience_ids, tag_ids: audience_ids)}
+  end
+
+  def handle_event("send", params, socket) do
+    body = params |> Map.get("body", "") |> String.trim()
+    is_internal? = Map.get(params, "is_internal") == "true"
+    facility = socket.assigns.current_facility
+    team = socket.assigns.current_team
+
+    cond do
+      body == "" ->
+        {:noreply, put_flash(socket, :error, "Add some words before sending.")}
+
+      is_nil(facility) or is_nil(team) ->
+        {:noreply, put_flash(socket, :error, "Sign in with a team to post.")}
+
+      true ->
+        post = persist_post(socket, body, is_internal?, facility, team)
+        sync_audience(post, socket.assigns.audience_ids, facility)
+        sync_tags(post, socket.assigns.tag_ids, facility)
+        upload_attachments(socket, post, facility)
+
+        {:noreply,
+         socket
+         |> put_flash(:info, "Post sent.")
+         |> push_navigate(to: ~p"/feed")}
+    end
+  end
+
+  defp persist_post(%{assigns: %{mode: :new}}, body, is_internal?, facility, team) do
+    Post
+    |> Ash.Changeset.for_create(
+      :create,
+      %{
+        facility_id: facility.id,
+        team_identity_id: team.id,
+        body: body,
+        is_internal: is_internal?
+      },
+      tenant: facility.id,
+      authorize?: false
+    )
+    |> Ash.create!(tenant: facility.id, authorize?: false)
+  end
+
+  defp persist_post(%{assigns: %{mode: :edit, post: post}}, body, is_internal?, facility, _team) do
+    post
+    |> Ash.Changeset.for_update(:update, %{body: body, is_internal: is_internal?},
+      tenant: facility.id,
+      authorize?: false
+    )
+    |> Ash.update!(tenant: facility.id, authorize?: false)
+  end
+
+  defp sync_audience(post, audience_ids, facility) do
+    existing =
+      PostAudience
+      |> Ash.Query.filter(post_id == ^post.id)
+      |> Ash.read!(tenant: facility.id, authorize?: false)
+
+    Enum.each(existing, fn link ->
+      Ash.destroy!(link, tenant: facility.id, authorize?: false)
+    end)
+
+    Enum.each(audience_ids, fn rid ->
+      PostAudience
+      |> Ash.Changeset.for_create(
+        :create,
+        %{facility_id: facility.id, post_id: post.id, resident_id: rid},
+        tenant: facility.id,
+        authorize?: false
+      )
+      |> Ash.create!(tenant: facility.id, authorize?: false)
+    end)
+  end
+
+  defp sync_tags(post, tag_ids, facility) do
+    existing =
+      ResidentTagOnPost
+      |> Ash.Query.filter(post_id == ^post.id)
+      |> Ash.read!(tenant: facility.id, authorize?: false)
+
+    Enum.each(existing, fn tag ->
+      Ash.destroy!(tag, tenant: facility.id, authorize?: false)
+    end)
+
+    Enum.each(tag_ids, fn rid ->
+      ResidentTagOnPost
+      |> Ash.Changeset.for_create(
+        :create,
+        %{facility_id: facility.id, post_id: post.id, resident_id: rid},
+        tenant: facility.id,
+        authorize?: false
+      )
+      |> Ash.create!(tenant: facility.id, authorize?: false)
+    end)
+  end
+
+  defp upload_attachments(socket, post, facility) do
+    Application.put_env(:caredeck, :thumbnailer_mode, :sync)
+
+    uploaded =
+      consume_uploaded_entries(socket, :photos, fn %{path: path}, entry ->
+        key = Feed.S3.generate_key("photos", entry.client_name)
+        {:ok, body} = File.read(path)
+        {:ok, _} = Feed.S3.put_object(key, body, entry.client_type)
+
+        {:ok,
+         %{key: key, mime: entry.client_type, bytes: entry.client_size, name: entry.client_name}}
+      end)
+
+    uploaded
+    |> Enum.with_index()
+    |> Enum.each(fn {%{key: key, mime: mime, bytes: bytes}, idx} ->
+      Attachment
+      |> Ash.Changeset.for_create(
+        :create,
+        %{
+          facility_id: facility.id,
+          post_id: post.id,
+          kind: :photo,
+          s3_key: key,
+          mime_type: mime,
+          bytes: bytes,
+          position: idx
+        },
+        tenant: facility.id,
+        authorize?: false
+      )
+      |> Ash.create!(tenant: facility.id, authorize?: false)
+    end)
+  end
+
+  defp audience_state(audience_ids, residents) do
+    cond do
+      MapSet.size(audience_ids) == 0 -> :none
+      MapSet.size(audience_ids) == length(residents) -> :all
+      true -> :partial
+    end
   end
 
   @impl true
   def render(assigns) do
+    audience_state = audience_state(assigns.audience_ids, assigns.residents)
+    assigns = assign(assigns, :audience_state, audience_state)
+
     ~H"""
     <Layouts.app
       flash={@flash}
       current_user={@current_user}
       current_team={@current_team}
     >
-      <div class="mx-auto max-w-2xl px-4 py-6">
-        <h1 class="text-display-md">Compose (Day 6)</h1>
+      <div class="mx-auto max-w-2xl px-4 py-6 pb-24">
+        <div class="flex items-center justify-between mb-4">
+          <.link navigate={~p"/feed"} class="text-ink-500 hover:text-ink-900 text-sm">
+            &larr; Cancel
+          </.link>
+          <h1 class="text-display-sm text-ink-900">
+            {if @mode == :edit, do: "Edit post", else: "New post"}
+          </h1>
+          <button
+            type="submit"
+            form="compose-form"
+            class="rounded-button bg-brand text-white px-4 py-2 text-sm"
+          >
+            Send post
+          </button>
+        </div>
+
+        <form id="compose-form" phx-submit="send" phx-change="validate">
+          <textarea
+            name="body"
+            rows="6"
+            placeholder="What's happening today?"
+            class="w-full rounded-input border border-divider px-3 py-2 text-ink-900 mb-4 focus:outline-none focus:ring-2 focus:ring-brand"
+          >{@body}</textarea>
+
+          <label class="flex items-center gap-2 mb-4 text-ink-900">
+            <input
+              type="checkbox"
+              name="is_internal"
+              value="true"
+              checked={@is_internal}
+            />
+            <span class="text-sm">Internal post (team only)</span>
+          </label>
+
+          <section class="mb-4">
+            <h2 class="text-ink-900 font-medium mb-2">Photos</h2>
+            <.live_file_input upload={@uploads.photos} class="text-sm" />
+            <div class="flex gap-2 mt-2 flex-wrap">
+              <article :for={entry <- @uploads.photos.entries} class="w-20 h-20">
+                <.live_img_preview entry={entry} class="w-20 h-20 object-cover rounded-input" />
+              </article>
+            </div>
+            <p :for={err <- upload_errors(@uploads.photos)} class="text-red-600 text-xs mt-1">
+              {error_to_string(err)}
+            </p>
+          </section>
+        </form>
+
+        <section class="mt-6">
+          <h2 class="text-ink-900 font-medium mb-2">Audience</h2>
+          <ul class="divide-y divide-divider bg-card rounded-card shadow-card">
+            <li class="px-4 py-3 flex items-center justify-between">
+              <span class="text-ink-900 font-medium">All residents</span>
+              <button
+                type="button"
+                phx-click="toggle_all_audience"
+                class={[
+                  "h-6 w-6 rounded-input border-2 border-brand flex items-center justify-center text-brand text-sm font-semibold",
+                  audience_indicator_classes(@audience_state)
+                ]}
+              >
+                {audience_indicator(@audience_state)}
+              </button>
+            </li>
+            <li :for={r <- @residents} class="px-4 py-3 flex items-center justify-between">
+              <span class="text-ink-900">{r.first_name} {r.last_name}</span>
+              <input
+                type="checkbox"
+                phx-click="toggle_audience"
+                phx-value-id={r.id}
+                checked={MapSet.member?(@audience_ids, r.id)}
+              />
+            </li>
+          </ul>
+        </section>
       </div>
     </Layouts.app>
     """
   end
+
+  defp audience_indicator(:all), do: "✓"
+  defp audience_indicator(:partial), do: "−"
+  defp audience_indicator(:none), do: " "
+
+  defp audience_indicator_classes(:all), do: "bg-brand text-white"
+  defp audience_indicator_classes(:partial), do: "bg-brand-soft"
+  defp audience_indicator_classes(:none), do: "bg-card"
+
+  defp error_to_string(:too_large), do: "File is too large (max 10 MB)."
+  defp error_to_string(:too_many_files), do: "Too many files (max 9)."
+  defp error_to_string(:not_accepted), do: "Unsupported file type."
+  defp error_to_string(err), do: "Upload error: #{inspect(err)}"
 end
