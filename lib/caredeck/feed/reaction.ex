@@ -4,7 +4,7 @@ defmodule Caredeck.Feed.Reaction do
     default_pub_sub: false,
     paper_trail: [attributes_as_attributes: [:facility_id]]
 
-  require Ash.Query
+  import Ecto.Query
 
   postgres do
     table "reactions"
@@ -62,31 +62,41 @@ defmodule Caredeck.Feed.Reaction do
         tenant = input.arguments.facility_id
         actor = ctx.actor
 
-        query =
-          __MODULE__
-          |> Ash.Query.filter(
-            post_id == ^input.arguments.post_id and user_id == ^actor.id
+        active =
+          from(r in __MODULE__,
+            where:
+              r.post_id == ^input.arguments.post_id and r.user_id == ^actor.id and
+                is_nil(r.archived_at)
+          )
+          |> Caredeck.Repo.one()
+
+        if active do
+          Ash.destroy!(active, tenant: tenant, actor: actor)
+          {:ok, %{action: :removed}}
+        else
+          archived =
+            from(r in __MODULE__,
+              where:
+                r.post_id == ^input.arguments.post_id and r.user_id == ^actor.id and
+                  not is_nil(r.archived_at)
+            )
+            |> Caredeck.Repo.one()
+
+          if archived, do: Caredeck.Repo.delete!(archived)
+
+          Ash.create!(
+            __MODULE__,
+            %{
+              facility_id: tenant,
+              post_id: input.arguments.post_id,
+              user_id: actor.id,
+              kind: input.arguments.kind
+            },
+            tenant: tenant,
+            actor: actor
           )
 
-        case Ash.read_one(query, tenant: tenant, authorize?: false) do
-          {:ok, %{} = existing} ->
-            Ash.destroy!(existing, tenant: tenant, actor: actor)
-            {:ok, %{action: :removed}}
-
-          {:ok, nil} ->
-            Ash.create!(
-              __MODULE__,
-              %{
-                facility_id: tenant,
-                post_id: input.arguments.post_id,
-                user_id: actor.id,
-                kind: input.arguments.kind
-              },
-              tenant: tenant,
-              actor: actor
-            )
-
-            {:ok, %{action: :added}}
+          {:ok, %{action: :added}}
         end
       end
     end
