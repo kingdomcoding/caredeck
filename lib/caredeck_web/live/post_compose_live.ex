@@ -5,7 +5,6 @@ defmodule CaredeckWeb.PostComposeLive do
   alias Caredeck.Feed.{Attachment, Post, PostAudience, ResidentTagOnPost}
   alias Caredeck.People
 
-  require Ash.Query
 
   @upload_opts [
     accept: ~w(.jpg .jpeg .png),
@@ -35,6 +34,7 @@ defmodule CaredeckWeb.PostComposeLive do
          |> assign(:residents, residents(facility))
          |> assign(:audience_ids, MapSet.new(Enum.map(post.audience, & &1.id)))
          |> assign(:tag_ids, MapSet.new(Enum.map(post.resident_tags, & &1.id)))
+         |> assign(:existing_attachments, post.attachments)
          |> assign(:page_title, "Edit post")
          |> allow_upload(:photos, @upload_opts)}
 
@@ -59,6 +59,7 @@ defmodule CaredeckWeb.PostComposeLive do
      |> assign(:residents, residents(facility))
      |> assign(:audience_ids, MapSet.new())
      |> assign(:tag_ids, MapSet.new())
+     |> assign(:existing_attachments, [])
      |> assign(:page_title, "New post")
      |> allow_upload(:photos, @upload_opts)}
   end
@@ -76,7 +77,7 @@ defmodule CaredeckWeb.PostComposeLive do
   defp load_post(facility, id) do
     case Ash.get(Post, id,
            tenant: facility.id,
-           load: [:audience, :resident_tags],
+           load: [:audience, :resident_tags, :attachments],
            authorize?: false
          ) do
       {:ok, post} -> post
@@ -123,6 +124,25 @@ defmodule CaredeckWeb.PostComposeLive do
     tag_ids = MapSet.intersection(socket.assigns.tag_ids, audience_ids)
 
     {:noreply, assign(socket, audience_ids: audience_ids, tag_ids: tag_ids)}
+  end
+
+  def handle_event("remove_attachment", %{"id" => attachment_id}, socket) do
+    facility = socket.assigns.current_facility
+    team = socket.assigns.current_team
+
+    case Ash.get(Attachment, attachment_id, tenant: facility.id, actor: team) do
+      {:ok, attachment} ->
+        import Ecto.Query
+
+        from(a in Attachment, where: a.id == ^attachment.id)
+        |> Caredeck.Repo.delete_all()
+
+        existing = Enum.reject(socket.assigns.existing_attachments, &(&1.id == attachment_id))
+        {:noreply, assign(socket, :existing_attachments, existing)}
+
+      _ ->
+        {:noreply, socket}
+    end
   end
 
   def handle_event("toggle_tag", %{"id" => id}, socket) do
@@ -192,16 +212,25 @@ defmodule CaredeckWeb.PostComposeLive do
   end
 
   defp sync_audience(post, audience_ids, facility, team) do
+    import Ecto.Query
+
     existing =
-      PostAudience
-      |> Ash.Query.filter(post_id == ^post.id)
-      |> Ash.read!(tenant: facility.id, actor: team)
+      from(a in PostAudience, where: a.post_id == ^post.id) |> Caredeck.Repo.all()
 
-    Enum.each(existing, fn link ->
-      Ash.destroy!(link, tenant: facility.id, actor: team)
-    end)
+    existing_ids = MapSet.new(existing, & &1.resident_id)
+    desired_ids = audience_ids
 
-    Enum.each(audience_ids, fn rid ->
+    to_remove = MapSet.difference(existing_ids, desired_ids)
+    to_add = MapSet.difference(desired_ids, existing_ids)
+
+    if MapSet.size(to_remove) > 0 do
+      ids = MapSet.to_list(to_remove)
+
+      from(a in PostAudience, where: a.post_id == ^post.id and a.resident_id in ^ids)
+      |> Caredeck.Repo.delete_all()
+    end
+
+    Enum.each(to_add, fn rid ->
       PostAudience
       |> Ash.Changeset.for_create(
         :create,
@@ -214,16 +243,25 @@ defmodule CaredeckWeb.PostComposeLive do
   end
 
   defp sync_tags(post, tag_ids, facility, team) do
+    import Ecto.Query
+
     existing =
-      ResidentTagOnPost
-      |> Ash.Query.filter(post_id == ^post.id)
-      |> Ash.read!(tenant: facility.id, actor: team)
+      from(t in ResidentTagOnPost, where: t.post_id == ^post.id) |> Caredeck.Repo.all()
 
-    Enum.each(existing, fn tag ->
-      Ash.destroy!(tag, tenant: facility.id, actor: team)
-    end)
+    existing_ids = MapSet.new(existing, & &1.resident_id)
+    desired_ids = tag_ids
 
-    Enum.each(tag_ids, fn rid ->
+    to_remove = MapSet.difference(existing_ids, desired_ids)
+    to_add = MapSet.difference(desired_ids, existing_ids)
+
+    if MapSet.size(to_remove) > 0 do
+      ids = MapSet.to_list(to_remove)
+
+      from(t in ResidentTagOnPost, where: t.post_id == ^post.id and t.resident_id in ^ids)
+      |> Caredeck.Repo.delete_all()
+    end
+
+    Enum.each(to_add, fn rid ->
       ResidentTagOnPost
       |> Ash.Changeset.for_create(
         :create,
@@ -330,6 +368,30 @@ defmodule CaredeckWeb.PostComposeLive do
 
           <section class="mb-4">
             <h2 class="text-ink-900 font-medium mb-2">Photos</h2>
+
+            <div :if={@existing_attachments != []} class="flex gap-2 mb-3 flex-wrap">
+              <article
+                :for={att <- @existing_attachments}
+                class="relative w-20 h-20 group"
+              >
+                <img
+                  src={"/attachments/" <> att.s3_key}
+                  class="w-20 h-20 object-cover rounded-input border border-divider"
+                  alt=""
+                />
+                <button
+                  type="button"
+                  phx-click="remove_attachment"
+                  phx-value-id={att.id}
+                  phx-confirm="Remove this photo from the post?"
+                  class="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-like-red text-white text-xs font-bold flex items-center justify-center shadow-card hover:bg-red-700"
+                  aria-label="Remove photo"
+                >
+                  ×
+                </button>
+              </article>
+            </div>
+
             <.live_file_input
               upload={@uploads.photos}
               class="block w-full text-sm text-ink-500 file:mr-4 file:py-2 file:px-4 file:rounded-button file:border-0 file:text-sm file:font-medium file:bg-brand-soft file:text-brand hover:file:bg-brand hover:file:text-white file:cursor-pointer"
