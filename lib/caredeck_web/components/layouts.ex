@@ -68,11 +68,131 @@ defmodule CaredeckWeb.Layouts do
       </div>
     </header>
 
-    <main class="bg-page min-h-[calc(100vh-65px)]">
+    <main class="bg-page min-h-[calc(100vh-65px)] pb-16 md:pb-0">
       {render_slot(@inner_block)}
     </main>
 
+    <nav
+      :if={@current_user}
+      class="fixed bottom-0 inset-x-0 z-30 md:hidden border-t border-divider bg-card pb-[env(safe-area-inset-bottom)]"
+      aria-label="Primary"
+    >
+      <ul class="grid grid-cols-4">
+        <.nav_tab navigate={~p"/feed"} label="Home" icon={:home} />
+        <.nav_tab
+          :if={@profile_rid}
+          navigate={~p"/residents/#{@profile_rid}"}
+          label="Profile"
+          icon={:user}
+        />
+        <.nav_tab :if={!@profile_rid} navigate={~p"/profile/edit"} label="Profile" icon={:user} />
+        <.nav_tab navigate={~p"/notifications"} label="Inbox" icon={:bell} badge={@unread} />
+        <.nav_tab href={~p"/sign-out"} method={:delete} label="Sign out" icon={:logout} />
+      </ul>
+    </nav>
+
     <.flash_group flash={@flash} />
+    """
+  end
+
+  attr :navigate, :string, default: nil
+  attr :href, :string, default: nil
+  attr :method, :atom, default: nil
+  attr :label, :string, required: true
+  attr :icon, :atom, required: true
+  attr :badge, :integer, default: 0
+
+  defp nav_tab(assigns) do
+    ~H"""
+    <li>
+      <.link
+        navigate={@navigate}
+        href={@href}
+        method={@method}
+        class="relative flex flex-col items-center py-2 text-xs text-ink-500 hover:text-ink-900"
+      >
+        <.nav_icon name={@icon} />
+        <span class="mt-0.5">{@label}</span>
+        <span
+          :if={@badge > 0}
+          class="absolute top-1 right-1/2 translate-x-4 min-w-[16px] h-[16px] px-1 rounded-full bg-like-red text-white text-[9px] font-bold flex items-center justify-center"
+        >
+          {format_count(@badge)}
+        </span>
+      </.link>
+    </li>
+    """
+  end
+
+  attr :name, :atom, required: true
+
+  defp nav_icon(%{name: :home} = assigns) do
+    ~H"""
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      class="h-6 w-6"
+      aria-hidden="true"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="M3 11l9-7 9 7v9a2 2 0 0 1-2 2h-4v-6h-6v6H5a2 2 0 0 1-2-2z"
+      />
+    </svg>
+    """
+  end
+
+  defp nav_icon(%{name: :user} = assigns) do
+    ~H"""
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      class="h-6 w-6"
+      aria-hidden="true"
+    >
+      <circle cx="12" cy="8" r="4" />
+      <path stroke-linecap="round" d="M4 21a8 8 0 0 1 16 0" />
+    </svg>
+    """
+  end
+
+  defp nav_icon(%{name: :bell} = assigns) do
+    ~H"""
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      class="h-6 w-6"
+      aria-hidden="true"
+    >
+      <path stroke-linecap="round" stroke-linejoin="round" d="M6 8a6 6 0 0 1 12 0v5l2 2H4l2-2z" />
+      <path stroke-linecap="round" d="M10 19a2 2 0 0 0 4 0" />
+    </svg>
+    """
+  end
+
+  defp nav_icon(%{name: :logout} = assigns) do
+    ~H"""
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      class="h-6 w-6"
+      aria-hidden="true"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="M15 17l5-5-5-5M20 12H9M12 4H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7"
+      />
+    </svg>
     """
   end
 
