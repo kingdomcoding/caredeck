@@ -408,10 +408,31 @@ defmodule CaredeckWeb.PostComposeLive do
               </article>
             </div>
 
-            <.live_file_input
-              upload={@uploads.photos}
-              class="block w-full text-sm text-ink-500 file:mr-4 file:py-2 file:px-4 file:rounded-button file:border-0 file:text-sm file:font-medium file:bg-brand-soft file:text-brand hover:file:bg-brand hover:file:text-white file:cursor-pointer"
-            />
+            <div class="flex gap-2 flex-wrap">
+              <label
+                for={@uploads.photos.ref}
+                class="px-3 py-2 rounded-button bg-brand-soft text-brand text-sm font-medium hover:bg-brand hover:text-white cursor-pointer"
+              >
+                Add from gallery
+              </label>
+              <.live_file_input upload={@uploads.photos} class="sr-only" />
+
+              <label
+                for="camera-input"
+                class="px-3 py-2 rounded-button bg-brand-soft text-brand text-sm font-medium hover:bg-brand hover:text-white cursor-pointer"
+              >
+                Take photo
+              </label>
+              <input
+                type="file"
+                id="camera-input"
+                accept="image/*"
+                capture="environment"
+                class="sr-only"
+                phx-hook="ShareCameraInput"
+                data-target={@uploads.photos.ref}
+              />
+            </div>
             <div class="flex gap-2 mt-3 flex-wrap">
               <article :for={entry <- @uploads.photos.entries} class="w-20 h-20">
                 <.live_img_preview entry={entry} class="w-20 h-20 object-cover rounded-input" />
