@@ -204,31 +204,30 @@ defmodule CaredeckWeb.FeedLive do
   attr :open_popover_for, :string, default: nil
 
   defp tag_chips(assigns) do
-    {first, second, overflow} =
-      case assigns.tags do
-        [] -> {nil, nil, 0}
-        [a] -> {a, nil, 0}
-        [a, b] -> {a, b, 0}
-        [a, b | rest] -> {a, b, length(rest)}
-      end
-
-    assigns = assign(assigns, first: first, second: second, overflow: overflow)
+    visible = Enum.take(assigns.tags, 2)
+    rest = Enum.drop(assigns.tags, 2)
+    assigns = assign(assigns, visible: visible, rest: rest)
 
     ~H"""
     <div :if={@tags != []} class="px-4 pt-3 relative">
-      <button
-        type="button"
-        phx-click="toggle_tag_popover"
-        phx-value-post-id={@post_id}
-        class="text-ink-500 text-sm hover:text-ink-900 text-left"
-      >
+      <p class="text-ink-500 text-sm">
         &#x2764;
-        <span :if={@first} class="text-ink-900">{@first.first_name} {@first.last_name}</span><span :if={
-          @second
-        }>, <span class="text-ink-900">{@second.first_name} {@second.last_name}</span></span><span :if={
-          @overflow > 0
-        }> and {@overflow} more</span>
-      </button>
+        <%= for {r, idx} <- Enum.with_index(@visible) do %>
+          <span :if={idx > 0}>, </span>
+          <.link navigate={~p"/residents/#{r.id}"} class="text-ink-900 hover:text-brand underline-offset-2 hover:underline">
+            {r.first_name} {r.last_name}
+          </.link>
+        <% end %>
+        <button
+          :if={@rest != []}
+          type="button"
+          phx-click="toggle_tag_popover"
+          phx-value-post-id={@post_id}
+          class="text-brand hover:underline ml-1"
+        >
+          and {length(@rest)} more
+        </button>
+      </p>
 
       <div
         :if={@open_popover_for == @post_id}
