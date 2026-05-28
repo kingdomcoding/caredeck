@@ -65,6 +65,12 @@ defmodule CaredeckWeb.Router do
       live "/feed/compose/:edit_post_id", PostComposeLive
     end
 
+    live_session :team_kitchen,
+      on_mount: {CaredeckWeb.LiveUserAuth, :live_team_required} do
+      live "/kitchen/weekly-menu", Kitchen.WeeklyMenuLive
+      live "/kitchen/weekly-menu/:date", Kitchen.DayEditorLive
+    end
+
     live_session :authenticated,
       on_mount: {CaredeckWeb.LiveUserAuth, :live_user_or_team_required} do
       live "/feed", FeedLive
