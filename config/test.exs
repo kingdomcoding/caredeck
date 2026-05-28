@@ -15,6 +15,10 @@ config :caredeck, Caredeck.Repo,
 
 config :caredeck, :token_signing_secret, "test-token-signing-secret"
 
+config :wax_,
+  origin: "http://localhost:4002",
+  rp_id: "localhost"
+
 config :bcrypt_elixir, log_rounds: 4
 
 config :caredeck, Oban,
