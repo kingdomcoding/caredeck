@@ -78,6 +78,8 @@ defmodule Caredeck.Services.ServiceRequest do
         :summary,
         :payload
       ]
+
+      change Caredeck.Services.ValidatePayload
     end
 
     update :update do
