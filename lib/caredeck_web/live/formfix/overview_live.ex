@@ -16,12 +16,14 @@ defmodule CaredeckWeb.Formfix.OverviewLive do
          ) do
       {:ok, app} ->
         ordered_sections = Enum.sort_by(app.sections, & &1.position)
+        next = Caredeck.Formfix.Applications.next_actionable_section(app)
 
         {:ok,
          socket
          |> assign(:page_title, "Formfix overview")
          |> assign(:application, app)
-         |> assign(:ordered_sections, ordered_sections)}
+         |> assign(:ordered_sections, ordered_sections)
+         |> assign(:next_actionable, next)}
 
       _ ->
         {:ok, push_navigate(socket, to: ~p"/formfix")}
@@ -45,9 +47,27 @@ defmodule CaredeckWeb.Formfix.OverviewLive do
           <div class="mt-3 h-3 w-full bg-page rounded-full overflow-hidden">
             <div class="h-3 bg-brand" style={"width: #{@application.progress_percent}%"}></div>
           </div>
-          <div class="flex items-center gap-3 mt-1">
-            <p class="text-ink-500 text-xs">{@application.progress_percent}% complete</p>
-            <.formfix_status_pill status={@application.state} />
+          <div class="flex items-center justify-between gap-3 mt-1 flex-wrap">
+            <div class="flex items-center gap-3">
+              <p class="text-ink-500 text-xs">{@application.progress_percent}% complete</p>
+              <.formfix_status_pill status={@application.state} />
+            </div>
+
+            <.link
+              :if={@application.state == :ready_to_submit}
+              navigate={~p"/formfix/#{@application.id}/submit"}
+              class="rounded-button bg-brand text-white text-sm font-medium px-4 py-2 hover:bg-brand-strong"
+            >
+              Submit application →
+            </.link>
+
+            <.link
+              :if={@application.state != :ready_to_submit && @next_actionable}
+              navigate={~p"/formfix/#{@application.id}/section/#{Atom.to_string(@next_actionable.section_key)}"}
+              class="rounded-button bg-brand text-white text-sm font-medium px-4 py-2 hover:bg-brand-strong"
+            >
+              {continue_label(@next_actionable)} →
+            </.link>
           </div>
         </header>
 
@@ -77,20 +97,15 @@ defmodule CaredeckWeb.Formfix.OverviewLive do
           </aside>
         </div>
 
-        <div class="mt-6">
-          <.link
-            :if={@application.state == :ready_to_submit}
-            navigate={~p"/formfix/#{@application.id}/submit"}
-            class="inline-block rounded-button bg-brand text-white text-sm font-medium px-4 py-2 hover:bg-brand-strong"
-          >
-            Go to submit →
-          </.link>
-        </div>
-
         <.formfix_footer />
       </div>
     </Layouts.app>
     """
   end
 
+  defp continue_label(%{status: :in_progress, section_key: key}),
+    do: "Continue " <> SectionKey.label(key)
+
+  defp continue_label(%{section_key: key}),
+    do: "Start " <> SectionKey.label(key)
 end

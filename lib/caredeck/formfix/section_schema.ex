@@ -338,10 +338,11 @@ defmodule Caredeck.Formfix.SectionSchema do
   def parse(:boolean, v) when v in [true, "true", "on", "1"], do: {:ok, true}
   def parse(:boolean, v) when v in [false, "false", "off", "0", nil, ""], do: {:ok, false}
 
-  def parse({:enum, _}, v) when is_binary(v) and v != "" do
-    {:ok, String.to_existing_atom(v)}
-  rescue
-    ArgumentError -> :error
+  def parse({:enum, mod}, v) when is_binary(v) and v != "" do
+    case Enum.find(mod.all(), &(Atom.to_string(&1) == v)) do
+      nil -> :error
+      atom -> {:ok, atom}
+    end
   end
 
   def parse(_kind, _v), do: :error

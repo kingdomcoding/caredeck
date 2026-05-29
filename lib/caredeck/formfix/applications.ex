@@ -11,6 +11,38 @@ defmodule Caredeck.Formfix.Applications do
 
   require Ash.Query
 
+  def next_section_key(application, current_section_key) do
+    fid = application.facility_id
+
+    sections =
+      ApplicationSection
+      |> Ash.Query.filter(application_id == ^application.id)
+      |> Ash.Query.sort(position: :asc)
+      |> Ash.read!(tenant: fid, authorize?: false)
+
+    keys = Enum.map(sections, & &1.section_key)
+    idx = Enum.find_index(keys, &(&1 == current_section_key))
+
+    case idx do
+      nil -> nil
+      i when i + 1 < length(keys) -> Enum.at(keys, i + 1)
+      _ -> nil
+    end
+  end
+
+  def next_actionable_section(application) do
+    fid = application.facility_id
+
+    sections =
+      ApplicationSection
+      |> Ash.Query.filter(application_id == ^application.id)
+      |> Ash.Query.sort(position: :asc)
+      |> Ash.read!(tenant: fid, authorize?: false)
+
+    Enum.find(sections, &(&1.status == :in_progress)) ||
+      Enum.find(sections, &(&1.status == :not_started))
+  end
+
   def start_for_resident!(facility, resident, actor) do
     {applicant_user_id, applicant_team_id} =
       case actor do

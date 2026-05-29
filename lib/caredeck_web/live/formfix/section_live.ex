@@ -26,7 +26,7 @@ defmodule CaredeckWeb.Formfix.SectionLive do
        |> assign(:fields, SectionSchema.fields(section_key))
        |> assign(:sub_sections, SectionSchema.sub_sections(section_key))
        |> assign(:form_data, form_data)
-       |> assign(:next_key, SectionKey.next_key(section_key))}
+       |> assign(:next_key, Caredeck.Formfix.Applications.next_section_key(application, section_key))}
     else
       {:error, :section_not_applicable} ->
         {:ok,
@@ -278,12 +278,6 @@ defmodule CaredeckWeb.Formfix.SectionLive do
             Required documents →
           </.link>
         </div>
-
-        <.next_section_card
-          :if={@next_key}
-          next_path={"/formfix/#{@application.id}/section/#{Atom.to_string(@next_key)}"}
-          next_label={SectionKey.label(@next_key)}
-        />
 
         <.formfix_footer />
       </div>
