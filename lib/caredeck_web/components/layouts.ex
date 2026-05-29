@@ -75,6 +75,13 @@ defmodule CaredeckWeb.Layouts do
           </.link>
           <.link
             :if={@current_team}
+            navigate={~p"/residents"}
+            class="hidden md:inline-block hover:text-ink-900"
+          >
+            Residents
+          </.link>
+          <.link
+            :if={@current_team}
             navigate={~p"/kitchen/weekly-menu"}
             class="hidden md:inline-block hover:text-ink-900"
           >
@@ -132,9 +139,9 @@ defmodule CaredeckWeb.Layouts do
         />
         <.nav_tab
           :if={@current_team}
-          navigate={~p"/kitchen/summary"}
-          label="Orders"
-          icon={:bell}
+          navigate={~p"/residents"}
+          label="Residents"
+          icon={:user}
         />
         <.nav_tab
           :if={!@current_team}
