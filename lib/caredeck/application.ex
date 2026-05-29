@@ -16,6 +16,7 @@ defmodule Caredeck.Application do
       Caredeck.Repo,
       {DNSCluster, query: Application.get_env(:caredeck, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Caredeck.PubSub},
+      {Task.Supervisor, name: Caredeck.TaskSupervisor},
       {Oban, Application.fetch_env!(:caredeck, Oban)},
       CaredeckWeb.Endpoint
     ]

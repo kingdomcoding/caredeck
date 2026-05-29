@@ -1,9 +1,8 @@
 defmodule CaredeckWeb.Formfix.RequiredDocumentsComponent do
   use CaredeckWeb, :live_component
 
-  alias Caredeck.Formfix.{RequiredDocuments, UploadedDocument}
+  alias Caredeck.Formfix.{RequiredDocuments, UploadedDocument, Verifier}
   alias Caredeck.Feed.S3
-  alias Caredeck.Workers.FormfixDocumentVerifier
 
   require Ash.Query
 
@@ -78,9 +77,7 @@ defmodule CaredeckWeb.Formfix.RequiredDocumentsComponent do
         )
         |> Ash.create(tenant: application.facility_id, authorize?: false)
 
-      %{document_id: doc.id, facility_id: application.facility_id}
-      |> FormfixDocumentVerifier.new()
-      |> Oban.insert()
+      Verifier.run_async(doc.id, application.facility_id)
 
       {:ok, doc}
     end)

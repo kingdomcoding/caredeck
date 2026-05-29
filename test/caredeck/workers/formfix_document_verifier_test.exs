@@ -85,7 +85,7 @@ defmodule Caredeck.Workers.FormfixDocumentVerifierTest do
       Application.put_env(:caredeck, :formfix_verification_engine, :stub)
     end)
 
-    assert_raise RuntimeError, ~r/aid_verification_engine/, fn ->
+    assert_raise RuntimeError, ~r/formfix_verification_engine/, fn ->
       perform_job(FormfixDocumentVerifier, %{
         "document_id" => ctx.doc.id,
         "facility_id" => ctx.facility.id
