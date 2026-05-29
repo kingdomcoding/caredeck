@@ -5,6 +5,7 @@ defmodule Caredeck.Release.Seeds do
   alias Caredeck.Org
   alias Caredeck.People
   alias Caredeck.Release.NamePool
+  alias Caredeck.Services
 
   require Ash.Query
 
@@ -61,6 +62,7 @@ defmodule Caredeck.Release.Seeds do
 
     seed_extra_posts(facility)
     seed_kitchen(facility)
+    seed_services(facility)
 
     resident_count =
       People.Resident
@@ -115,6 +117,100 @@ defmodule Caredeck.Release.Seeds do
     IO.puts("")
 
     :ok
+  end
+
+  @service_provider_seeds [
+    %{
+      kind: :pharmacy,
+      name: "Apotheke Demo",
+      handle: "team-pharmacy",
+      window: "Mon–Fri 09:00–18:00",
+      target_hours: 24
+    },
+    %{
+      kind: :laundry,
+      name: "Linen Service",
+      handle: "team-laundry",
+      window: "Mon, Wed, Fri",
+      target_hours: 48
+    },
+    %{
+      kind: :hairdresser,
+      name: "Salon Demo",
+      handle: "team-hairdresser",
+      window: "Tue & Thu afternoons",
+      target_hours: 72
+    },
+    %{
+      kind: :doctor,
+      name: "Hausarzt Demo",
+      handle: "team-doctor",
+      window: "Mon–Fri 08:00–16:00",
+      target_hours: 24
+    }
+  ]
+
+  defp seed_services(facility) do
+    Enum.each(@service_provider_seeds, fn p ->
+      team = find_or_create_service_team(p, facility)
+      find_or_create_service_provider(p, team, facility)
+    end)
+
+    :ok
+  end
+
+  defp find_or_create_service_team(%{handle: handle, name: name}, facility) do
+    case Ash.read_one(
+           Accounts.TeamIdentity |> Ash.Query.filter(handle == ^handle),
+           authorize?: false
+         ) do
+      {:ok, nil} ->
+        Accounts.TeamIdentity
+        |> Ash.Changeset.for_create(
+          :register_with_password,
+          %{
+            handle: handle,
+            name: name,
+            role_kind: :service,
+            facility_id: facility.id,
+            password: @demo_password
+          },
+          authorize?: false
+        )
+        |> Ash.create!(authorize?: false)
+
+      {:ok, existing} ->
+        existing
+    end
+  end
+
+  defp find_or_create_service_provider(p, team, facility) do
+    case Ash.read_one(
+           Services.ServiceProvider |> Ash.Query.filter(kind == ^p.kind),
+           tenant: facility.id,
+           authorize?: false
+         ) do
+      {:ok, nil} ->
+        Services.ServiceProvider
+        |> Ash.Changeset.for_create(
+          :create,
+          %{
+            facility_id: facility.id,
+            kind: p.kind,
+            name: p.name,
+            display_name: p.name,
+            response_window_label: p.window,
+            response_time_target_hours: p.target_hours,
+            team_identity_id: team.id
+          },
+          tenant: facility.id,
+          authorize?: false
+        )
+        |> Ash.create!(tenant: facility.id, authorize?: false)
+
+      {:ok, existing} ->
+        existing
+    end
   end
 
   @kitchen_products [
