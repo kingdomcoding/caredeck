@@ -142,6 +142,31 @@ defmodule CaredeckWeb.Formfix.SectionLiveTest do
              :error
   end
 
+  test "required boolean renders as Yes/No radios (not a single checkbox)", ctx do
+    conn = sign_in_team(ctx.conn, ctx.care_team)
+    {:ok, _view, html} = live(conn, ~p"/formfix/#{ctx.application.id}/section/disability")
+
+    assert html =~ ~s(type="radio")
+    assert html =~ ~s(value="true")
+    assert html =~ ~s(value="false")
+    assert html =~ ">Yes</span>"
+    assert html =~ ">No</span>"
+  end
+
+  test "show_when field is hidden until its trigger flips true", ctx do
+    conn = sign_in_team(ctx.conn, ctx.care_team)
+    {:ok, view, html} = live(conn, ~p"/formfix/#{ctx.application.id}/section/disability")
+
+    refute html =~ "Degree (%)"
+
+    view
+    |> element("form")
+    |> render_change(%{"has_disability_status" => "true"})
+
+    html_after = render(view)
+    assert html_after =~ "Degree (%)"
+  end
+
   defp sign_in_team(conn, team) do
     conn
     |> Phoenix.ConnTest.init_test_session(%{})

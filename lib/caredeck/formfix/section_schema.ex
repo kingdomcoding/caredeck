@@ -193,7 +193,8 @@ defmodule Caredeck.Formfix.SectionSchema do
           key: :gifts_description,
           label: "If yes, briefly describe",
           kind: :text,
-          sub: :recent
+          sub: :recent,
+          show_when: {:any_gifts_over_500, true}
         }
       ]
     },
@@ -214,7 +215,8 @@ defmodule Caredeck.Formfix.SectionSchema do
           key: :partner_gifts_description,
           label: "If yes, briefly describe",
           kind: :text,
-          sub: :recent
+          sub: :recent,
+          show_when: {:partner_any_gifts_over_500, true}
         }
       ]
     },
@@ -250,7 +252,13 @@ defmodule Caredeck.Formfix.SectionSchema do
           sub: :status,
           required: true
         },
-        %{key: :degree_percent, label: "Degree (%)", kind: :integer, sub: :status}
+        %{
+          key: :degree_percent,
+          label: "Degree (%)",
+          kind: :integer,
+          sub: :status,
+          show_when: {:has_disability_status, true}
+        }
       ]
     },
     %{

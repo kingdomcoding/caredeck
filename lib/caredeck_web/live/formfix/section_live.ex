@@ -61,6 +61,21 @@ defmodule CaredeckWeb.Formfix.SectionLive do
     |> Map.new(&{&1.field_key, scalar(&1)})
   end
 
+  defp visible_fields(fields, sub_key, form_data) do
+    Enum.filter(fields, fn f -> f.sub == sub_key and show?(f, form_data) end)
+  end
+
+  defp show?(field, form_data) do
+    case Map.get(field, :show_when) do
+      nil -> true
+      {key, expected} -> matches?(Map.get(form_data, Atom.to_string(key)), expected)
+    end
+  end
+
+  defp matches?(value, true), do: value in [true, "true", "on", "1"]
+  defp matches?(value, false), do: value in [false, "false", "off", "0", nil, ""]
+  defp matches?(value, expected), do: to_string(value) == to_string(expected)
+
   defp scalar(%{value_text: v}) when not is_nil(v), do: v
   defp scalar(%{value_date: v}) when not is_nil(v), do: Date.to_iso8601(v)
   defp scalar(%{value_bool: v}) when not is_nil(v), do: v
@@ -229,7 +244,7 @@ defmodule CaredeckWeb.Formfix.SectionLive do
             <h2 class="text-ink-900 font-medium mb-3">{sub.label}</h2>
 
             <div
-              :for={f <- Enum.filter(@fields, &(&1.sub == sub.key))}
+              :for={f <- visible_fields(@fields, sub.key, @form_data)}
               class="grid gap-4 lg:grid-cols-[1fr_280px] mb-4"
             >
               <div>
@@ -348,16 +363,8 @@ defmodule CaredeckWeb.Formfix.SectionLive do
     """
   end
 
-  defp field_input(%{field: %{kind: :boolean}} = assigns) do
-    ~H"""
-    <div class="mt-1">
-      <.checkbox
-        name={Atom.to_string(@field.key)}
-        checked={@value in [true, "true", "on", "1"]}
-        label="Yes"
-      />
-    </div>
-    """
+  defp field_input(%{field: %{kind: :boolean} = field} = assigns) do
+    if Map.get(field, :required), do: yes_no_radios(assigns), else: plain_checkbox(assigns)
   end
 
   defp field_input(%{field: %{kind: {:enum, mod}}} = assigns) when is_atom(mod) do
@@ -377,6 +384,36 @@ defmodule CaredeckWeb.Formfix.SectionLive do
         {@mod.label(v)}
       </option>
     </select>
+    """
+  end
+
+  defp yes_no_radios(assigns) do
+    ~H"""
+    <div class="mt-1 space-y-2">
+      <.radio
+        name={Atom.to_string(@field.key)}
+        value="true"
+        checked={@value in [true, "true", "on", "1"]}
+        label="Yes"
+      />
+      <.radio
+        name={Atom.to_string(@field.key)}
+        value="false"
+        checked={@value in [false, "false", "off", "0"]}
+        label="No"
+      />
+    </div>
+    """
+  end
+
+  defp plain_checkbox(assigns) do
+    ~H"""
+    <div class="mt-1">
+      <.checkbox
+        name={Atom.to_string(@field.key)}
+        checked={@value in [true, "true", "on", "1"]}
+      />
+    </div>
     """
   end
 end
