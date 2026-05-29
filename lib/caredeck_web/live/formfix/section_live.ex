@@ -12,23 +12,42 @@ defmodule CaredeckWeb.Formfix.SectionLive do
     actor = current_actor(socket)
     section_key = String.to_existing_atom(sk)
 
-    case Ash.get(AidApplication, aid, tenant: facility.id, actor: actor, load: [:resident]) do
-      {:ok, application} ->
-        answers = load_answers(application, section_key)
-        form_data = build_initial_form(section_key, answers)
+    with {:ok, application} <-
+           Ash.get(AidApplication, aid, tenant: facility.id, actor: actor, load: [:resident]),
+         {:ok, _section} <- fetch_section(application, section_key) do
+      answers = load_answers(application, section_key)
+      form_data = build_initial_form(section_key, answers)
 
+      {:ok,
+       socket
+       |> assign(:page_title, SectionKey.label(section_key))
+       |> assign(:application, application)
+       |> assign(:section_key, section_key)
+       |> assign(:fields, SectionSchema.fields(section_key))
+       |> assign(:sub_sections, SectionSchema.sub_sections(section_key))
+       |> assign(:form_data, form_data)
+       |> assign(:next_key, SectionKey.next_key(section_key))}
+    else
+      {:error, :section_not_applicable} ->
         {:ok,
          socket
-         |> assign(:page_title, SectionKey.label(section_key))
-         |> assign(:application, application)
-         |> assign(:section_key, section_key)
-         |> assign(:fields, SectionSchema.fields(section_key))
-         |> assign(:sub_sections, SectionSchema.sub_sections(section_key))
-         |> assign(:form_data, form_data)
-         |> assign(:next_key, SectionKey.next_key(section_key))}
+         |> put_flash(:info, "That section isn't applicable for this application.")
+         |> push_navigate(to: ~p"/formfix/#{aid}/overview")}
 
       _ ->
         {:ok, push_navigate(socket, to: ~p"/formfix")}
+    end
+  end
+
+  defp fetch_section(application, section_key) do
+    case ApplicationSection
+         |> Ash.Query.filter(
+           application_id == ^application.id and section_key == ^section_key
+         )
+         |> Ash.read_one(tenant: application.facility_id, authorize?: false) do
+      {:ok, nil} -> {:error, :section_not_applicable}
+      {:ok, section} -> {:ok, section}
+      err -> err
     end
   end
 
@@ -316,6 +335,22 @@ defmodule CaredeckWeb.Formfix.SectionLive do
       value={@value}
       class="mt-1 block w-full rounded-input border border-divider px-3 py-2"
     />
+    """
+  end
+
+  defp field_input(%{field: %{kind: {:integer_select, allowed}}} = assigns) do
+    assigns = assign(assigns, :allowed, allowed)
+
+    ~H"""
+    <select
+      name={Atom.to_string(@field.key)}
+      class="mt-1 block w-full rounded-input border border-divider px-3 py-2"
+    >
+      <option value="" selected={@value in [nil, ""]}>—</option>
+      <option :for={n <- @allowed} value={n} selected={to_string(@value) == to_string(n)}>
+        {n}
+      </option>
+    </select>
     """
   end
 

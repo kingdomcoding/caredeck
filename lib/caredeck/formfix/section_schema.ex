@@ -62,7 +62,7 @@ defmodule Caredeck.Formfix.SectionSchema do
         %{
           key: :care_level,
           label: "Assigned care level (1-5)",
-          kind: :integer,
+          kind: {:integer_select, [1, 2, 3, 4, 5]},
           sub: :level,
           required: true
         },
@@ -319,6 +319,15 @@ defmodule Caredeck.Formfix.SectionSchema do
   def parse(:date, v) when is_binary(v), do: Date.from_iso8601(v)
   def parse(:integer, v) when is_binary(v), do: parse_int(v)
 
+  def parse({:integer_select, allowed}, v) when is_binary(v) do
+    with {:ok, n} <- parse_int(v),
+         true <- n in allowed do
+      {:ok, n}
+    else
+      _ -> :error
+    end
+  end
+
   def parse(:decimal, v) when is_binary(v) do
     case Decimal.parse(v) do
       {d, ""} -> {:ok, d}
@@ -341,6 +350,7 @@ defmodule Caredeck.Formfix.SectionSchema do
   def value_column(:text), do: :value_text
   def value_column(:date), do: :value_date
   def value_column(:integer), do: :value_decimal
+  def value_column({:integer_select, _}), do: :value_decimal
   def value_column(:decimal), do: :value_decimal
   def value_column(:boolean), do: :value_bool
   def value_column({:enum, _}), do: :value_atom

@@ -122,6 +122,26 @@ defmodule CaredeckWeb.Formfix.SectionLiveTest do
     assert section.status == :complete
   end
 
+  test "navigating to a non-materialised section redirects to overview", ctx do
+    conn = sign_in_team(ctx.conn, ctx.care_team)
+
+    assert {:error, {:live_redirect, %{to: redirect}}} =
+             live(conn, ~p"/formfix/#{ctx.application.id}/section/income_partner")
+
+    assert redirect == "/formfix/#{ctx.application.id}/overview"
+  end
+
+  test "care level select rejects values outside 1..5 via the parse layer", _ctx do
+    assert Caredeck.Formfix.SectionSchema.parse({:integer_select, [1, 2, 3, 4, 5]}, "3") ==
+             {:ok, 3}
+
+    assert Caredeck.Formfix.SectionSchema.parse({:integer_select, [1, 2, 3, 4, 5]}, "6") ==
+             :error
+
+    assert Caredeck.Formfix.SectionSchema.parse({:integer_select, [1, 2, 3, 4, 5]}, "abc") ==
+             :error
+  end
+
   defp sign_in_team(conn, team) do
     conn
     |> Phoenix.ConnTest.init_test_session(%{})
