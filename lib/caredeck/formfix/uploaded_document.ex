@@ -99,7 +99,7 @@ defmodule Caredeck.Formfix.UploadedDocument do
 
   pub_sub do
     module CaredeckWeb.Endpoint
-    prefix "aid"
+    prefix "formfix"
 
     publish :create, [:application_id, "documents"], event: "doc_created"
     publish :start_verification, [:application_id, "documents"], event: "doc_updated"

@@ -182,7 +182,8 @@ defmodule CaredeckWeb.Formfix.RequiredDocumentsComponent do
               <.live_file_input upload={@uploads[slot.key]} class="text-xs" />
               <button
                 type="submit"
-                class="rounded-button bg-brand text-white text-xs font-medium px-3 py-1.5 hover:bg-brand-strong"
+                phx-disable-with="Uploading…"
+                class="rounded-button bg-brand text-white text-xs font-medium px-3 py-1.5 hover:bg-brand-strong disabled:opacity-60"
               >
                 Upload
               </button>
