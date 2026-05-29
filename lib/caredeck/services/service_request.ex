@@ -110,6 +110,8 @@ defmodule Caredeck.Services.ServiceRequest do
 
     publish :create, [:id], event: "request_created"
     publish :transition, [:id], event: "request_updated"
+    publish :create, ["inbox", :facility_id], event: "inbox_changed"
+    publish :transition, ["inbox", :facility_id], event: "inbox_changed"
   end
 
   policies do

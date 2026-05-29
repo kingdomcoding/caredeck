@@ -1,7 +1,7 @@
 defmodule Caredeck.Workers.NotificationFanout do
   use Oban.Worker, queue: :fanout, max_attempts: 3
 
-  alias Caredeck.{Accounts, Feed, People}
+  alias Caredeck.{Accounts, Feed, People, Services}
   alias Caredeck.Notifications.{Notification, Recipients}
 
   require Ash.Query
@@ -141,9 +141,91 @@ defmodule Caredeck.Workers.NotificationFanout do
     :ok
   end
 
+  def perform(%Oban.Job{args: %{"event" => "service_request_created"} = args}) do
+    request_id = args["request_id"]
+    facility_id = args["facility_id"]
+
+    request =
+      Services.ServiceRequest
+      |> Ash.get!(request_id,
+        tenant: facility_id,
+        authorize?: false,
+        load: [resident: [relative_links: :relative]]
+      )
+
+    recipients = relative_user_ids(request.resident)
+    actor_kind = if request.requester_team_id, do: :team, else: :user
+    actor_id = request.requester_team_id || request.requester_user_id
+
+    Enum.each(recipients, fn user_id ->
+      if user_id != request.requester_user_id do
+        upsert(%{
+          facility_id: facility_id,
+          user_id: user_id,
+          actor_kind: actor_kind,
+          actor_id: actor_id,
+          verb: :requested,
+          target_kind: :service_request,
+          target_id: request.id
+        })
+      end
+    end)
+
+    :ok
+  end
+
+  def perform(%Oban.Job{args: %{"event" => "service_message_created"} = args}) do
+    message_id = args["message_id"]
+    facility_id = args["facility_id"]
+
+    message =
+      Services.ServiceMessage
+      |> Ash.get!(message_id,
+        tenant: facility_id,
+        authorize?: false,
+        load: [service_request: [resident: [relative_links: :relative]]]
+      )
+
+    request = message.service_request
+    relative_ids = relative_user_ids(request.resident)
+    requester_id = request.requester_user_id
+
+    candidates =
+      [requester_id | relative_ids]
+      |> Enum.reject(&is_nil/1)
+      |> Enum.reject(&(&1 == message.author_user_id))
+      |> Enum.uniq()
+
+    actor_kind = if message.author_team_id, do: :team, else: :user
+    actor_id = message.author_team_id || message.author_user_id
+
+    Enum.each(candidates, fn user_id ->
+      upsert(%{
+        facility_id: facility_id,
+        user_id: user_id,
+        actor_kind: actor_kind,
+        actor_id: actor_id,
+        verb: :replied,
+        target_kind: :service_message,
+        target_id: message.id
+      })
+    end)
+
+    :ok
+  end
+
   def perform(%Oban.Job{args: args}) do
     Logger.warning("NotificationFanout: unhandled job args=#{inspect(args)}")
     :ok
+  end
+
+  defp relative_user_ids(nil), do: []
+
+  defp relative_user_ids(resident) do
+    resident.relative_links
+    |> Enum.map(& &1.relative.user_id)
+    |> Enum.reject(&is_nil/1)
+    |> Enum.uniq()
   end
 
   defp first_attachment_key(post) do

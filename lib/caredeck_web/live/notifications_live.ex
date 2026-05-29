@@ -76,6 +76,20 @@ defmodule CaredeckWeb.NotificationsLive do
 
   defp target_path(%{target_kind: :post, target_id: pid}), do: ~p"/feed/#{pid}"
   defp target_path(%{target_kind: :resident, target_id: rid}), do: ~p"/residents/#{rid}"
+
+  defp target_path(%{target_kind: :service_request, target_id: rid}),
+    do: ~p"/services/requests/#{rid}"
+
+  defp target_path(%{target_kind: :service_message, target_id: mid, facility_id: fid}) do
+    case Ash.get(Caredeck.Services.ServiceMessage, mid,
+           tenant: fid,
+           authorize?: false
+         ) do
+      {:ok, %{service_request_id: rid}} -> ~p"/services/requests/#{rid}"
+      _ -> ~p"/notifications"
+    end
+  end
+
   defp target_path(_), do: ~p"/notifications"
 
   defp load_notifications(nil, _user), do: []
