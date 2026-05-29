@@ -474,19 +474,12 @@ defmodule CaredeckWeb.PostComposeLive do
             class="w-full rounded-input border border-divider px-3 py-2 text-ink-900 mb-4 focus:outline-none focus:ring-2 focus:ring-brand"
           >{@body}</textarea>
 
-          <label class="flex items-center gap-2 mb-4 text-ink-900 cursor-pointer select-none">
-            <input
-              type="checkbox"
-              name="is_internal"
-              value="true"
-              checked={@is_internal}
-              class="sr-only peer"
-            />
-            <span class="h-5 w-5 rounded-input border-2 border-divider flex items-center justify-center text-white text-xs font-bold transition peer-checked:bg-brand peer-checked:border-brand peer-checked:[&>span]:opacity-100">
-              <span class="opacity-0">&#x2713;</span>
-            </span>
-            <span class="text-sm">Internal post (team only)</span>
-          </label>
+          <.checkbox
+            name="is_internal"
+            checked={@is_internal}
+            label="Internal post (team only)"
+            class="mb-4"
+          />
 
           <section class="mb-4">
             <h2 class="text-ink-900 font-medium mb-2">Photos</h2>

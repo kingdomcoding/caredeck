@@ -136,15 +136,14 @@ defmodule CaredeckWeb.Kitchen.DietProfileLive do
 
           <fieldset>
             <legend class="text-ink-900 text-sm font-medium mb-2">Skip categories</legend>
-            <label :for={cat <- MealCategory.all()} class="flex items-center gap-2 mb-1">
-              <input
-                type="checkbox"
-                name="skip_categories[]"
-                value={cat}
-                checked={cat in @skip_categories}
-                class="rounded-input border-divider"
-              /> <span class="text-ink-900 text-sm">{MealCategory.label(cat)}</span>
-            </label>
+            <.checkbox
+              :for={cat <- MealCategory.all()}
+              name="skip_categories[]"
+              value={Atom.to_string(cat)}
+              checked={cat in @skip_categories}
+              label={MealCategory.label(cat)}
+              class="mb-1"
+            />
           </fieldset>
 
           <label class="block">

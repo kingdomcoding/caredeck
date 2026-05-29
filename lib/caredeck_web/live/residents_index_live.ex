@@ -228,15 +228,12 @@ defmodule CaredeckWeb.ResidentsIndexLive do
               </select>
             </label>
 
-            <label class="text-ink-500 text-sm flex items-center gap-2 whitespace-nowrap">
-              <input
-                type="checkbox"
-                name="only_allergens"
-                value="true"
-                checked={@only_allergens}
-                class="rounded-input border-divider"
-              /> With allergens
-            </label>
+            <.checkbox
+              name="only_allergens"
+              checked={@only_allergens}
+              label="With allergens"
+              class="whitespace-nowrap"
+            />
           </form>
         </div>
 

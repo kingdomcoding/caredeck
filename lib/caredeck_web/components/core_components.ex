@@ -30,6 +30,35 @@ defmodule CaredeckWeb.CoreComponents do
 
   alias Phoenix.LiveView.JS
 
+  attr :name, :string, required: true
+  attr :value, :string, default: "true"
+  attr :checked, :boolean, default: false
+  attr :label, :string, default: nil
+  attr :class, :string, default: ""
+  attr :rest, :global
+
+  slot :inner_block
+
+  def checkbox(assigns) do
+    ~H"""
+    <label class={["flex items-center gap-2 text-ink-900 cursor-pointer select-none", @class]}>
+      <input
+        type="checkbox"
+        name={@name}
+        value={@value}
+        checked={@checked}
+        class="sr-only peer"
+        {@rest}
+      />
+      <span class="h-5 w-5 shrink-0 rounded-input border-2 border-divider flex items-center justify-center text-white text-xs font-bold transition peer-checked:bg-brand peer-checked:border-brand peer-checked:[&>span]:opacity-100">
+        <span class="opacity-0">&#x2713;</span>
+      </span>
+      <span :if={@label} class="text-sm">{@label}</span>
+      {render_slot(@inner_block)}
+    </label>
+    """
+  end
+
   @doc """
   Renders flash notices.
 
