@@ -165,6 +165,15 @@ defmodule CaredeckWeb.Aid.SectionLive do
           </div>
         </form>
 
+        <div :if={Caredeck.Aid.RequiredDocuments.for(@section_key) != []} class="mt-4 text-right">
+          <.link
+            navigate={~p"/aid/#{@application.id}/section/#{Atom.to_string(@section_key)}/documents"}
+            class="text-brand text-sm hover:underline"
+          >
+            Required documents →
+          </.link>
+        </div>
+
         <.next_section_card
           :if={@next_key}
           next_path={"/aid/#{@application.id}/section/#{Atom.to_string(@next_key)}"}
