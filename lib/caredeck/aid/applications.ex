@@ -1,5 +1,13 @@
 defmodule Caredeck.Aid.Applications do
-  alias Caredeck.Aid.{Application, ApplicationSection, RequiredDocuments, SectionSeeder, UploadedDocument}
+  alias Caredeck.Aid.{
+    Application,
+    ApplicationSection,
+    MaritalStatus,
+    RequiredDocuments,
+    SectionAnswer,
+    SectionSeeder,
+    UploadedDocument
+  }
 
   require Ash.Query
 
@@ -77,6 +85,59 @@ defmodule Caredeck.Aid.Applications do
       |> Ash.update(tenant: fid, authorize?: false)
 
     :ok
+  end
+
+  def refresh_conditional_sections(application) do
+    fid = application.facility_id
+
+    marital_atom =
+      SectionAnswer
+      |> Ash.Query.filter(
+        application_id == ^application.id and
+          section_key == :person_needing_care and
+          field_key == :marital_status
+      )
+      |> Ash.read_one!(tenant: fid, authorize?: false)
+      |> case do
+        nil -> nil
+        ans -> ans.value_atom
+      end
+
+    needs_spouse? = marital_atom && MaritalStatus.requires_spouse_section?(marital_atom)
+
+    existing =
+      ApplicationSection
+      |> Ash.Query.filter(application_id == ^application.id and section_key == :spouse)
+      |> Ash.read_one!(tenant: fid, authorize?: false)
+
+    cond do
+      needs_spouse? && is_nil(existing) ->
+        ApplicationSection
+        |> Ash.Changeset.for_create(
+          :create,
+          %{
+            facility_id: fid,
+            application_id: application.id,
+            section_key: :spouse,
+            position: 14,
+            status: :not_started
+          },
+          tenant: fid,
+          authorize?: false
+        )
+        |> Ash.create!(tenant: fid, authorize?: false)
+
+        :ok
+
+      !needs_spouse? && existing ->
+        existing
+        |> Ash.destroy!(tenant: fid, authorize?: false)
+
+        :ok
+
+      true ->
+        :ok
+    end
   end
 
   defp all_required_documents_verified?(application, sections) do

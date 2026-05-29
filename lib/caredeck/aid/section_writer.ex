@@ -31,6 +31,10 @@ defmodule Caredeck.Aid.SectionWriter do
     )
     |> Ash.update!(tenant: facility_id, authorize?: false)
 
+    if section_key == :person_needing_care do
+      :ok = Caredeck.Aid.Applications.refresh_conditional_sections(application)
+    end
+
     :ok = Caredeck.Aid.Applications.recompute_status(application)
 
     :ok
