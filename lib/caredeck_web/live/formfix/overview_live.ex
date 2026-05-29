@@ -30,7 +30,8 @@ defmodule CaredeckWeb.Formfix.OverviewLive do
          |> assign(:application, app)
          |> assign(:ordered_sections, ordered_sections)
          |> assign(:docs_summary, docs_summary(app))
-         |> assign(:next_actionable, next)}
+         |> assign(:next_actionable, next)
+         |> assign(:total_progress, Caredeck.Formfix.Applications.total_progress_percent(app))}
 
       _ ->
         {:ok, push_navigate(socket, to: ~p"/formfix")}
@@ -40,7 +41,12 @@ defmodule CaredeckWeb.Formfix.OverviewLive do
   @impl true
   def handle_info(%Phoenix.Socket.Broadcast{event: event}, socket)
       when event in ["doc_created", "doc_updated"] do
-    {:noreply, assign(socket, :docs_summary, docs_summary(socket.assigns.application))}
+    app = socket.assigns.application
+
+    {:noreply,
+     socket
+     |> assign(:docs_summary, docs_summary(app))
+     |> assign(:total_progress, Caredeck.Formfix.Applications.total_progress_percent(app))}
   end
 
   def handle_info(_, socket), do: {:noreply, socket}
@@ -80,12 +86,15 @@ defmodule CaredeckWeb.Formfix.OverviewLive do
           </h1>
 
           <div class="mt-3 h-3 w-full bg-page rounded-full overflow-hidden">
-            <div class="h-3 bg-brand" style={"width: #{@application.progress_percent}%"}></div>
+            <div class="h-3 bg-brand" style={"width: #{@total_progress}%"}></div>
           </div>
           <div class="flex items-center justify-between gap-3 mt-1 flex-wrap">
             <div class="flex items-center gap-3">
-              <p class="text-ink-500 text-xs">{@application.progress_percent}% complete</p>
-              <.formfix_status_pill status={@application.state} />
+              <p class="text-ink-500 text-xs">{@total_progress}% complete</p>
+              <.formfix_status_pill
+                :if={@application.state in [:submitted, :approved]}
+                status={@application.state}
+              />
             </div>
 
             <.link

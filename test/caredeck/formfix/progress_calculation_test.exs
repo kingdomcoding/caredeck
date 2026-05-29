@@ -90,6 +90,15 @@ defmodule Caredeck.Formfix.ProgressCalculationTest do
     assert progress(ctx.application, ctx.facility) == 100
   end
 
+  test "total_progress_percent blends sections and docs gates 50/50", ctx do
+    # 0/10 sections + 0/7 docs → 0%
+    assert Caredeck.Formfix.Applications.total_progress_percent(ctx.application) == 0
+
+    # 10/10 sections + 0/7 docs → 50%
+    mark_n_sections!(ctx.application, ctx.facility, 10)
+    assert Caredeck.Formfix.Applications.total_progress_percent(ctx.application) == 50
+  end
+
   test "mixing :complete and :skipped both count", ctx do
     sections =
       ApplicationSection

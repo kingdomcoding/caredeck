@@ -25,7 +25,8 @@ defmodule CaredeckWeb.Formfix.SubmitLive do
          |> assign(:page_title, "Review and submit")
          |> assign(:application, app)
          |> assign(:answers_by_section, answers_by_section)
-         |> assign(:ordered_keys, ordered_keys)}
+         |> assign(:ordered_keys, ordered_keys)
+         |> assign(:total_progress, Caredeck.Formfix.Applications.total_progress_percent(app))}
 
       _ ->
         {:ok, push_navigate(socket, to: ~p"/formfix")}
@@ -82,8 +83,11 @@ defmodule CaredeckWeb.Formfix.SubmitLive do
             For {@application.resident.first_name} {@application.resident.last_name}
           </p>
           <div class="mt-3 flex items-center gap-3">
-            <p class="text-ink-500 text-xs">{@application.progress_percent}% complete</p>
-            <.formfix_status_pill status={@application.state} />
+            <p class="text-ink-500 text-xs">{@total_progress}% complete</p>
+            <.formfix_status_pill
+              :if={@application.state in [:submitted, :approved]}
+              status={@application.state}
+            />
           </div>
         </header>
 

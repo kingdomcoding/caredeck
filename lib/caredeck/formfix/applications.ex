@@ -30,6 +30,45 @@ defmodule Caredeck.Formfix.Applications do
     end
   end
 
+  def total_progress_percent(application) do
+    fid = application.facility_id
+
+    sections =
+      ApplicationSection
+      |> Ash.Query.filter(application_id == ^application.id)
+      |> Ash.read!(tenant: fid, authorize?: false)
+
+    total_secs = length(sections)
+    done_secs = Enum.count(sections, &(&1.status in [:complete, :skipped]))
+
+    verified_pairs =
+      UploadedDocument
+      |> Ash.Query.filter(application_id == ^application.id and state == :verified)
+      |> Ash.read!(tenant: fid, authorize?: false)
+      |> Enum.map(&{&1.section_key, &1.document_key})
+      |> MapSet.new()
+
+    required_pairs =
+      sections
+      |> Enum.reject(&(&1.status == :skipped))
+      |> Enum.flat_map(fn s ->
+        RequiredDocuments.for(s.section_key) |> Enum.map(&{s.section_key, &1.key})
+      end)
+      |> MapSet.new()
+
+    total_docs = MapSet.size(required_pairs)
+
+    verified_docs =
+      required_pairs
+      |> MapSet.intersection(verified_pairs)
+      |> MapSet.size()
+
+    sec_pct = if total_secs == 0, do: 0, else: done_secs / total_secs
+    doc_pct = if total_docs == 0, do: 1, else: verified_docs / total_docs
+
+    round((sec_pct + doc_pct) * 50)
+  end
+
   def next_actionable_section(application) do
     fid = application.facility_id
 

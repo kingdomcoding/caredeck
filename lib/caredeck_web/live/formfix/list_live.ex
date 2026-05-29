@@ -32,8 +32,11 @@ defmodule CaredeckWeb.Formfix.ListLive do
   defp load_applications(facility, actor) do
     AidApplication
     |> Ash.Query.sort(inserted_at: :desc)
-    |> Ash.Query.load([:resident, :progress_percent])
+    |> Ash.Query.load([:resident])
     |> Ash.read!(tenant: facility.id, actor: actor)
+    |> Enum.map(fn a ->
+      Map.put(a, :total_progress, Caredeck.Formfix.Applications.total_progress_percent(a))
+    end)
   end
 
   defp scoped_residents(_facility, nil), do: []
@@ -142,13 +145,16 @@ defmodule CaredeckWeb.Formfix.ListLive do
                 <p class="text-ink-900 font-medium">
                   Application for {a.resident.first_name} {a.resident.last_name}
                 </p>
-                <.formfix_status_pill status={a.state} />
+                <.formfix_status_pill
+                  :if={a.state in [:submitted, :approved]}
+                  status={a.state}
+                />
               </div>
               <div class="mt-2 h-2 w-full bg-page rounded-full overflow-hidden">
-                <div class="h-2 bg-brand" style={"width: #{a.progress_percent}%"}></div>
+                <div class="h-2 bg-brand" style={"width: #{a.total_progress}%"}></div>
               </div>
               <p class="text-ink-500 text-xs mt-1">
-                {a.progress_percent}% complete · updated {Calendar.strftime(a.updated_at, "%d %b %Y")}
+                {a.total_progress}% complete · updated {Calendar.strftime(a.updated_at, "%d %b %Y")}
               </p>
             </.link>
           </li>

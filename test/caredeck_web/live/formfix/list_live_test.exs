@@ -66,7 +66,7 @@ defmodule CaredeckWeb.Formfix.ListLiveTest do
     conn = sign_in_team(ctx.conn, ctx.care_team)
     {:ok, _view, html} = live(conn, ~p"/formfix")
     assert html =~ "Application for Anne Smith"
-    assert html =~ "Draft"
+    assert html =~ "0% complete"
   end
 
   defp sign_in_team(conn, team) do
