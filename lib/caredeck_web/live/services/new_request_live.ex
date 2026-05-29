@@ -99,13 +99,15 @@ defmodule CaredeckWeb.Services.NewRequestLive do
 
   def handle_event("validate", _params, socket), do: {:noreply, socket}
 
-  def handle_event("submit", _params, socket) do
+  def handle_event("submit", params, socket) do
     facility = socket.assigns.current_facility
     actor = current_actor(socket)
     provider = socket.assigns.provider
     attachment_id = maybe_upload_prescription(socket, facility)
 
-    payload = build_payload(socket.assigns.subkind, socket.assigns, attachment_id)
+    form_assigns = merge_form(socket.assigns, params)
+
+    payload = build_payload(socket.assigns.subkind, form_assigns, attachment_id)
     summary = derive_summary(provider.kind, socket.assigns.subkind, payload)
 
     requester_user_id = socket.assigns[:current_user] && socket.assigns.current_user.id
@@ -114,7 +116,7 @@ defmodule CaredeckWeb.Services.NewRequestLive do
     attrs = %{
       facility_id: facility.id,
       provider_id: provider.id,
-      resident_id: socket.assigns.resident_id,
+      resident_id: form_assigns.resident_id,
       requester_user_id: requester_user_id,
       requester_team_id: requester_team_id,
       subkind: socket.assigns.subkind,
@@ -136,6 +138,15 @@ defmodule CaredeckWeb.Services.NewRequestLive do
       {:error, _} ->
         {:noreply, put_flash(socket, :error, "Couldn't send the request.")}
     end
+  end
+
+  defp merge_form(assigns, params) do
+    %{
+      resident_id: params["resident_id"] || assigns.resident_id,
+      instructions: params["instructions"] || assigns.instructions,
+      medication_name: params["medication_name"] || assigns.medication_name,
+      question: params["question"] || assigns.question
+    }
   end
 
   defp build_payload("prescription_upload", assigns, attachment_id) do
