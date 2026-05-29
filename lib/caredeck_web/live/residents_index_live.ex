@@ -139,8 +139,9 @@ defmodule CaredeckWeb.ResidentsIndexLive do
      )}
   end
 
-  def handle_event("filter", %{"ward" => ward, "only_allergens" => oa}, socket) do
-    only_allergens = oa == "true"
+  def handle_event("filter", params, socket) do
+    ward = Map.get(params, "ward", socket.assigns.ward_filter)
+    only_allergens = Map.get(params, "only_allergens") == "true"
 
     {:noreply,
      socket
