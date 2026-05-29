@@ -30,10 +30,6 @@ defmodule CaredeckWeb.Formfix.RequiredDocumentsComponent do
         end
       end)
 
-    if connected?(socket) and not Map.get(socket.assigns, :subscribed, false) do
-      Phoenix.PubSub.subscribe(Caredeck.PubSub, "formfix:#{application.id}:documents")
-    end
-
     docs = load_docs(application, section_key)
 
     {:ok,
@@ -42,7 +38,6 @@ defmodule CaredeckWeb.Formfix.RequiredDocumentsComponent do
      |> assign(:section_key, section_key)
      |> assign(:slots, slots)
      |> assign(:docs_by_slot, group_by_slot(docs))
-     |> assign(:subscribed, true)
      |> assign_new(:open, fn -> initial_open end)
      |> assign(:show_header, Map.get(assigns, :show_header, true))
      |> assign(:variant, Map.get(assigns, :variant, :embedded))}
@@ -121,8 +116,8 @@ defmodule CaredeckWeb.Formfix.RequiredDocumentsComponent do
 
     ~H"""
     <section
-      :if={@slots != []}
       class={[
+        @slots == [] && "hidden",
         "rounded-card border border-divider bg-card",
         @variant == :embedded && "mt-6"
       ]}

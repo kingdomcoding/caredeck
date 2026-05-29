@@ -18,6 +18,10 @@ defmodule CaredeckWeb.Formfix.SectionLive do
       answers = load_answers(application, section_key)
       form_data = build_initial_form(section_key, answers)
 
+      if connected?(socket) and Caredeck.Formfix.RequiredDocuments.for(section_key) != [] do
+        Phoenix.PubSub.subscribe(Caredeck.PubSub, "formfix:#{application.id}:documents")
+      end
+
       {:ok,
        socket
        |> assign(:page_title, SectionKey.label(section_key))
@@ -169,6 +173,20 @@ defmodule CaredeckWeb.Formfix.SectionLive do
   end
 
   @impl true
+  def handle_info(%Phoenix.Socket.Broadcast{event: event}, socket)
+      when event in ["doc_created", "doc_updated"] do
+    send_update(CaredeckWeb.Formfix.RequiredDocumentsComponent,
+      id: "docs-#{socket.assigns.section_key}",
+      application: socket.assigns.application,
+      section_key: socket.assigns.section_key
+    )
+
+    {:noreply, socket}
+  end
+
+  def handle_info(_, socket), do: {:noreply, socket}
+
+  @impl true
   def render(%{section_key: :welcome} = assigns), do: render_welcome(assigns)
   def render(assigns), do: render_form(assigns)
 
@@ -282,17 +300,13 @@ defmodule CaredeckWeb.Formfix.SectionLive do
           </div>
         </form>
 
-        <div
+        <.live_component
           :if={Caredeck.Formfix.RequiredDocuments.for(@section_key) != []}
-          class="mt-4 text-right"
-        >
-          <.link
-            navigate={~p"/formfix/#{@application.id}/section/#{Atom.to_string(@section_key)}/documents"}
-            class="text-brand text-sm hover:underline"
-          >
-            Required documents →
-          </.link>
-        </div>
+          module={CaredeckWeb.Formfix.RequiredDocumentsComponent}
+          id={"docs-#{@section_key}"}
+          application={@application}
+          section_key={@section_key}
+        />
 
         <.formfix_footer />
       </div>
