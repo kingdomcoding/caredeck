@@ -9,7 +9,8 @@ config :caredeck,
     Caredeck.Feed,
     Caredeck.Notifications,
     Caredeck.Kitchen,
-    Caredeck.Services
+    Caredeck.Services,
+    Caredeck.Aid
   ],
   generators: [timestamp_type: :utc_datetime]
 
