@@ -2,7 +2,7 @@ defmodule CaredeckWeb.Services.NewRequestLive do
   use CaredeckWeb, :live_view
 
   alias Caredeck.Feed
-  alias Caredeck.Feed.Attachment
+  alias Caredeck.Feed.{Attachment, Post, ResidentTagOnPost}
   alias Caredeck.People.{Relative, RelativeOfResident, Resident}
   alias Caredeck.Services.{ProviderKind, ServiceProvider, ServiceRequest}
 
@@ -33,7 +33,18 @@ defmodule CaredeckWeb.Services.NewRequestLive do
              |> assign(:instructions, "")
              |> assign(:medication_name, "")
              |> assign(:question, "")
+             |> assign(:reason, "Item not properly processed")
+             |> assign(:details, "")
+             |> assign(:preferred_date, "")
+             |> assign(:haircut_type, "trim")
+             |> assign(:notes, "")
+             |> assign(:post_to_feed, false)
              |> allow_upload(:prescription,
+               accept: ~w(.jpg .jpeg .png .webp),
+               max_entries: 1,
+               max_file_size: 8_000_000
+             )
+             |> allow_upload(:laundry_photo,
                accept: ~w(.jpg .jpeg .png .webp),
                max_entries: 1,
                max_file_size: 8_000_000
@@ -94,7 +105,13 @@ defmodule CaredeckWeb.Services.NewRequestLive do
        :medication_name,
        params["medication_name"] || socket.assigns.medication_name
      )
-     |> assign(:question, params["question"] || socket.assigns.question)}
+     |> assign(:question, params["question"] || socket.assigns.question)
+     |> assign(:reason, params["reason"] || socket.assigns.reason)
+     |> assign(:details, params["details"] || socket.assigns.details)
+     |> assign(:preferred_date, params["preferred_date"] || socket.assigns.preferred_date)
+     |> assign(:haircut_type, params["haircut_type"] || socket.assigns.haircut_type)
+     |> assign(:notes, params["notes"] || socket.assigns.notes)
+     |> assign(:post_to_feed, params["post_to_feed"] == "true")}
   end
 
   def handle_event("validate", _params, socket), do: {:noreply, socket}
@@ -103,9 +120,8 @@ defmodule CaredeckWeb.Services.NewRequestLive do
     facility = socket.assigns.current_facility
     actor = current_actor(socket)
     provider = socket.assigns.provider
-    attachment_id = maybe_upload_prescription(socket, facility)
-
     form_assigns = merge_form(socket.assigns, params)
+    attachment_id = maybe_upload(socket, facility, socket.assigns.subkind)
 
     payload = build_payload(socket.assigns.subkind, form_assigns, attachment_id)
     summary = derive_summary(provider.kind, socket.assigns.subkind, payload)
@@ -129,6 +145,7 @@ defmodule CaredeckWeb.Services.NewRequestLive do
          |> Ash.create(tenant: facility.id, actor: actor) do
       {:ok, request} ->
         if attachment_id, do: link_attachment(attachment_id, request.id, facility.id)
+        maybe_create_feed_post(request, provider, payload, facility)
 
         {:noreply,
          socket
@@ -145,7 +162,13 @@ defmodule CaredeckWeb.Services.NewRequestLive do
       resident_id: params["resident_id"] || assigns.resident_id,
       instructions: params["instructions"] || assigns.instructions,
       medication_name: params["medication_name"] || assigns.medication_name,
-      question: params["question"] || assigns.question
+      question: params["question"] || assigns.question,
+      reason: params["reason"] || assigns.reason,
+      details: params["details"] || assigns.details,
+      preferred_date: params["preferred_date"] || assigns.preferred_date,
+      haircut_type: params["haircut_type"] || assigns.haircut_type,
+      notes: params["notes"] || assigns.notes,
+      post_to_feed: params["post_to_feed"] == "true" or assigns.post_to_feed
     }
   end
 
@@ -172,9 +195,37 @@ defmodule CaredeckWeb.Services.NewRequestLive do
     }
   end
 
-  defp maybe_upload_prescription(socket, facility) do
+  defp build_payload("complaint", assigns, attachment_id) do
+    %{
+      "subkind" => "complaint",
+      "service" => "Resident laundry",
+      "reason" => assigns.reason,
+      "details" => assigns.details,
+      "attachment_id" => attachment_id
+    }
+  end
+
+  defp build_payload("appointment_request", assigns, _attachment_id) do
+    %{
+      "subkind" => "appointment_request",
+      "preferred_date" => assigns.preferred_date,
+      "haircut_type" => assigns.haircut_type,
+      "notes" => assigns.notes,
+      "post_to_feed" => assigns.post_to_feed
+    }
+  end
+
+  defp maybe_upload(socket, facility, subkind) do
+    case subkind do
+      "prescription_upload" -> consume_one_photo(socket, :prescription, facility)
+      "complaint" -> consume_one_photo(socket, :laundry_photo, facility)
+      _ -> nil
+    end
+  end
+
+  defp consume_one_photo(socket, name, facility) do
     consumed =
-      consume_uploaded_entries(socket, :prescription, fn %{path: path}, entry ->
+      consume_uploaded_entries(socket, name, fn %{path: path}, entry ->
         key = Feed.S3.generate_key("photos", entry.client_name)
         {:ok, body} = File.read(path)
         {:ok, _} = Feed.S3.put_object(key, body, entry.client_type)
@@ -218,7 +269,71 @@ defmodule CaredeckWeb.Services.NewRequestLive do
   defp derive_summary(:pharmacy, "general_question", _),
     do: "Question for pharmacy"
 
+  defp derive_summary(:laundry, "complaint", %{"reason" => r}),
+    do: "Laundry complaint — #{r}"
+
+  defp derive_summary(:hairdresser, "appointment_request", _),
+    do: "Hairdresser appointment"
+
   defp derive_summary(_kind, subkind, _payload), do: subkind
+
+  defp maybe_create_feed_post(
+         request,
+         %{kind: :hairdresser, team_identity_id: team_id} = provider,
+         %{"post_to_feed" => true} = payload,
+         facility
+       )
+       when not is_nil(team_id) do
+    body = hairdresser_post_body(provider, payload)
+
+    {:ok, post} =
+      Post
+      |> Ash.Changeset.for_create(
+        :create,
+        %{
+          facility_id: facility.id,
+          team_identity_id: team_id,
+          body: body,
+          is_internal: false
+        },
+        tenant: facility.id,
+        authorize?: false
+      )
+      |> Ash.create(tenant: facility.id, authorize?: false)
+
+    if request.resident_id do
+      ResidentTagOnPost
+      |> Ash.Changeset.for_create(
+        :create,
+        %{
+          facility_id: facility.id,
+          post_id: post.id,
+          resident_id: request.resident_id
+        },
+        tenant: facility.id,
+        authorize?: false
+      )
+      |> Ash.create!(tenant: facility.id, authorize?: false)
+    end
+
+    :ok
+  end
+
+  defp maybe_create_feed_post(_, _, _, _), do: :ok
+
+  defp hairdresser_post_body(provider, payload) do
+    date = payload["preferred_date"]
+    cut = payload["haircut_type"] || "appointment"
+
+    date_phrase =
+      case date do
+        nil -> ""
+        "" -> ""
+        d -> " on #{d}"
+      end
+
+    "Haircut booked at #{provider.name}#{date_phrase} (#{cut})."
+  end
 
   @impl true
   def render(assigns) do
@@ -301,6 +416,94 @@ defmodule CaredeckWeb.Services.NewRequestLive do
                   class="mt-1 block w-full rounded-input border border-divider px-3 py-2"
                 >{@question}</textarea>
               </label>
+            <% "complaint" -> %>
+              <label class="block">
+                <span class="text-ink-900 text-sm font-medium">Service</span>
+                <input
+                  name="service_label"
+                  value="Resident laundry"
+                  disabled
+                  class="mt-1 block w-full rounded-input border border-divider bg-page px-3 py-2 text-ink-500"
+                />
+              </label>
+
+              <label class="block">
+                <span class="text-ink-900 text-sm font-medium">Reason</span>
+                <select
+                  name="reason"
+                  class="mt-1 block w-full rounded-input border border-divider px-3 py-2"
+                >
+                  <option
+                    :for={
+                      r <- [
+                        "Item not properly processed",
+                        "Item lost",
+                        "Item shrunk",
+                        "Other"
+                      ]
+                    }
+                    value={r}
+                    selected={@reason == r}
+                  >
+                    {r}
+                  </option>
+                </select>
+              </label>
+
+              <label class="block">
+                <span class="text-ink-900 text-sm font-medium">Details</span>
+                <textarea
+                  name="details"
+                  rows="3"
+                  class="mt-1 block w-full rounded-input border border-divider px-3 py-2"
+                >{@details}</textarea>
+              </label>
+
+              <label class="block">
+                <span class="text-ink-900 text-sm font-medium">Photo</span>
+                <.live_file_input upload={@uploads.laundry_photo} class="mt-1" />
+              </label>
+            <% "appointment_request" -> %>
+              <label class="block">
+                <span class="text-ink-900 text-sm font-medium">Preferred date</span>
+                <input
+                  type="date"
+                  name="preferred_date"
+                  value={@preferred_date}
+                  class="mt-1 block w-full rounded-input border border-divider px-3 py-2"
+                />
+              </label>
+
+              <fieldset>
+                <legend class="text-ink-900 text-sm font-medium mb-1">
+                  Haircut type
+                </legend>
+                <label :for={t <- ~w(trim buzz wash_set other)} class="flex items-center gap-2 mb-1">
+                  <input
+                    type="radio"
+                    name="haircut_type"
+                    value={t}
+                    checked={@haircut_type == t}
+                    class="accent-brand"
+                  />
+                  <span class="text-ink-900 text-sm">{humanize_radio(t)}</span>
+                </label>
+              </fieldset>
+
+              <label class="block">
+                <span class="text-ink-900 text-sm font-medium">Notes</span>
+                <textarea
+                  name="notes"
+                  rows="2"
+                  class="mt-1 block w-full rounded-input border border-divider px-3 py-2"
+                >{@notes}</textarea>
+              </label>
+
+              <.checkbox
+                name="post_to_feed"
+                checked={@post_to_feed}
+                label="Also post to family feed"
+              />
             <% _ -> %>
               <p class="text-ink-500 text-sm">
                 This subkind is not yet implemented.
@@ -321,4 +524,7 @@ defmodule CaredeckWeb.Services.NewRequestLive do
 
   defp humanize_subkind(sk) when is_atom(sk),
     do: sk |> Atom.to_string() |> String.replace("_", " ") |> String.capitalize()
+
+  defp humanize_radio(s),
+    do: s |> String.replace("_", " ") |> String.capitalize()
 end
