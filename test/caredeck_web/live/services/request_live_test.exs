@@ -91,7 +91,7 @@ defmodule CaredeckWeb.Services.RequestLiveTest do
       People.Resident
       |> Ash.Changeset.for_create(
         :create,
-        %{facility_id: facility.id, first_name: "Anna", last_name: "Becker"},
+        %{facility_id: facility.id, first_name: "Anna", last_name: "Smith"},
         tenant: facility.id,
         authorize?: false
       )
@@ -128,7 +128,7 @@ defmodule CaredeckWeb.Services.RequestLiveTest do
         %{
           facility_id: facility.id,
           kind: :pharmacy,
-          name: "Apotheke",
+          name: "Pharmacy",
           team_identity_id: pharmacy_team.id
         },
         tenant: facility.id,
@@ -168,7 +168,7 @@ defmodule CaredeckWeb.Services.RequestLiveTest do
     {:ok, view, html} = live(conn, ~p"/services/requests/#{ctx.request.id}")
 
     assert html =~ "Question for pharmacy"
-    assert html =~ "Apotheke"
+    assert html =~ "Pharmacy"
 
     view
     |> form("form[phx-submit=send]", %{"body" => "Yes — Friday morning."})

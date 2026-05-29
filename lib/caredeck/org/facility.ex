@@ -11,7 +11,7 @@ defmodule Caredeck.Org.Facility do
 
     attribute :name, :string, allow_nil?: false, public?: true
     attribute :slug, :ci_string, allow_nil?: false, public?: true
-    attribute :timezone, :string, default: "Europe/Berlin", public?: true
+    attribute :timezone, :string, default: "Etc/UTC", public?: true
 
     create_timestamp :inserted_at
     update_timestamp :updated_at

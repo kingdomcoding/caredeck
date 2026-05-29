@@ -42,7 +42,7 @@ defmodule CaredeckWeb.Services.IndexLiveTest do
       |> Ash.create!(authorize?: false)
 
     for {kind, name} <- [
-          {:pharmacy, "Apotheke"},
+          {:pharmacy, "Pharmacy"},
           {:laundry, "Linen"},
           {:hairdresser, "Salon"}
         ] do
@@ -64,7 +64,7 @@ defmodule CaredeckWeb.Services.IndexLiveTest do
     {:ok, _view, html} = live(conn, ~p"/services")
 
     assert html =~ "Services"
-    assert html =~ "Apotheke"
+    assert html =~ "Pharmacy"
     assert html =~ "Linen"
     assert html =~ "Salon"
     assert html =~ "Pharmacy"

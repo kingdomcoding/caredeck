@@ -51,7 +51,7 @@ defmodule Caredeck.Workers.ServicesNotificationFanoutTest do
       People.Resident
       |> Ash.Changeset.for_create(
         :create,
-        %{facility_id: facility.id, first_name: "Anna", last_name: "Becker"},
+        %{facility_id: facility.id, first_name: "Anna", last_name: "Smith"},
         tenant: facility.id,
         authorize?: false
       )
@@ -69,7 +69,7 @@ defmodule Caredeck.Workers.ServicesNotificationFanoutTest do
         %{
           facility_id: facility.id,
           kind: :pharmacy,
-          name: "Apotheke",
+          name: "Pharmacy",
           team_identity_id: pharmacy_team.id
         },
         tenant: facility.id,

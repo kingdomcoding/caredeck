@@ -99,7 +99,7 @@ defmodule CaredeckWeb.Kitchen.SummaryTest do
   end
 
   test "aggregates 3 orders into correct desc counts", ctx do
-    p_a = create_product(ctx.facility, "Schnitzel")
+    p_a = create_product(ctx.facility, "Roast chicken")
     p_b = create_product(ctx.facility, "Vegetarian curry")
 
     r1 = create_resident(ctx.facility, "R1")
@@ -113,14 +113,14 @@ defmodule CaredeckWeb.Kitchen.SummaryTest do
     conn = sign_in_team(ctx.conn, ctx.team)
     {:ok, _view, html} = live(conn, ~p"/kitchen/summary")
 
-    assert html =~ "Schnitzel"
+    assert html =~ "Roast chicken"
     assert html =~ "×2"
     assert html =~ "Vegetarian curry"
     assert html =~ "×1"
 
-    schnitzel_pos = :binary.match(html, "Schnitzel") |> elem(0)
+    chicken_pos = :binary.match(html, "Roast chicken") |> elem(0)
     curry_pos = :binary.match(html, "Vegetarian curry") |> elem(0)
-    assert schnitzel_pos < curry_pos
+    assert chicken_pos < curry_pos
   end
 
   test "broadcast order_changed re-aggregates", ctx do

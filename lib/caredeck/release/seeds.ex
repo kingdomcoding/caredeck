@@ -122,7 +122,7 @@ defmodule Caredeck.Release.Seeds do
   @service_provider_seeds [
     %{
       kind: :pharmacy,
-      name: "Apotheke Demo",
+      name: "Demo Pharmacy",
       handle: "team-pharmacy",
       window: "Mon–Fri 09:00–18:00",
       target_hours: 24
@@ -143,7 +143,7 @@ defmodule Caredeck.Release.Seeds do
     },
     %{
       kind: :doctor,
-      name: "Hausarzt Demo",
+      name: "Family Doctor Demo",
       handle: "team-doctor",
       window: "Mon–Fri 08:00–16:00",
       target_hours: 24
@@ -215,7 +215,7 @@ defmodule Caredeck.Release.Seeds do
 
   @kitchen_products [
     {:breakfast, ["Granola bowl", "Porridge", "Scrambled eggs"]},
-    {:lunch, ["Schnitzel", "Vegetable curry", "Pasta primavera"]},
+    {:lunch, ["Roast chicken", "Vegetable curry", "Pasta primavera"]},
     {:dinner, ["Soup of the day", "Fish & potatoes", "Chickpea stew"]},
     {:drinks, ["Apple juice", "Herbal tea", "Mineral water"]},
     {:fruit, ["Apple", "Banana", "Seasonal mix"]},

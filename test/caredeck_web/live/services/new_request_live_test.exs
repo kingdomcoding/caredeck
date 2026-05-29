@@ -47,7 +47,7 @@ defmodule CaredeckWeb.Services.NewRequestLiveTest do
       People.Resident
       |> Ash.Changeset.for_create(
         :create,
-        %{facility_id: facility.id, first_name: "Anna", last_name: "Becker"},
+        %{facility_id: facility.id, first_name: "Anna", last_name: "Smith"},
         tenant: facility.id,
         authorize?: false
       )
@@ -57,7 +57,7 @@ defmodule CaredeckWeb.Services.NewRequestLiveTest do
       Services.ServiceProvider
       |> Ash.Changeset.for_create(
         :create,
-        %{facility_id: facility.id, kind: :pharmacy, name: "Apotheke"},
+        %{facility_id: facility.id, kind: :pharmacy, name: "Pharmacy"},
         tenant: facility.id,
         authorize?: false
       )

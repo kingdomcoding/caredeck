@@ -61,7 +61,7 @@ defmodule Caredeck.Kitchen.ResourcesTest do
   end
 
   test "Product create + read are tenant-scoped", ctx do
-    {:ok, _} = create_product(ctx.facility_a, "Schnitzel")
+    {:ok, _} = create_product(ctx.facility_a, "Roast chicken")
     a_rows = Kitchen.Product |> Ash.read!(tenant: ctx.facility_a.id, authorize?: false)
     b_rows = Kitchen.Product |> Ash.read!(tenant: ctx.facility_b.id, authorize?: false)
 

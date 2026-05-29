@@ -37,7 +37,7 @@ defmodule CaredeckWeb.AcceptInvitationTest do
       People.Resident
       |> Ash.Changeset.for_create(
         :create,
-        %{facility_id: facility.id, first_name: "Anna", last_name: "Becker"},
+        %{facility_id: facility.id, first_name: "Anna", last_name: "Smith"},
         tenant: facility.id,
         authorize?: false
       )
@@ -66,7 +66,7 @@ defmodule CaredeckWeb.AcceptInvitationTest do
       )
 
     {:ok, _view, html} = live(ctx.conn, ~p"/invitations/#{inv.token}")
-    assert html =~ "Anna Becker"
+    assert html =~ "Anna Smith"
     assert html =~ "Join Caredeck"
     assert html =~ "newbie-#{ctx.suffix}@example.test"
   end

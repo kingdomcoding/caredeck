@@ -18,7 +18,7 @@ defmodule Caredeck.Feed.AuthzTest do
     create_membership(user_a, facility_a)
     create_membership(user_b, facility_a)
 
-    resident_a = create_resident(facility_a, "Anna", "Becker")
+    resident_a = create_resident(facility_a, "Anna", "Smith")
     relative_a = create_relative(facility_a, user_a, "User A")
     link_relative(facility_a, relative_a, resident_a, :daughter)
 

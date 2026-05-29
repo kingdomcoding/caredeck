@@ -1,20 +1,21 @@
 defmodule Caredeck.Release.NamePool do
   @first_names ~w(
-    Alice Bernard Carla Daniel Edith Frieda Greta Heinrich Ida Jakob
-    Karl Liese Magnus Nora Otto Petra Rosa Stefan Theo Ursula
-    Viktor Walter Anna Bruno Clara Dieter Elsa Fritz Gisela Hans
-    Inge Johann Klaus Lotte Martha Nikolaus Olga Paul Renate Sophie
-    Tobias Uwe Vera Werner Xenia Yvonne Zoe Adam Beatrice Charlotte
-    Dominik Erika Felix Gertrud Hugo Irma Jens Katharina Lukas Maria
-    Niklas Oskar Pia Quentin Ruth Stella Thomas Ulrich Vincent Wilma
+    Alice Beatrice Charles Dorothy Edward Florence George Harriet Isaac James
+    Kathleen Lawrence Margaret Nicholas Olivia Patrick Queenie Robert Susan Thomas
+    Ursula Victor William Yvonne Zachary Albert Bernice Clifford Doris Ernest
+    Frances Gerald Hannah Irene John Katherine Leonard Mabel Norman Phyllis
+    Quentin Ralph Sylvia Terence Vera Wallace Constance Henry Joan Lillian
+    Martin Nora Oliver Pauline Reginald Shirley Theodore Victoria Walter Audrey
+    Bruce Caroline Dennis Eleanor Frank Geraldine Howard Iris Julian Lydia
+    Marcus Nadine Owen Penelope
   )
 
   @last_names ~w(
-    Schmidt Müller Becker Wagner Fischer Weber Schulz Hoffmann Bauer Hartmann
-    Meier Schäfer Koch Richter Klein Schwarz Wolf Zimmermann Braun Krüger
-    Schneider Lange König Hofmann Kaiser Fuchs Lehmann Walter Krause Werner
-    Schmitt Schreiber Gerber Vogel Stein Roth Berger Kruse Friedrich Otto
-    Engel Heinrich Albrecht Lorenz Maier Reuter Voss Brandt Frank Hahn
+    Smith Johnson Williams Brown Jones Miller Davis Wilson Anderson Taylor
+    Thomas Moore Jackson Martin Lee Walker Hall Allen Young King Wright
+    Scott Green Adams Baker Carter Mitchell Roberts Turner Phillips Campbell
+    Parker Evans Edwards Collins Stewart Morris Murphy Cook Rogers Morgan
+    Bell Bailey Cooper Richardson Howard Ward Cox Gray Watson Brooks Foster
   )
 
   def random_first_name, do: Enum.random(@first_names)

@@ -70,7 +70,7 @@ defmodule CaredeckWeb.Services.InboxLiveTest do
       Services.ServiceProvider
       |> Ash.Changeset.for_create(
         :create,
-        %{facility_id: facility.id, kind: :pharmacy, name: "Apotheke"},
+        %{facility_id: facility.id, kind: :pharmacy, name: "Pharmacy"},
         tenant: facility.id,
         authorize?: false
       )
@@ -101,7 +101,7 @@ defmodule CaredeckWeb.Services.InboxLiveTest do
 
     assert html =~ "Services inbox"
     assert html =~ "Open one"
-    assert html =~ "Apotheke"
+    assert html =~ "Pharmacy"
   end
 
   test "/services/inbox redirects non-care/non-service teams", ctx do

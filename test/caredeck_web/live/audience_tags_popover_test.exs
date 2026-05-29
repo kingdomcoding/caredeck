@@ -32,7 +32,7 @@ defmodule CaredeckWeb.AudienceTagsPopoverTest do
     create_membership(user, facility)
 
     [r1, r2, r3] =
-      Enum.map(["Anna Becker", "Otto Berger", "Lena Meyer"], fn full ->
+      Enum.map(["Anna Smith", "Oliver Brooks", "Linda Moore"], fn full ->
         [first, last] = String.split(full, " ")
 
         People.Resident
@@ -118,7 +118,7 @@ defmodule CaredeckWeb.AudienceTagsPopoverTest do
     rendered = render(view)
 
     assert rendered =~ "Tagged residents"
-    assert rendered =~ "Anna Becker"
+    assert rendered =~ "Anna Smith"
   end
 
   defp create_team(facility, suffix) do

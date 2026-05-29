@@ -34,8 +34,8 @@ defmodule CaredeckWeb.ProfileTest do
     create_membership(user_a, facility)
     create_membership(user_b, facility)
 
-    relative_a = create_relative(facility, user_a, "Anna Becker")
-    relative_b = create_relative(facility, user_b, "Otto Berger")
+    relative_a = create_relative(facility, user_a, "Anna Smith")
+    relative_b = create_relative(facility, user_b, "Oliver Brooks")
 
     resident =
       People.Resident
@@ -63,8 +63,8 @@ defmodule CaredeckWeb.ProfileTest do
   test "ProfileLive shows both relatives with 'Me' on current user", ctx do
     conn = ctx.conn |> sign_in_user(ctx.user_a)
     {:ok, _view, html} = live(conn, ~p"/residents/#{ctx.resident.id}")
-    assert html =~ "Anna Becker"
-    assert html =~ "Otto Berger"
+    assert html =~ "Anna Smith"
+    assert html =~ "Oliver Brooks"
     assert html =~ "Daughter"
     assert html =~ "Son"
     assert html =~ "Me"
@@ -101,7 +101,7 @@ defmodule CaredeckWeb.ProfileTest do
     view
     |> form("form[phx-submit=save]", %{
       "first_name" => "Anne",
-      "family_name" => "Becker-Wolf",
+      "family_name" => "Smith-Watson",
       "phone" => "555-9999",
       "relationship" => "niece"
     })
@@ -113,7 +113,7 @@ defmodule CaredeckWeb.ProfileTest do
         actor: ctx.user_a
       )
 
-    assert reloaded.display_name == "Anne Becker-Wolf"
+    assert reloaded.display_name == "Anne Smith-Watson"
     assert reloaded.phone == "555-9999"
 
     link =

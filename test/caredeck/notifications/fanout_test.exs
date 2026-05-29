@@ -19,7 +19,7 @@ defmodule Caredeck.Notifications.FanoutTest do
     user_a = create_user("ua-fanout-#{suffix}@example.test")
     user_b = create_user("ub-fanout-#{suffix}@example.test")
 
-    resident = create_resident(facility, "Anna", "Becker")
+    resident = create_resident(facility, "Anna", "Smith")
 
     relative_a = create_relative(facility, user_a, "User A")
     relative_b = create_relative(facility, user_b, "User B")

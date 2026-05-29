@@ -75,7 +75,7 @@ defmodule CaredeckWeb.ReactionToggleTest do
       People.Resident
       |> Ash.Changeset.for_create(
         :create,
-        %{facility_id: facility.id, first_name: "Anna", last_name: "Becker"},
+        %{facility_id: facility.id, first_name: "Anna", last_name: "Smith"},
         tenant: facility.id,
         authorize?: false
       )
