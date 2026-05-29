@@ -94,6 +94,8 @@ defmodule CaredeckWeb.Aid.SectionLive do
     )
     |> Ash.update!(tenant: facility_id, authorize?: false)
 
+    :ok = Caredeck.Aid.Applications.recompute_status(socket.assigns.application)
+
     next =
       case socket.assigns.next_key do
         nil -> ~p"/aid/#{socket.assigns.application.id}/overview"

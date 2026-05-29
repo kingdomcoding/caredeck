@@ -31,6 +31,8 @@ defmodule Caredeck.Aid.SectionWriter do
     )
     |> Ash.update!(tenant: facility_id, authorize?: false)
 
+    :ok = Caredeck.Aid.Applications.recompute_status(application)
+
     :ok
   end
 

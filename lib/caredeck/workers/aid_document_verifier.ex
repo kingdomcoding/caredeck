@@ -31,6 +31,14 @@ defmodule Caredeck.Workers.AidDocumentVerifier do
         raise "aid_verification_engine #{inspect(other)} is not implemented"
     end
 
+    application =
+      Ash.get!(Caredeck.Aid.Application, doc.application_id,
+        tenant: fid,
+        authorize?: false
+      )
+
+    :ok = Caredeck.Aid.Applications.recompute_status(application)
+
     :ok
   end
 end
