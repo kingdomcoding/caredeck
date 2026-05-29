@@ -1,7 +1,7 @@
-defmodule Caredeck.Aid.ConditionalSpouseTest do
+defmodule Caredeck.Formfix.ConditionalSpouseTest do
   use Caredeck.DataCase, async: false
 
-  alias Caredeck.Aid.{Application, ApplicationSection, Applications, SectionSeeder, SectionWriter}
+  alias Caredeck.Formfix.{Application, ApplicationSection, Applications, SectionSeeder, SectionWriter}
   alias Caredeck.{Org, People}
 
   require Ash.Query

@@ -1,7 +1,7 @@
-defmodule Caredeck.Aid.SectionSchemaTest do
+defmodule Caredeck.Formfix.SectionSchemaTest do
   use ExUnit.Case, async: true
 
-  alias Caredeck.Aid.SectionSchema
+  alias Caredeck.Formfix.SectionSchema
 
   test "all/0 returns 14 sections (13 base + 1 conditional)" do
     assert length(SectionSchema.all()) == 14
@@ -39,7 +39,7 @@ defmodule Caredeck.Aid.SectionSchemaTest do
     end
 
     test "enum" do
-      assert SectionSchema.parse({:enum, Caredeck.Aid.MaritalStatus}, "married") ==
+      assert SectionSchema.parse({:enum, Caredeck.Formfix.MaritalStatus}, "married") ==
                {:ok, :married}
     end
   end
@@ -51,7 +51,7 @@ defmodule Caredeck.Aid.SectionSchemaTest do
       assert SectionSchema.value_column(:integer) == :value_decimal
       assert SectionSchema.value_column(:decimal) == :value_decimal
       assert SectionSchema.value_column(:boolean) == :value_bool
-      assert SectionSchema.value_column({:enum, Caredeck.Aid.MaritalStatus}) == :value_atom
+      assert SectionSchema.value_column({:enum, Caredeck.Formfix.MaritalStatus}) == :value_atom
     end
   end
 

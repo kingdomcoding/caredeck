@@ -1,7 +1,7 @@
-defmodule Caredeck.Aid.SectionWriterTest do
+defmodule Caredeck.Formfix.SectionWriterTest do
   use Caredeck.DataCase, async: false
 
-  alias Caredeck.Aid.{Application, ApplicationSection, SectionAnswer, SectionSeeder, SectionWriter}
+  alias Caredeck.Formfix.{Application, ApplicationSection, SectionAnswer, SectionSeeder, SectionWriter}
   alias Caredeck.{Org, People}
 
   require Ash.Query

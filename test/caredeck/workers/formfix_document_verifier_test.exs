@@ -1,10 +1,10 @@
-defmodule Caredeck.Workers.AidDocumentVerifierTest do
+defmodule Caredeck.Workers.FormfixDocumentVerifierTest do
   use Caredeck.DataCase, async: false
   use Oban.Testing, repo: Caredeck.Repo
 
-  alias Caredeck.{Aid, Org, People}
-  alias Caredeck.Aid.{UploadedDocument}
-  alias Caredeck.Workers.AidDocumentVerifier
+  alias Caredeck.{Formfix, Org, People}
+  alias Caredeck.Formfix.{UploadedDocument}
+  alias Caredeck.Workers.FormfixDocumentVerifier
 
   setup do
     suffix = :erlang.unique_integer([:positive])
@@ -38,7 +38,7 @@ defmodule Caredeck.Workers.AidDocumentVerifierTest do
       |> Ash.create!(authorize?: false)
 
     application =
-      Aid.Application
+      Formfix.Application
       |> Ash.Changeset.for_create(
         :create,
         %{facility_id: facility.id, resident_id: resident.id},
@@ -68,7 +68,7 @@ defmodule Caredeck.Workers.AidDocumentVerifierTest do
   end
 
   test "stub engine transitions :pending → :verified with timestamp", ctx do
-    perform_job(AidDocumentVerifier, %{
+    perform_job(FormfixDocumentVerifier, %{
       "document_id" => ctx.doc.id,
       "facility_id" => ctx.facility.id
     })
@@ -79,14 +79,14 @@ defmodule Caredeck.Workers.AidDocumentVerifierTest do
   end
 
   test "unknown engine raises", ctx do
-    Application.put_env(:caredeck, :aid_verification_engine, :ocr)
+    Application.put_env(:caredeck, :formfix_verification_engine, :ocr)
 
     on_exit(fn ->
-      Application.put_env(:caredeck, :aid_verification_engine, :stub)
+      Application.put_env(:caredeck, :formfix_verification_engine, :stub)
     end)
 
     assert_raise RuntimeError, ~r/aid_verification_engine/, fn ->
-      perform_job(AidDocumentVerifier, %{
+      perform_job(FormfixDocumentVerifier, %{
         "document_id" => ctx.doc.id,
         "facility_id" => ctx.facility.id
       })

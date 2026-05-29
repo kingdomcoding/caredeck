@@ -1,9 +1,9 @@
-defmodule CaredeckWeb.Aid.OverviewLiveTest do
+defmodule CaredeckWeb.Formfix.OverviewLiveTest do
   use CaredeckWeb.ConnCase, async: false
 
   import Phoenix.LiveViewTest
 
-  alias Caredeck.{Accounts, Aid, Org, People}
+  alias Caredeck.{Accounts, Formfix, Org, People}
 
   setup do
     suffix = :erlang.unique_integer([:positive])
@@ -51,14 +51,14 @@ defmodule CaredeckWeb.Aid.OverviewLiveTest do
       )
       |> Ash.create!(authorize?: false)
 
-    application = Aid.Applications.start_for_resident!(facility, resident, care_team)
+    application = Formfix.Applications.start_for_resident!(facility, resident, care_team)
 
     %{facility: facility, care_team: care_team, resident: resident, application: application}
   end
 
   test "renders 13 section tiles and the support card", ctx do
     conn = sign_in_team(ctx.conn, ctx.care_team)
-    {:ok, _view, html} = live(conn, ~p"/aid/#{ctx.application.id}/overview")
+    {:ok, _view, html} = live(conn, ~p"/formfix/#{ctx.application.id}/overview")
 
     assert html =~ "Welcome"
     assert html =~ "Person Needing Care"
@@ -76,7 +76,7 @@ defmodule CaredeckWeb.Aid.OverviewLiveTest do
 
   test "renders progress bar at 0% initially", ctx do
     conn = sign_in_team(ctx.conn, ctx.care_team)
-    {:ok, _view, html} = live(conn, ~p"/aid/#{ctx.application.id}/overview")
+    {:ok, _view, html} = live(conn, ~p"/formfix/#{ctx.application.id}/overview")
     assert html =~ "0% complete"
   end
 

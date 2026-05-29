@@ -1,7 +1,7 @@
-defmodule Caredeck.Aid.ProgressCalculationTest do
+defmodule Caredeck.Formfix.ProgressCalculationTest do
   use Caredeck.DataCase, async: false
 
-  alias Caredeck.Aid.{Application, ApplicationSection, SectionSeeder}
+  alias Caredeck.Formfix.{Application, ApplicationSection, SectionSeeder}
   alias Caredeck.{Org, People}
 
   require Ash.Query

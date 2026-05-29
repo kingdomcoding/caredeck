@@ -1,9 +1,9 @@
-defmodule CaredeckWeb.Aid.SectionLiveTest do
+defmodule CaredeckWeb.Formfix.SectionLiveTest do
   use CaredeckWeb.ConnCase, async: false
 
   import Phoenix.LiveViewTest
 
-  alias Caredeck.{Accounts, Aid, Org, People}
+  alias Caredeck.{Accounts, Formfix, Org, People}
 
   require Ash.Query
 
@@ -53,14 +53,14 @@ defmodule CaredeckWeb.Aid.SectionLiveTest do
       )
       |> Ash.create!(authorize?: false)
 
-    application = Aid.Applications.start_for_resident!(facility, resident, care_team)
+    application = Formfix.Applications.start_for_resident!(facility, resident, care_team)
 
     %{facility: facility, care_team: care_team, resident: resident, application: application}
   end
 
   test "rendering person_needing_care shows the labels + rationale", ctx do
     conn = sign_in_team(ctx.conn, ctx.care_team)
-    {:ok, _view, html} = live(conn, ~p"/aid/#{ctx.application.id}/section/person_needing_care")
+    {:ok, _view, html} = live(conn, ~p"/formfix/#{ctx.application.id}/section/person_needing_care")
     assert html =~ "Person Needing Care"
     assert html =~ "First name"
     assert html =~ "Marital status"
@@ -69,7 +69,7 @@ defmodule CaredeckWeb.Aid.SectionLiveTest do
 
   test "filling all required fields flips section status to :complete", ctx do
     conn = sign_in_team(ctx.conn, ctx.care_team)
-    {:ok, view, _html} = live(conn, ~p"/aid/#{ctx.application.id}/section/person_needing_care")
+    {:ok, view, _html} = live(conn, ~p"/formfix/#{ctx.application.id}/section/person_needing_care")
 
     view
     |> form("form", %{
@@ -84,7 +84,7 @@ defmodule CaredeckWeb.Aid.SectionLiveTest do
     |> render_submit()
 
     section =
-      Aid.ApplicationSection
+      Formfix.ApplicationSection
       |> Ash.Query.filter(application_id == ^ctx.application.id and section_key == :person_needing_care)
       |> Ash.read_one!(tenant: ctx.facility.id, authorize?: false)
 
@@ -93,12 +93,12 @@ defmodule CaredeckWeb.Aid.SectionLiveTest do
 
   test "Skip button transitions section to :skipped", ctx do
     conn = sign_in_team(ctx.conn, ctx.care_team)
-    {:ok, view, _html} = live(conn, ~p"/aid/#{ctx.application.id}/section/welcome")
+    {:ok, view, _html} = live(conn, ~p"/formfix/#{ctx.application.id}/section/welcome")
 
     view |> element("button[phx-click=skip]") |> render_click()
 
     section =
-      Aid.ApplicationSection
+      Formfix.ApplicationSection
       |> Ash.Query.filter(application_id == ^ctx.application.id and section_key == :welcome)
       |> Ash.read_one!(tenant: ctx.facility.id, authorize?: false)
 

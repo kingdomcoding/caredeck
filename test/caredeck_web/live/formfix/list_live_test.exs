@@ -1,9 +1,9 @@
-defmodule CaredeckWeb.Aid.ListLiveTest do
+defmodule CaredeckWeb.Formfix.ListLiveTest do
   use CaredeckWeb.ConnCase, async: false
 
   import Phoenix.LiveViewTest
 
-  alias Caredeck.{Accounts, Aid, Org, People}
+  alias Caredeck.{Accounts, Formfix, Org, People}
 
   setup do
     suffix = :erlang.unique_integer([:positive])
@@ -56,15 +56,15 @@ defmodule CaredeckWeb.Aid.ListLiveTest do
 
   test "care team sees an empty list initially", ctx do
     conn = sign_in_team(ctx.conn, ctx.care_team)
-    {:ok, _view, html} = live(conn, ~p"/aid")
-    assert html =~ "Long-term care assistance"
+    {:ok, _view, html} = live(conn, ~p"/formfix")
+    assert html =~ "Formfix"
     assert html =~ "No applications yet"
   end
 
   test "an existing application appears in the list", ctx do
-    Aid.Applications.start_for_resident!(ctx.facility, ctx.resident, ctx.care_team)
+    Formfix.Applications.start_for_resident!(ctx.facility, ctx.resident, ctx.care_team)
     conn = sign_in_team(ctx.conn, ctx.care_team)
-    {:ok, _view, html} = live(conn, ~p"/aid")
+    {:ok, _view, html} = live(conn, ~p"/formfix")
     assert html =~ "Application for Anne Smith"
     assert html =~ "Draft"
   end

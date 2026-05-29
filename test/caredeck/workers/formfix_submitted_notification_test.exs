@@ -1,8 +1,8 @@
-defmodule Caredeck.Workers.AidSubmittedNotificationTest do
+defmodule Caredeck.Workers.FormfixSubmittedNotificationTest do
   use Caredeck.DataCase, async: false
   use Oban.Testing, repo: Caredeck.Repo
 
-  alias Caredeck.{Accounts, Aid, Org, People}
+  alias Caredeck.{Accounts, Formfix, Org, People}
   alias Caredeck.Notifications.Notification
   alias Caredeck.Workers.NotificationFanout
 
@@ -56,7 +56,7 @@ defmodule Caredeck.Workers.AidSubmittedNotificationTest do
     link_relative(facility, requester_relative, resident, :daughter)
     link_relative(facility, other_relative, resident, :son)
 
-    application = Aid.Applications.start_for_resident!(facility, resident, requester_user)
+    application = Formfix.Applications.start_for_resident!(facility, resident, requester_user)
 
     %{
       facility: facility,
