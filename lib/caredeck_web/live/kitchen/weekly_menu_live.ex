@@ -60,11 +60,21 @@ defmodule CaredeckWeb.Kitchen.WeeklyMenuLive do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user} current_team={@current_team}>
-      <div class="mx-auto max-w-4xl px-4 py-6">
-        <h1 class="text-display-md text-ink-900 mb-2">Weekly menu</h1>
-        <p class="text-ink-500 text-sm mb-4">
-          Week of {Calendar.strftime(@week_start, "%d %b %Y")}
-        </p>
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 py-6">
+        <header class="flex items-end justify-between mb-6 gap-4">
+          <div>
+            <h1 class="text-display-md text-ink-900">Weekly menu</h1>
+            <p class="text-ink-500 text-sm">
+              Week of {Calendar.strftime(@week_start, "%d %b %Y")}
+            </p>
+          </div>
+          <.link
+            navigate={~p"/kitchen/summary"}
+            class="text-brand text-sm hover:text-brand-strong"
+          >
+            Today's orders &rarr;
+          </.link>
+        </header>
 
         <div
           :if={!@has_active_template?}
@@ -73,35 +83,45 @@ defmodule CaredeckWeb.Kitchen.WeeklyMenuLive do
           Set up a default week first by activating a menu template (no active template yet for this facility).
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-7 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           <article
             :for={date <- @week}
             class={[
-              "bg-card rounded-card shadow-card p-4",
+              "bg-card rounded-card shadow-card p-5 flex flex-col gap-4",
               date == @today && "ring-2 ring-brand"
             ]}
           >
-            <header class="flex items-center justify-between mb-3">
+            <header class="flex items-start justify-between gap-3">
               <div>
                 <p class="text-ink-500 text-xs uppercase tracking-wide">
-                  {Calendar.strftime(date, "%a")}
+                  {Calendar.strftime(date, "%A")}
                 </p>
-                <p class="text-ink-900 font-semibold">{Calendar.strftime(date, "%d %b")}</p>
+                <p class="text-ink-900 font-semibold text-lg">
+                  {Calendar.strftime(date, "%d %b")}
+                </p>
               </div>
               <.link
                 navigate={~p"/kitchen/weekly-menu/#{Date.to_iso8601(date)}"}
-                class="text-brand text-xs hover:text-brand-strong"
+                class="rounded-button bg-brand-soft text-brand text-xs font-medium px-3 py-1.5 hover:bg-brand hover:text-white whitespace-nowrap"
               >
                 Edit
               </.link>
             </header>
 
             <% menu = Map.get(@menus, date) %>
+            <% slot_by_cat = (menu && Map.new(menu.slots, &{&1.category, &1})) || %{} %>
 
-            <ul :if={menu} class="space-y-1 text-xs">
-              <li :for={slot <- menu.slots}>
-                <span class="text-ink-500">{MealCategory.label(slot.category)}:</span>
-                <span class="text-ink-900">{slot.product.name}</span>
+            <ul class="space-y-2 text-sm">
+              <li
+                :for={cat <- MealCategory.all()}
+                class="flex items-baseline justify-between gap-3"
+              >
+                <span class="text-ink-500 text-xs uppercase tracking-wide shrink-0">
+                  {MealCategory.label(cat)}
+                </span>
+                <span class="text-ink-900 text-right">
+                  {(Map.get(slot_by_cat, cat) || %{}) |> Map.get(:product) |> product_name()}
+                </span>
               </li>
             </ul>
 
@@ -110,9 +130,9 @@ defmodule CaredeckWeb.Kitchen.WeeklyMenuLive do
               type="button"
               phx-click="materialise"
               phx-value-date={Date.to_iso8601(date)}
-              class="rounded-button bg-brand-soft text-brand text-xs px-3 py-1.5 hover:bg-brand hover:text-white"
+              class="mt-auto rounded-button bg-brand text-white text-sm font-medium px-3 py-2 hover:bg-brand-strong"
             >
-              Materialise
+              Materialise this day
             </button>
           </article>
         </div>
@@ -120,4 +140,7 @@ defmodule CaredeckWeb.Kitchen.WeeklyMenuLive do
     </Layouts.app>
     """
   end
+
+  defp product_name(nil), do: "—"
+  defp product_name(%{name: name}), do: name
 end

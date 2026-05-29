@@ -66,6 +66,27 @@ defmodule CaredeckWeb.Layouts do
           >
             Sign out
           </.link>
+          <.link
+            :if={@current_team}
+            navigate={~p"/feed"}
+            class="hover:text-ink-900"
+          >
+            Feed
+          </.link>
+          <.link
+            :if={@current_team}
+            navigate={~p"/kitchen/weekly-menu"}
+            class="hover:text-ink-900"
+          >
+            Kitchen
+          </.link>
+          <.link
+            :if={@current_team}
+            navigate={~p"/kitchen/summary"}
+            class="hover:text-ink-900"
+          >
+            Today's orders
+          </.link>
           <span :if={@current_team} class="text-ink-900 truncate max-w-[14ch]">
             {@current_team.name}
           </span>
