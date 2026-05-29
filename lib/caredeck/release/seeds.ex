@@ -2,6 +2,7 @@ defmodule Caredeck.Release.Seeds do
   alias Caredeck.Accounts
   alias Caredeck.Feed
   alias Caredeck.Kitchen
+  alias Caredeck.Aid
   alias Caredeck.Org
   alias Caredeck.People
   alias Caredeck.Release.NamePool
@@ -63,6 +64,7 @@ defmodule Caredeck.Release.Seeds do
     seed_extra_posts(facility)
     seed_kitchen(facility)
     seed_services(facility)
+    seed_aid(facility)
 
     resident_count =
       People.Resident
@@ -211,6 +213,87 @@ defmodule Caredeck.Release.Seeds do
       {:ok, existing} ->
         existing
     end
+  end
+
+  defp seed_aid(facility) do
+    with %{} = user <- find_demo_relative_user(),
+         %{} = resident <- first_linked_resident(user, facility) do
+      existing =
+        Aid.Application
+        |> Ash.Query.filter(applicant_user_id == ^user.id and resident_id == ^resident.id)
+        |> Ash.read!(tenant: facility.id, authorize?: false)
+
+      if existing == [] do
+        app = Aid.Applications.start_for_resident!(facility, resident, user)
+        prefill_person_needing_care!(app, resident, facility)
+        prefill_applicant!(app, user, facility)
+      end
+    else
+      _ -> :ok
+    end
+  end
+
+  defp find_demo_relative_user do
+    Accounts.User
+    |> Ash.Query.filter(email == ^@relative_email)
+    |> Ash.read_one!(authorize?: false)
+  end
+
+  defp first_linked_resident(user, facility) do
+    relative_ids =
+      People.Relative
+      |> Ash.Query.filter(user_id == ^user.id)
+      |> Ash.read!(tenant: facility.id, authorize?: false)
+      |> Enum.map(& &1.id)
+
+    case relative_ids do
+      [] ->
+        nil
+
+      ids ->
+        resident_ids =
+          People.RelativeOfResident
+          |> Ash.Query.filter(relative_id in ^ids)
+          |> Ash.Query.sort(inserted_at: :asc)
+          |> Ash.read!(tenant: facility.id, authorize?: false)
+          |> Enum.map(& &1.resident_id)
+          |> Enum.uniq()
+
+        case resident_ids do
+          [] ->
+            nil
+
+          [rid | _] ->
+            People.Resident
+            |> Ash.get!(rid, tenant: facility.id, authorize?: false)
+        end
+    end
+  end
+
+  defp prefill_person_needing_care!(application, resident, facility) do
+    Aid.SectionWriter.save_answers!(application, :person_needing_care, %{
+      "first_name" => resident.first_name,
+      "last_name" => resident.last_name,
+      "date_of_birth" =>
+        if(resident.date_of_birth, do: Date.to_iso8601(resident.date_of_birth), else: ""),
+      "marital_status" => "widowed",
+      "postal_code" => "12345",
+      "street" => "1 Demo Lane",
+      "city" => "Demo City"
+    })
+
+    _ = facility
+    :ok
+  end
+
+  defp prefill_applicant!(application, user, facility) do
+    Aid.SectionWriter.save_answers!(application, :applicant, %{
+      "first_name" => user.name || "Demo",
+      "last_name" => user.family_name || "Relative"
+    })
+
+    _ = facility
+    :ok
   end
 
   @kitchen_products [
