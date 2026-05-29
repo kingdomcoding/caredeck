@@ -84,17 +84,35 @@ defmodule CaredeckWeb.Kitchen.ResidentOrderLive do
     facility = socket.assigns.current_facility
     actor = current_actor(socket)
     cat = String.to_existing_atom(cat)
+    planned = Enum.find(socket.assigns.day_menu.slots, &(&1.category == cat))
 
-    case Map.get(socket.assigns.orders_by_cat, cat) do
-      nil ->
-        :ok
+    cond do
+      is_nil(planned) ->
+        {:noreply, socket}
 
-      order ->
-        Ash.destroy!(order, tenant: facility.id, actor: actor)
+      true ->
+        attrs = %{
+          facility_id: facility.id,
+          resident_id: socket.assigns.resident.id,
+          date: socket.assigns.date,
+          category: cat,
+          product_id: planned.product_id,
+          state: :cancelled,
+          ordered_by_user_id: socket.assigns[:current_user] && socket.assigns.current_user.id,
+          ordered_by_team_id: socket.assigns[:current_team] && socket.assigns.current_team.id
+        }
+
+        case ResidentMealOrder
+             |> Ash.Changeset.for_create(:create, attrs, tenant: facility.id, actor: actor)
+             |> Ash.create(tenant: facility.id, actor: actor) do
+          {:ok, _} ->
+            orders = load_orders(facility, socket.assigns.resident.id, socket.assigns.date)
+            {:noreply, assign(socket, :orders_by_cat, Map.new(orders, &{&1.category, &1}))}
+
+          {:error, _} ->
+            {:noreply, put_flash(socket, :error, "You can't update orders for this resident.")}
+        end
     end
-
-    orders = load_orders(facility, socket.assigns.resident.id, socket.assigns.date)
-    {:noreply, assign(socket, :orders_by_cat, Map.new(orders, &{&1.category, &1}))}
   end
 
   def handle_event("order", %{"category" => cat, "product_id" => pid}, socket) do
@@ -148,15 +166,31 @@ defmodule CaredeckWeb.Kitchen.ResidentOrderLive do
           :for={cat <- MealCategory.all()}
           class="bg-card rounded-card shadow-card p-4 mb-3"
         >
-          <h2 class="text-ink-900 font-medium mb-2">{MealCategory.label(cat)}</h2>
-
           <% planned = Enum.find(@day_menu.slots, &(&1.category == cat)) %>
           <% picked = Map.get(@orders_by_cat, cat) %>
+          <% taken = picked && picked.state == :ordered %>
+          <% skipped = picked && picked.state == :cancelled %>
 
-          <p :if={planned} class="text-ink-500 text-xs mb-2">
+          <header class="flex items-center justify-between mb-2 gap-2">
+            <h2 class="text-ink-900 font-medium">{MealCategory.label(cat)}</h2>
+            <span
+              :if={taken}
+              class="text-brand text-xs font-medium bg-brand-soft rounded-full px-2 py-0.5"
+            >
+              ✓ Ordered
+            </span>
+            <span
+              :if={skipped}
+              class="text-ink-500 text-xs font-medium bg-page border border-divider rounded-full px-2 py-0.5"
+            >
+              Skipped
+            </span>
+          </header>
+
+          <p :if={planned} class="text-ink-500 text-xs mb-3">
             Today's plan: <span class="text-ink-900">{planned.product.name}</span>
           </p>
-          <p :if={!planned} class="text-ink-300 text-xs mb-2">No plan for this category.</p>
+          <p :if={!planned} class="text-ink-300 text-xs mb-3">No plan for this category.</p>
 
           <div class="flex gap-2 flex-wrap">
             <button
@@ -166,21 +200,24 @@ defmodule CaredeckWeb.Kitchen.ResidentOrderLive do
               phx-value-category={cat}
               phx-value-product_id={planned.product_id}
               class={[
-                "px-3 py-1.5 rounded-input border text-sm",
-                picked && picked.product_id == planned.product_id &&
-                  "bg-brand text-white border-brand",
-                !(picked && picked.product_id == planned.product_id) &&
-                  "bg-card text-ink-900 border-divider hover:border-brand"
+                "px-3 py-1.5 rounded-input border text-sm font-medium",
+                taken && "bg-brand text-white border-brand",
+                !taken && "bg-card text-ink-900 border-divider hover:border-brand"
               ]}
             >
               Take the plan
             </button>
             <button
+              :if={planned}
               type="button"
               phx-click="order"
               phx-value-category={cat}
               phx-value-product_id="skip"
-              class="px-3 py-1.5 rounded-input border border-divider bg-card text-ink-500 hover:border-brand text-sm"
+              class={[
+                "px-3 py-1.5 rounded-input border text-sm font-medium",
+                skipped && "bg-ink-900 text-white border-ink-900",
+                !skipped && "bg-card text-ink-500 border-divider hover:border-brand"
+              ]}
             >
               Skip
             </button>

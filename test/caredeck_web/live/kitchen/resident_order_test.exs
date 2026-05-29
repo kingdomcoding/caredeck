@@ -206,7 +206,7 @@ defmodule CaredeckWeb.Kitchen.ResidentOrderTest do
     assert orders == []
   end
 
-  test "Skip destroys an existing order row", ctx do
+  test "Skip marks an existing order as cancelled (row persists)", ctx do
     conn = sign_in_team(ctx.conn, ctx.care_team)
     {:ok, view, _html} = live(conn, ~p"/kitchen/order/#{ctx.resident.id}")
 
@@ -216,15 +216,31 @@ defmodule CaredeckWeb.Kitchen.ResidentOrderTest do
     )
     |> render_click()
 
-    assert [_] =
+    assert [%{state: :ordered}] =
              Kitchen.ResidentMealOrder
              |> Ash.read!(tenant: ctx.facility.id, authorize?: false)
+
+    html =
+      view
+      |> element("button[phx-click=order][phx-value-category=lunch][phx-value-product_id=skip]")
+      |> render_click()
+
+    assert [%{state: :cancelled, category: :lunch}] =
+             Kitchen.ResidentMealOrder
+             |> Ash.read!(tenant: ctx.facility.id, authorize?: false)
+
+    assert html =~ "Skipped"
+  end
+
+  test "Skip with no prior order creates a cancelled row", ctx do
+    conn = sign_in_team(ctx.conn, ctx.care_team)
+    {:ok, view, _html} = live(conn, ~p"/kitchen/order/#{ctx.resident.id}")
 
     view
     |> element("button[phx-click=order][phx-value-category=lunch][phx-value-product_id=skip]")
     |> render_click()
 
-    assert [] =
+    assert [%{state: :cancelled, category: :lunch}] =
              Kitchen.ResidentMealOrder
              |> Ash.read!(tenant: ctx.facility.id, authorize?: false)
   end
