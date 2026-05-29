@@ -77,6 +77,24 @@ defmodule CaredeckWeb.FormfixComponents do
     """
   end
 
+  attr :summary, :any, required: true
+
+  def section_docs_pill(%{summary: nil} = assigns), do: ~H""
+
+  def section_docs_pill(%{summary: {verified, total}} = assigns) do
+    assigns = assign(assigns, verified: verified, total: total, all_done: verified == total)
+
+    ~H"""
+    <span class={[
+      "text-xs font-medium rounded-full px-2 py-0.5",
+      @all_done && "bg-green-100 text-green-700",
+      not @all_done && "bg-yellow-100 text-yellow-700"
+    ]}>
+      {@verified}/{@total} docs
+    </span>
+    """
+  end
+
   attr :state, :atom, required: true
 
   def verification_pill(assigns) do

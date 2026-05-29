@@ -2,7 +2,9 @@ defmodule CaredeckWeb.Formfix.OverviewLive do
   use CaredeckWeb, :live_view
 
   alias Caredeck.Formfix.Application, as: AidApplication
-  alias Caredeck.Formfix.SectionKey
+  alias Caredeck.Formfix.{RequiredDocuments, SectionKey, UploadedDocument}
+
+  require Ash.Query
 
   @impl true
   def mount(%{"application_id" => aid}, _session, socket) do
@@ -18,16 +20,49 @@ defmodule CaredeckWeb.Formfix.OverviewLive do
         ordered_sections = Enum.sort_by(app.sections, & &1.position)
         next = Caredeck.Formfix.Applications.next_actionable_section(app)
 
+        if connected?(socket) do
+          Phoenix.PubSub.subscribe(Caredeck.PubSub, "formfix:#{app.id}:documents")
+        end
+
         {:ok,
          socket
          |> assign(:page_title, "Formfix overview")
          |> assign(:application, app)
          |> assign(:ordered_sections, ordered_sections)
+         |> assign(:docs_summary, docs_summary(app))
          |> assign(:next_actionable, next)}
 
       _ ->
         {:ok, push_navigate(socket, to: ~p"/formfix")}
     end
+  end
+
+  @impl true
+  def handle_info(%Phoenix.Socket.Broadcast{event: event}, socket)
+      when event in ["doc_created", "doc_updated"] do
+    {:noreply, assign(socket, :docs_summary, docs_summary(socket.assigns.application))}
+  end
+
+  def handle_info(_, socket), do: {:noreply, socket}
+
+  defp docs_summary(application) do
+    verified_pairs =
+      UploadedDocument
+      |> Ash.Query.filter(application_id == ^application.id and state == :verified)
+      |> Ash.read!(tenant: application.facility_id, authorize?: false)
+      |> Enum.map(&{&1.section_key, &1.document_key})
+      |> MapSet.new()
+
+    RequiredDocuments.all_required()
+    |> Enum.group_by(fn {section_key, _doc_key} -> section_key end, fn {_, doc_key} -> doc_key end)
+    |> Map.new(fn {section_key, doc_keys} ->
+      verified =
+        Enum.count(doc_keys, fn doc_key ->
+          MapSet.member?(verified_pairs, {section_key, doc_key})
+        end)
+
+      {section_key, {verified, length(doc_keys)}}
+    end)
   end
 
   defp current_actor(socket),
@@ -82,7 +117,10 @@ defmodule CaredeckWeb.Formfix.OverviewLive do
                   <p class="text-ink-900 font-medium">
                     {SectionKey.label(section.section_key)}
                   </p>
-                  <.section_pill status={section.status} />
+                  <div class="flex items-center gap-2">
+                    <.section_pill status={section.status} />
+                    <.section_docs_pill summary={Map.get(@docs_summary, section.section_key)} />
+                  </div>
                 </div>
               </.link>
             </li>
