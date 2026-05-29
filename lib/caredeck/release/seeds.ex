@@ -15,6 +15,7 @@ defmodule Caredeck.Release.Seeds do
   @bulk_password "phase2-bulk-pass"
 
   @team_seeds [
+    %{name: "Team Admin", handle: "team-admin", role_kind: :admin},
     %{name: "Team Care", handle: "team-care", role_kind: :care},
     %{name: "Team Activities", handle: "team-activities", role_kind: :activities},
     %{name: "Team Therapy", handle: "team-therapy", role_kind: :therapy},
@@ -65,6 +66,7 @@ defmodule Caredeck.Release.Seeds do
     seed_kitchen(facility)
     seed_services(facility)
     seed_formfix(facility)
+    seed_formfix_demo_notes(facility)
 
     resident_count =
       People.Resident
@@ -232,6 +234,55 @@ defmodule Caredeck.Release.Seeds do
       backfill_verified_documents!(facility)
     else
       _ -> :ok
+    end
+  end
+
+  defp seed_formfix_demo_notes(facility) do
+    admin =
+      Accounts.TeamIdentity
+      |> Ash.Query.filter(handle == "team-admin" and facility_id == ^facility.id)
+      |> Ash.read_one!(authorize?: false)
+
+    case admin do
+      nil ->
+        :ok
+
+      _ ->
+        Formfix.Application
+        |> Ash.Query.filter(state in [:draft, :missing_documents, :ready_to_submit, :submitted, :approved])
+        |> Ash.read!(tenant: facility.id, authorize?: false)
+        |> Enum.each(&ensure_demo_notes!(&1, admin, facility))
+    end
+  end
+
+  defp ensure_demo_notes!(app, admin, facility) do
+    existing =
+      Formfix.ApplicationNote
+      |> Ash.Query.filter(application_id == ^app.id)
+      |> Ash.read!(tenant: facility.id, authorize?: false)
+
+    if existing == [] do
+      Enum.each(
+        [
+          "Reviewed initial submission, all sections look complete.",
+          "Documents verified by counsel."
+        ],
+        fn body ->
+          Formfix.ApplicationNote
+          |> Ash.Changeset.for_create(
+            :create,
+            %{
+              facility_id: facility.id,
+              application_id: app.id,
+              author_team_id: admin.id,
+              body: body
+            },
+            tenant: facility.id,
+            authorize?: false
+          )
+          |> Ash.create!(tenant: facility.id, authorize?: false)
+        end
+      )
     end
   end
 
