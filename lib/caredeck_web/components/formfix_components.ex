@@ -77,6 +77,25 @@ defmodule CaredeckWeb.FormfixComponents do
     """
   end
 
+  attr :notes, :list, required: true
+
+  def notes_strip(assigns) do
+    ~H"""
+    <ul :if={@notes != []} class="space-y-1">
+      <li :for={n <- @notes} class="text-xs">
+        <span class="text-ink-500">
+          {Calendar.strftime(n.inserted_at, "%d %b %y")} · {author_label(n)}
+        </span>
+        <span class="text-ink-900"> — {n.body}</span>
+      </li>
+    </ul>
+    <p :if={@notes == []} class="text-ink-500 text-xs italic">No notes yet.</p>
+    """
+  end
+
+  defp author_label(%{author_team: %{name: n}}) when is_binary(n), do: n
+  defp author_label(_), do: "Admin"
+
   attr :summary, :any, required: true
 
   def section_docs_pill(%{summary: nil} = assigns), do: ~H""

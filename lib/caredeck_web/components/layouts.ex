@@ -95,6 +95,13 @@ defmodule CaredeckWeb.Layouts do
             Formfix
           </.link>
           <.link
+            :if={@current_team && @current_team.role_kind == :admin}
+            navigate={~p"/formfix/admin"}
+            class="hidden md:inline-block hover:text-ink-900"
+          >
+            Admin
+          </.link>
+          <.link
             :if={@current_team && @current_team.role_kind == :care}
             navigate={~p"/services/inbox"}
             class="hidden md:inline-block hover:text-ink-900"

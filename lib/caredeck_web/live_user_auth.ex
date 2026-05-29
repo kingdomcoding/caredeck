@@ -33,6 +33,28 @@ defmodule CaredeckWeb.LiveUserAuth do
     end
   end
 
+  def on_mount(:live_team_admin_required, _params, session, socket) do
+    socket = resolve(socket, session)
+    team = socket.assigns[:current_team]
+
+    cond do
+      is_nil(team) ->
+        {:halt,
+         socket
+         |> Phoenix.LiveView.put_flash(:error, "Sign in with an admin account.")
+         |> Phoenix.LiveView.redirect(to: "/team/sign-in")}
+
+      team.role_kind != :admin ->
+        {:halt,
+         socket
+         |> Phoenix.LiveView.put_flash(:error, "Admin access required.")
+         |> Phoenix.LiveView.redirect(to: "/")}
+
+      true ->
+        {:cont, socket}
+    end
+  end
+
   def on_mount(:live_no_user, _params, session, socket) do
     socket = resolve(socket, session)
 

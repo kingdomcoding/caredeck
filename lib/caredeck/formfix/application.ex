@@ -128,7 +128,7 @@ defmodule Caredeck.Formfix.Application do
 
       authorize_if expr(
                      ^actor(:__struct__) == Caredeck.Accounts.TeamIdentity and
-                       ^actor(:role_kind) == :care
+                       ^actor(:role_kind) in [:care, :admin]
                    )
 
       authorize_if expr(

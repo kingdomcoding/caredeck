@@ -96,6 +96,11 @@ defmodule CaredeckWeb.Router do
       live "/formfix/:application_id/section/:section_key/documents", Formfix.DocumentsLive
       live "/formfix/:application_id/submit", Formfix.SubmitLive
     end
+
+    live_session :authenticated_team_admin,
+      on_mount: {CaredeckWeb.LiveUserAuth, :live_team_admin_required} do
+      live "/formfix/admin", Formfix.AdminLive
+    end
   end
 
   scope "/", CaredeckWeb do
