@@ -1,12 +1,12 @@
-defmodule Caredeck.Aid.Application do
+defmodule Caredeck.Formfix.Application do
   use Caredeck.Resource,
-    domain: Caredeck.Aid,
+    domain: Caredeck.Formfix,
     default_pub_sub: false,
     paper_trail: [attributes_as_attributes: [:facility_id]],
     extensions: [AshStateMachine]
 
   postgres do
-    table "aid_applications"
+    table "formfix_applications"
     repo Caredeck.Repo
   end
 
@@ -70,9 +70,9 @@ defmodule Caredeck.Aid.Application do
       source_attribute: :applicant_team_id,
       define_attribute?: false
 
-    has_many :sections, Caredeck.Aid.ApplicationSection
-    has_many :answers, Caredeck.Aid.SectionAnswer
-    has_many :documents, Caredeck.Aid.UploadedDocument
+    has_many :sections, Caredeck.Formfix.ApplicationSection
+    has_many :answers, Caredeck.Formfix.SectionAnswer
+    has_many :documents, Caredeck.Formfix.UploadedDocument
   end
 
   aggregates do

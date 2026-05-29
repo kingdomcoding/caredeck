@@ -2,7 +2,7 @@ defmodule Caredeck.Release.Seeds do
   alias Caredeck.Accounts
   alias Caredeck.Feed
   alias Caredeck.Kitchen
-  alias Caredeck.Aid
+  alias Caredeck.Formfix
   alias Caredeck.Org
   alias Caredeck.People
   alias Caredeck.Release.NamePool
@@ -64,7 +64,7 @@ defmodule Caredeck.Release.Seeds do
     seed_extra_posts(facility)
     seed_kitchen(facility)
     seed_services(facility)
-    seed_aid(facility)
+    seed_formfix(facility)
 
     resident_count =
       People.Resident
@@ -215,16 +215,16 @@ defmodule Caredeck.Release.Seeds do
     end
   end
 
-  defp seed_aid(facility) do
+  defp seed_formfix(facility) do
     with %{} = user <- find_demo_relative_user(),
          %{} = resident <- first_linked_resident(user, facility) do
       existing =
-        Aid.Application
+        Formfix.Application
         |> Ash.Query.filter(applicant_user_id == ^user.id and resident_id == ^resident.id)
         |> Ash.read!(tenant: facility.id, authorize?: false)
 
       if existing == [] do
-        app = Aid.Applications.start_for_resident!(facility, resident, user)
+        app = Formfix.Applications.start_for_resident!(facility, resident, user)
         prefill_person_needing_care!(app, resident, facility)
         prefill_applicant!(app, user, facility)
       end
@@ -271,7 +271,7 @@ defmodule Caredeck.Release.Seeds do
   end
 
   defp prefill_person_needing_care!(application, resident, facility) do
-    Aid.SectionWriter.save_answers!(application, :person_needing_care, %{
+    Formfix.SectionWriter.save_answers!(application, :person_needing_care, %{
       "first_name" => resident.first_name,
       "last_name" => resident.last_name,
       "date_of_birth" =>
@@ -287,7 +287,7 @@ defmodule Caredeck.Release.Seeds do
   end
 
   defp prefill_applicant!(application, user, facility) do
-    Aid.SectionWriter.save_answers!(application, :applicant, %{
+    Formfix.SectionWriter.save_answers!(application, :applicant, %{
       "first_name" => user.name || "Demo",
       "last_name" => user.family_name || "Relative"
     })

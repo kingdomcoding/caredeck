@@ -1,5 +1,5 @@
-defmodule Caredeck.Aid.SectionWriter do
-  alias Caredeck.Aid.{ApplicationSection, SectionAnswer, SectionSchema}
+defmodule Caredeck.Formfix.SectionWriter do
+  alias Caredeck.Formfix.{ApplicationSection, SectionAnswer, SectionSchema}
 
   require Ash.Query
 
@@ -32,10 +32,10 @@ defmodule Caredeck.Aid.SectionWriter do
     |> Ash.update!(tenant: facility_id, authorize?: false)
 
     if section_key == :person_needing_care do
-      :ok = Caredeck.Aid.Applications.refresh_conditional_sections(application)
+      :ok = Caredeck.Formfix.Applications.refresh_conditional_sections(application)
     end
 
-    :ok = Caredeck.Aid.Applications.recompute_status(application)
+    :ok = Caredeck.Formfix.Applications.recompute_status(application)
 
     :ok
   end

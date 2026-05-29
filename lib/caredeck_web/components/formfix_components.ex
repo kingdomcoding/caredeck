@@ -1,7 +1,7 @@
-defmodule CaredeckWeb.AidComponents do
+defmodule CaredeckWeb.FormfixComponents do
   use Phoenix.Component
 
-  def aid_footer(assigns) do
+  def formfix_footer(assigns) do
     ~H"""
     <p class="text-ink-500 text-xs text-center mt-10 mb-4">
       🔒 Your data is safe with us.
@@ -12,11 +12,11 @@ defmodule CaredeckWeb.AidComponents do
   attr :application_id, :string, required: true
   attr :label, :string, default: "Back to overview"
 
-  def aid_back_link(assigns) do
+  def formfix_back_link(assigns) do
     ~H"""
     <p class="mb-4">
       <a
-        href={"/aid/#{@application_id}/overview"}
+        href={"/formfix/#{@application_id}/overview"}
         class="text-ink-500 text-sm hover:text-ink-900"
       >
         ← {@label}
@@ -46,7 +46,7 @@ defmodule CaredeckWeb.AidComponents do
 
   attr :status, :atom, required: true
 
-  def aid_status_pill(assigns) do
+  def formfix_status_pill(assigns) do
     ~H"""
     <span class={[
       "text-xs font-medium rounded-full px-2 py-0.5",
@@ -56,7 +56,7 @@ defmodule CaredeckWeb.AidComponents do
       @status == :submitted && "bg-green-100 text-green-700",
       @status == :approved && "bg-green-200 text-green-900"
     ]}>
-      {aid_status_label(@status)}
+      {formfix_status_label(@status)}
     </span>
     """
   end
@@ -93,11 +93,11 @@ defmodule CaredeckWeb.AidComponents do
     """
   end
 
-  def aid_status_label(:draft), do: "Draft"
-  def aid_status_label(:missing_documents), do: "Missing documents"
-  def aid_status_label(:ready_to_submit), do: "Ready to submit"
-  def aid_status_label(:submitted), do: "Submitted"
-  def aid_status_label(:approved), do: "Approved"
+  def formfix_status_label(:draft), do: "Draft"
+  def formfix_status_label(:missing_documents), do: "Missing documents"
+  def formfix_status_label(:ready_to_submit), do: "Ready to submit"
+  def formfix_status_label(:submitted), do: "Submitted"
+  def formfix_status_label(:approved), do: "Approved"
 
   def section_label(:not_started), do: "Not started"
   def section_label(:in_progress), do: "In progress"

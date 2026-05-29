@@ -9,7 +9,7 @@ defmodule Caredeck.Application do
 
   @impl true
   def start(_type, _args) do
-    warn_if_aid_stub()
+    warn_if_formfix_stub()
 
     children = [
       CaredeckWeb.Telemetry,
@@ -26,12 +26,12 @@ defmodule Caredeck.Application do
     Supervisor.start_link(children, opts)
   end
 
-  defp warn_if_aid_stub do
+  defp warn_if_formfix_stub do
     if @mix_env == :prod and
-         Application.get_env(:caredeck, :aid_verification_engine, :stub) == :stub do
+         Application.get_env(:caredeck, :formfix_verification_engine, :stub) == :stub do
       require Logger
       Logger.warning(
-        "[Aid] verification engine is :stub — replace before real applicants are onboarded."
+        "[Formfix] verification engine is :stub — replace before real applicants are onboarded."
       )
     end
   end

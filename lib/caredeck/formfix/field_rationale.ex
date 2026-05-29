@@ -1,4 +1,4 @@
-defmodule Caredeck.Aid.FieldRationale do
+defmodule Caredeck.Formfix.FieldRationale do
   @rationales %{
     {:person_needing_care, :marital_status} =>
       "The marital status of the person needing care affects various welfare-law questions — for example, support obligations, household composition, and the documents required.",

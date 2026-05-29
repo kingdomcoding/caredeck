@@ -1,11 +1,11 @@
-defmodule Caredeck.Aid.SectionAnswer do
+defmodule Caredeck.Formfix.SectionAnswer do
   use Caredeck.Resource,
-    domain: Caredeck.Aid,
+    domain: Caredeck.Formfix,
     default_pub_sub: false,
     paper_trail: [attributes_as_attributes: [:facility_id]]
 
   postgres do
-    table "aid_section_answers"
+    table "formfix_section_answers"
     repo Caredeck.Repo
 
     references do
@@ -41,7 +41,7 @@ defmodule Caredeck.Aid.SectionAnswer do
 
   relationships do
     belongs_to :facility, Caredeck.Org.Facility, allow_nil?: false
-    belongs_to :application, Caredeck.Aid.Application, allow_nil?: false
+    belongs_to :application, Caredeck.Formfix.Application, allow_nil?: false
   end
 
   actions do

@@ -1,10 +1,10 @@
-defmodule CaredeckWeb.Aid.DocumentsLive do
+defmodule CaredeckWeb.Formfix.DocumentsLive do
   use CaredeckWeb, :live_view
 
-  alias Caredeck.Aid.Application, as: AidApplication
-  alias Caredeck.Aid.{RequiredDocuments, SectionKey, UploadedDocument}
+  alias Caredeck.Formfix.Application, as: AidApplication
+  alias Caredeck.Formfix.{RequiredDocuments, SectionKey, UploadedDocument}
   alias Caredeck.Feed.S3
-  alias Caredeck.Workers.AidDocumentVerifier
+  alias Caredeck.Workers.FormfixDocumentVerifier
 
   require Ash.Query
 
@@ -24,7 +24,7 @@ defmodule CaredeckWeb.Aid.DocumentsLive do
         docs = load_docs(application, section_key)
 
         if connected?(socket) do
-          Phoenix.PubSub.subscribe(Caredeck.PubSub, "aid:#{application.id}:documents")
+          Phoenix.PubSub.subscribe(Caredeck.PubSub, "formfix:#{application.id}:documents")
         end
 
         socket =
@@ -45,7 +45,7 @@ defmodule CaredeckWeb.Aid.DocumentsLive do
          |> assign(:docs_by_slot, group_by_slot(docs))}
 
       _ ->
-        {:ok, push_navigate(socket, to: ~p"/aid")}
+        {:ok, push_navigate(socket, to: ~p"/formfix")}
     end
   end
 
@@ -93,7 +93,7 @@ defmodule CaredeckWeb.Aid.DocumentsLive do
         |> Ash.create(tenant: application.facility_id, authorize?: false)
 
       %{document_id: doc.id, facility_id: application.facility_id}
-      |> AidDocumentVerifier.new()
+      |> FormfixDocumentVerifier.new()
       |> Oban.insert()
 
       {:ok, doc}
@@ -121,7 +121,7 @@ defmodule CaredeckWeb.Aid.DocumentsLive do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user} current_team={@current_team}>
       <div class="mx-auto max-w-3xl px-4 sm:px-6 py-6">
-        <.aid_back_link application_id={@application.id} />
+        <.formfix_back_link application_id={@application.id} />
 
         <header class="mb-6">
           <p class="text-ink-500 text-xs uppercase tracking-wide">
@@ -170,7 +170,7 @@ defmodule CaredeckWeb.Aid.DocumentsLive do
           </li>
         </ul>
 
-        <.aid_footer />
+        <.formfix_footer />
       </div>
     </Layouts.app>
     """

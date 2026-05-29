@@ -1,7 +1,7 @@
 defmodule Caredeck.Workers.NotificationFanout do
   use Oban.Worker, queue: :fanout, max_attempts: 3
 
-  alias Caredeck.{Accounts, Aid, Feed, Org, People, Services}
+  alias Caredeck.{Accounts, Formfix, Feed, Org, People, Services}
   alias Caredeck.Notifications.{Notification, Recipients}
 
   require Ash.Query
@@ -219,7 +219,7 @@ defmodule Caredeck.Workers.NotificationFanout do
     facility_id = args["facility_id"]
 
     application =
-      Aid.Application
+      Formfix.Application
       |> Ash.get!(application_id,
         tenant: facility_id,
         authorize?: false,

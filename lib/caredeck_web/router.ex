@@ -90,11 +90,11 @@ defmodule CaredeckWeb.Router do
       live "/services/:provider_id/new", Services.NewRequestLive
       live "/services/:provider_id", Services.ProviderLive
 
-      live "/aid", Aid.ListLive
-      live "/aid/:application_id/overview", Aid.OverviewLive
-      live "/aid/:application_id/section/:section_key", Aid.SectionLive
-      live "/aid/:application_id/section/:section_key/documents", Aid.DocumentsLive
-      live "/aid/:application_id/submit", Aid.SubmitLive
+      live "/formfix", Formfix.ListLive
+      live "/formfix/:application_id/overview", Formfix.OverviewLive
+      live "/formfix/:application_id/section/:section_key", Formfix.SectionLive
+      live "/formfix/:application_id/section/:section_key/documents", Formfix.DocumentsLive
+      live "/formfix/:application_id/submit", Formfix.SubmitLive
     end
   end
 

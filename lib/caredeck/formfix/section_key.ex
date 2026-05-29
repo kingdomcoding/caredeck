@@ -1,4 +1,4 @@
-defmodule Caredeck.Aid.SectionKey do
+defmodule Caredeck.Formfix.SectionKey do
   @ordered ~w(welcome person_needing_care applicant care_situation income
               income_partner assets assets_partner gifts_given
               gifts_given_partner expenses disability foreign_nationality

@@ -1,5 +1,5 @@
-defmodule Caredeck.Aid.SectionSeeder do
-  alias Caredeck.Aid.{ApplicationSection, SectionKey}
+defmodule Caredeck.Formfix.SectionSeeder do
+  alias Caredeck.Formfix.{ApplicationSection, SectionKey}
 
   def materialise!(%{id: application_id, facility_id: facility_id} = _application) do
     SectionKey.base()

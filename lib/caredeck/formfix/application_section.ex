@@ -1,11 +1,11 @@
-defmodule Caredeck.Aid.ApplicationSection do
+defmodule Caredeck.Formfix.ApplicationSection do
   use Caredeck.Resource,
-    domain: Caredeck.Aid,
+    domain: Caredeck.Formfix,
     default_pub_sub: false,
     paper_trail: [attributes_as_attributes: [:facility_id]]
 
   postgres do
-    table "aid_application_sections"
+    table "formfix_application_sections"
     repo Caredeck.Repo
 
     references do
@@ -24,7 +24,7 @@ defmodule Caredeck.Aid.ApplicationSection do
     attribute :application_id, :uuid, allow_nil?: false, public?: true
 
     attribute :section_key, :atom,
-      constraints: [one_of: Caredeck.Aid.SectionKey.all()],
+      constraints: [one_of: Caredeck.Formfix.SectionKey.all()],
       allow_nil?: false,
       public?: true
 
@@ -46,7 +46,7 @@ defmodule Caredeck.Aid.ApplicationSection do
 
   relationships do
     belongs_to :facility, Caredeck.Org.Facility, allow_nil?: false
-    belongs_to :application, Caredeck.Aid.Application, allow_nil?: false
+    belongs_to :application, Caredeck.Formfix.Application, allow_nil?: false
   end
 
   actions do

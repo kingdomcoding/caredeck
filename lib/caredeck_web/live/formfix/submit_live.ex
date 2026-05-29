@@ -1,8 +1,8 @@
-defmodule CaredeckWeb.Aid.SubmitLive do
+defmodule CaredeckWeb.Formfix.SubmitLive do
   use CaredeckWeb, :live_view
 
-  alias Caredeck.Aid.Application, as: AidApplication
-  alias Caredeck.Aid.{SectionAnswer, SectionKey, SectionSchema}
+  alias Caredeck.Formfix.Application, as: AidApplication
+  alias Caredeck.Formfix.{SectionAnswer, SectionKey, SectionSchema}
 
   require Ash.Query
 
@@ -26,7 +26,7 @@ defmodule CaredeckWeb.Aid.SubmitLive do
          |> assign(:answers_by_section, answers_by_section)}
 
       _ ->
-        {:ok, push_navigate(socket, to: ~p"/aid")}
+        {:ok, push_navigate(socket, to: ~p"/formfix")}
     end
   end
 
@@ -60,7 +60,7 @@ defmodule CaredeckWeb.Aid.SubmitLive do
         {:noreply,
          socket
          |> put_flash(:info, "Application submitted.")
-         |> push_navigate(to: ~p"/aid/#{updated.id}/overview")}
+         |> push_navigate(to: ~p"/formfix/#{updated.id}/overview")}
 
       {:error, _} ->
         {:noreply, put_flash(socket, :error, "Cannot submit yet.")}
@@ -72,7 +72,7 @@ defmodule CaredeckWeb.Aid.SubmitLive do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user} current_team={@current_team}>
       <div class="mx-auto max-w-3xl px-4 sm:px-6 py-6">
-        <.aid_back_link application_id={@application.id} />
+        <.formfix_back_link application_id={@application.id} />
 
         <header class="mb-6">
           <h1 class="text-display-md text-ink-900">Review and submit</h1>
@@ -81,7 +81,7 @@ defmodule CaredeckWeb.Aid.SubmitLive do
           </p>
           <div class="mt-3 flex items-center gap-3">
             <p class="text-ink-500 text-xs">{@application.progress_percent}% complete</p>
-            <.aid_status_pill status={@application.state} />
+            <.formfix_status_pill status={@application.state} />
           </div>
         </header>
 
@@ -129,7 +129,7 @@ defmodule CaredeckWeb.Aid.SubmitLive do
           Please complete all sections and upload all required documents before submitting.
         </p>
 
-        <.aid_footer />
+        <.formfix_footer />
       </div>
     </Layouts.app>
     """

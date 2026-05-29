@@ -1,8 +1,8 @@
-defmodule CaredeckWeb.Aid.ListLive do
+defmodule CaredeckWeb.Formfix.ListLive do
   use CaredeckWeb, :live_view
 
-  alias Caredeck.Aid.Application, as: AidApplication
-  alias Caredeck.Aid.Applications
+  alias Caredeck.Formfix.Application, as: AidApplication
+  alias Caredeck.Formfix.Applications
   alias Caredeck.People.{Relative, RelativeOfResident, Resident}
 
   require Ash.Query
@@ -17,7 +17,7 @@ defmodule CaredeckWeb.Aid.ListLive do
 
     {:ok,
      socket
-     |> assign(:page_title, "Long-term care assistance")
+     |> assign(:page_title, "Formfix")
      |> assign(:applications, applications)
      |> assign(:residents_available, residents_available)
      |> assign(:picking_resident, false)
@@ -79,7 +79,7 @@ defmodule CaredeckWeb.Aid.ListLive do
     {:ok, resident} = Ash.get(Resident, rid, tenant: facility.id, authorize?: false)
     app = Applications.start_for_resident!(facility, resident, actor)
 
-    {:noreply, push_navigate(socket, to: ~p"/aid/#{app.id}/overview")}
+    {:noreply, push_navigate(socket, to: ~p"/formfix/#{app.id}/overview")}
   end
 
   @impl true
@@ -88,7 +88,7 @@ defmodule CaredeckWeb.Aid.ListLive do
     <Layouts.app flash={@flash} current_user={@current_user} current_team={@current_team}>
       <div class="mx-auto max-w-4xl px-4 sm:px-6 py-6">
         <header class="flex items-center justify-between gap-3 flex-wrap mb-6">
-          <h1 class="text-display-md text-ink-900">Long-term care assistance</h1>
+          <h1 class="text-display-md text-ink-900">Formfix</h1>
 
           <button
             :if={@residents_available != []}
@@ -137,12 +137,12 @@ defmodule CaredeckWeb.Aid.ListLive do
           class="bg-card rounded-card shadow-card divide-y divide-divider overflow-hidden"
         >
           <li :for={a <- @applications}>
-            <.link navigate={~p"/aid/#{a.id}/overview"} class="block px-4 py-3 hover:bg-page">
+            <.link navigate={~p"/formfix/#{a.id}/overview"} class="block px-4 py-3 hover:bg-page">
               <div class="flex items-center justify-between gap-2 flex-wrap">
                 <p class="text-ink-900 font-medium">
                   Application for {a.resident.first_name} {a.resident.last_name}
                 </p>
-                <.aid_status_pill status={a.state} />
+                <.formfix_status_pill status={a.state} />
               </div>
               <div class="mt-2 h-2 w-full bg-page rounded-full overflow-hidden">
                 <div class="h-2 bg-brand" style={"width: #{a.progress_percent}%"}></div>
@@ -154,7 +154,7 @@ defmodule CaredeckWeb.Aid.ListLive do
           </li>
         </ul>
 
-        <.aid_footer />
+        <.formfix_footer />
       </div>
     </Layouts.app>
     """

@@ -1,8 +1,8 @@
-defmodule CaredeckWeb.Aid.SectionLive do
+defmodule CaredeckWeb.Formfix.SectionLive do
   use CaredeckWeb, :live_view
 
-  alias Caredeck.Aid.Application, as: AidApplication
-  alias Caredeck.Aid.{ApplicationSection, FieldRationale, SectionAnswer, SectionKey, SectionSchema, SectionWriter}
+  alias Caredeck.Formfix.Application, as: AidApplication
+  alias Caredeck.Formfix.{ApplicationSection, FieldRationale, SectionAnswer, SectionKey, SectionSchema, SectionWriter}
 
   require Ash.Query
 
@@ -28,7 +28,7 @@ defmodule CaredeckWeb.Aid.SectionLive do
          |> assign(:next_key, SectionKey.next_key(section_key))}
 
       _ ->
-        {:ok, push_navigate(socket, to: ~p"/aid")}
+        {:ok, push_navigate(socket, to: ~p"/formfix")}
     end
   end
 
@@ -64,8 +64,8 @@ defmodule CaredeckWeb.Aid.SectionLive do
 
     next =
       case socket.assigns.next_key do
-        nil -> ~p"/aid/#{socket.assigns.application.id}/overview"
-        k -> ~p"/aid/#{socket.assigns.application.id}/section/#{Atom.to_string(k)}"
+        nil -> ~p"/formfix/#{socket.assigns.application.id}/overview"
+        k -> ~p"/formfix/#{socket.assigns.application.id}/section/#{Atom.to_string(k)}"
       end
 
     {:noreply, push_navigate(socket, to: next)}
@@ -94,12 +94,12 @@ defmodule CaredeckWeb.Aid.SectionLive do
     )
     |> Ash.update!(tenant: facility_id, authorize?: false)
 
-    :ok = Caredeck.Aid.Applications.recompute_status(socket.assigns.application)
+    :ok = Caredeck.Formfix.Applications.recompute_status(socket.assigns.application)
 
     next =
       case socket.assigns.next_key do
-        nil -> ~p"/aid/#{socket.assigns.application.id}/overview"
-        k -> ~p"/aid/#{socket.assigns.application.id}/section/#{Atom.to_string(k)}"
+        nil -> ~p"/formfix/#{socket.assigns.application.id}/overview"
+        k -> ~p"/formfix/#{socket.assigns.application.id}/section/#{Atom.to_string(k)}"
       end
 
     {:noreply, push_navigate(socket, to: next)}
@@ -110,7 +110,7 @@ defmodule CaredeckWeb.Aid.SectionLive do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user} current_team={@current_team}>
       <div class="mx-auto max-w-4xl px-4 sm:px-6 py-6">
-        <.aid_back_link application_id={@application.id} />
+        <.formfix_back_link application_id={@application.id} />
 
         <header class="mb-6">
           <h1 class="text-display-md text-ink-900">{SectionKey.label(@section_key)}</h1>
@@ -167,9 +167,9 @@ defmodule CaredeckWeb.Aid.SectionLive do
           </div>
         </form>
 
-        <div :if={Caredeck.Aid.RequiredDocuments.for(@section_key) != []} class="mt-4 text-right">
+        <div :if={Caredeck.Formfix.RequiredDocuments.for(@section_key) != []} class="mt-4 text-right">
           <.link
-            navigate={~p"/aid/#{@application.id}/section/#{Atom.to_string(@section_key)}/documents"}
+            navigate={~p"/formfix/#{@application.id}/section/#{Atom.to_string(@section_key)}/documents"}
             class="text-brand text-sm hover:underline"
           >
             Required documents →
@@ -178,11 +178,11 @@ defmodule CaredeckWeb.Aid.SectionLive do
 
         <.next_section_card
           :if={@next_key}
-          next_path={"/aid/#{@application.id}/section/#{Atom.to_string(@next_key)}"}
+          next_path={"/formfix/#{@application.id}/section/#{Atom.to_string(@next_key)}"}
           next_label={SectionKey.label(@next_key)}
         />
 
-        <.aid_footer />
+        <.formfix_footer />
       </div>
     </Layouts.app>
     """
@@ -247,7 +247,7 @@ defmodule CaredeckWeb.Aid.SectionLive do
     """
   end
 
-  defp field_input(%{field: %{kind: {:enum, Caredeck.Aid.MaritalStatus}}} = assigns) do
+  defp field_input(%{field: %{kind: {:enum, Caredeck.Formfix.MaritalStatus}}} = assigns) do
     ~H"""
     <select
       name={Atom.to_string(@field.key)}
@@ -255,11 +255,11 @@ defmodule CaredeckWeb.Aid.SectionLive do
     >
       <option value="" selected={@value in [nil, ""]}>—</option>
       <option
-        :for={v <- Caredeck.Aid.MaritalStatus.all()}
+        :for={v <- Caredeck.Formfix.MaritalStatus.all()}
         value={Atom.to_string(v)}
         selected={@value == Atom.to_string(v)}
       >
-        {Caredeck.Aid.MaritalStatus.label(v)}
+        {Caredeck.Formfix.MaritalStatus.label(v)}
       </option>
     </select>
     """

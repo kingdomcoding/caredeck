@@ -1,13 +1,13 @@
-defmodule Caredeck.Workers.AidDocumentVerifier do
+defmodule Caredeck.Workers.FormfixDocumentVerifier do
   use Oban.Worker, queue: :aid, max_attempts: 3
 
   @mix_env Mix.env()
 
-  alias Caredeck.Aid.UploadedDocument
+  alias Caredeck.Formfix.UploadedDocument
 
   @impl Oban.Worker
   def perform(%Oban.Job{args: %{"document_id" => id, "facility_id" => fid}}) do
-    engine = Application.get_env(:caredeck, :aid_verification_engine, :stub)
+    engine = Application.get_env(:caredeck, :formfix_verification_engine, :stub)
 
     if engine == :stub and @mix_env != :test, do: Process.sleep(1_000)
 
@@ -32,12 +32,12 @@ defmodule Caredeck.Workers.AidDocumentVerifier do
     end
 
     application =
-      Ash.get!(Caredeck.Aid.Application, doc.application_id,
+      Ash.get!(Caredeck.Formfix.Application, doc.application_id,
         tenant: fid,
         authorize?: false
       )
 
-    :ok = Caredeck.Aid.Applications.recompute_status(application)
+    :ok = Caredeck.Formfix.Applications.recompute_status(application)
 
     :ok
   end

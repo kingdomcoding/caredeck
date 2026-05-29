@@ -89,10 +89,10 @@ defmodule CaredeckWeb.Layouts do
           </.link>
           <.link
             :if={@current_user}
-            navigate={~p"/aid"}
+            navigate={~p"/formfix"}
             class="hidden md:inline-block hover:text-ink-900"
           >
-            Aid
+            Formfix
           </.link>
           <.link
             :if={@current_team && @current_team.role_kind == :care}
@@ -372,7 +372,7 @@ defmodule CaredeckWeb.Layouts do
 
     [
       %{navigate: ~p"/feed", label: "Home", icon: :home},
-      %{navigate: ~p"/aid", label: "Aid", icon: :clipboard},
+      %{navigate: ~p"/formfix", label: "Formfix", icon: :clipboard},
       %{navigate: profile_path, label: "Profile", icon: :user},
       %{navigate: ~p"/services", label: "Services", icon: :briefcase},
       %{navigate: ~p"/notifications", label: "Inbox", icon: :bell, badge: unread},

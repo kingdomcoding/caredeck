@@ -1,8 +1,8 @@
-defmodule CaredeckWeb.Aid.OverviewLive do
+defmodule CaredeckWeb.Formfix.OverviewLive do
   use CaredeckWeb, :live_view
 
-  alias Caredeck.Aid.Application, as: AidApplication
-  alias Caredeck.Aid.SectionKey
+  alias Caredeck.Formfix.Application, as: AidApplication
+  alias Caredeck.Formfix.SectionKey
 
   @impl true
   def mount(%{"application_id" => aid}, _session, socket) do
@@ -19,12 +19,12 @@ defmodule CaredeckWeb.Aid.OverviewLive do
 
         {:ok,
          socket
-         |> assign(:page_title, "Application overview")
+         |> assign(:page_title, "Formfix overview")
          |> assign(:application, app)
          |> assign(:sections_by_key, sections_by_key)}
 
       _ ->
-        {:ok, push_navigate(socket, to: ~p"/aid")}
+        {:ok, push_navigate(socket, to: ~p"/formfix")}
     end
   end
 
@@ -39,7 +39,7 @@ defmodule CaredeckWeb.Aid.OverviewLive do
         <header class="mb-6">
           <p class="text-ink-500 text-xs uppercase tracking-wide">Your overview</p>
           <h1 class="text-display-md text-ink-900">
-            Long-Term Care Assistance — {@application.resident.first_name} {@application.resident.last_name}
+            Formfix — {@application.resident.first_name} {@application.resident.last_name}
           </h1>
 
           <div class="mt-3 h-3 w-full bg-page rounded-full overflow-hidden">
@@ -47,7 +47,7 @@ defmodule CaredeckWeb.Aid.OverviewLive do
           </div>
           <div class="flex items-center gap-3 mt-1">
             <p class="text-ink-500 text-xs">{@application.progress_percent}% complete</p>
-            <.aid_status_pill status={@application.state} />
+            <.formfix_status_pill status={@application.state} />
           </div>
         </header>
 
@@ -55,7 +55,7 @@ defmodule CaredeckWeb.Aid.OverviewLive do
           <ul class="grid gap-3 sm:grid-cols-2">
             <li :for={key <- SectionKey.base()}>
               <.link
-                navigate={~p"/aid/#{@application.id}/section/#{Atom.to_string(key)}"}
+                navigate={~p"/formfix/#{@application.id}/section/#{Atom.to_string(key)}"}
                 class="block bg-card rounded-card shadow-card p-4 hover:border-brand border border-transparent transition"
               >
                 <div class="flex items-center justify-between gap-2 flex-wrap">
@@ -78,14 +78,14 @@ defmodule CaredeckWeb.Aid.OverviewLive do
         <div class="mt-6">
           <.link
             :if={@application.state == :ready_to_submit}
-            navigate={~p"/aid/#{@application.id}/submit"}
+            navigate={~p"/formfix/#{@application.id}/submit"}
             class="inline-block rounded-button bg-brand text-white text-sm font-medium px-4 py-2 hover:bg-brand-strong"
           >
             Go to submit →
           </.link>
         </div>
 
-        <.aid_footer />
+        <.formfix_footer />
       </div>
     </Layouts.app>
     """

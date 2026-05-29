@@ -1,5 +1,5 @@
-defmodule Caredeck.Aid.Applications do
-  alias Caredeck.Aid.{
+defmodule Caredeck.Formfix.Applications do
+  alias Caredeck.Formfix.{
     Application,
     ApplicationSection,
     MaritalStatus,

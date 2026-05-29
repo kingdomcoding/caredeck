@@ -1,4 +1,4 @@
-defmodule Caredeck.Aid.RequiredDocuments do
+defmodule Caredeck.Formfix.RequiredDocuments do
   @docs %{
     person_needing_care: [
       %{

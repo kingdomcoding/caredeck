@@ -1,5 +1,5 @@
-defmodule Caredeck.Aid.SectionSchema do
-  alias Caredeck.Aid.MaritalStatus
+defmodule Caredeck.Formfix.SectionSchema do
+  alias Caredeck.Formfix.MaritalStatus
 
   @sections [
     %{

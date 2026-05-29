@@ -81,7 +81,7 @@ defmodule CaredeckWeb do
       import Phoenix.HTML
       # Core UI components
       import CaredeckWeb.CoreComponents
-      import CaredeckWeb.AidComponents
+      import CaredeckWeb.FormfixComponents
 
       # Common modules used in templates
       alias CaredeckWeb.Layouts

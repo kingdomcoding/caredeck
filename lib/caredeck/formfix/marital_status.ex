@@ -1,4 +1,4 @@
-defmodule Caredeck.Aid.MaritalStatus do
+defmodule Caredeck.Formfix.MaritalStatus do
   @values ~w(single married domestic_partnership registered_civil_partnership
              widowed divorced permanently_separated civil_partnership_dissolved
              unknown)a

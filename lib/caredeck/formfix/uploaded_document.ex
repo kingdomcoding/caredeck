@@ -1,12 +1,12 @@
-defmodule Caredeck.Aid.UploadedDocument do
+defmodule Caredeck.Formfix.UploadedDocument do
   use Caredeck.Resource,
-    domain: Caredeck.Aid,
+    domain: Caredeck.Formfix,
     default_pub_sub: false,
     paper_trail: [attributes_as_attributes: [:facility_id]],
     extensions: [AshStateMachine]
 
   postgres do
-    table "aid_uploaded_documents"
+    table "formfix_uploaded_documents"
     repo Caredeck.Repo
 
     references do
@@ -59,7 +59,7 @@ defmodule Caredeck.Aid.UploadedDocument do
 
   relationships do
     belongs_to :facility, Caredeck.Org.Facility, allow_nil?: false
-    belongs_to :application, Caredeck.Aid.Application, allow_nil?: false
+    belongs_to :application, Caredeck.Formfix.Application, allow_nil?: false
   end
 
   actions do

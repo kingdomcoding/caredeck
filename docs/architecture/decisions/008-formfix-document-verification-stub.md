@@ -1,19 +1,19 @@
-# ADR 008: Aid document verification stub
+# ADR 008: Formfix document verification stub
 
 **Status:** Accepted
 **Date:** 2026-05-26
 
 ## Context
 
-The Aid wizard's signature UX moment is the small green "Successfully verified" label that appears under each uploaded document after ~1 second. The marketing pitch sells this as automated OCR + LLM-driven correctness checking.
+The Formfix wizard's signature UX moment is the small green "Successfully verified" label that appears under each uploaded document after ~1 second. The marketing pitch sells this as automated OCR + LLM-driven correctness checking.
 
-Building a real verifier in Phase 10 would block the entire phase on training data, OCR tooling, model selection, and FERPA-equivalent legal review. The verifier is a *secondary* selling point of the Aid module — the *primary* one is the 13-section wizard itself.
+Building a real verifier in Phase 10 would block the entire phase on training data, OCR tooling, model selection, and FERPA-equivalent legal review. The verifier is a *secondary* selling point of the Formfix module — the *primary* one is the 13-section wizard itself.
 
 ## Decision
 
 Ship a stub from Phase 10 onwards:
 
-- An Ash action `Caredeck.Aid.verify_document/1` returns `{:ok, :verified}` after a 1-second async delay (Oban `:aid` queue).
+- An Ash action `Caredeck.Formfix.verify_document/1` returns `{:ok, :verified}` after a 1-second async delay (Oban `:aid` queue).
 - The `UploadedDocument` resource has a `verification_status` state machine: `:pending → :verifying → :verified | :failed`.
 - The state machine is a real `AshStateMachine` — the *contract* is real, only the verifier *impl* is stub.
 - A feature flag `:aid_verification_engine ∈ {:stub, :ocr, :llm}` lives in runtime config. Default `:stub`. The `:ocr` and `:llm` implementations land later behind the same interface.
