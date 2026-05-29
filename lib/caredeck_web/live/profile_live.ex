@@ -60,20 +60,20 @@ defmodule CaredeckWeb.ProfileLive do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user} current_team={@current_team}>
       <div class="mx-auto max-w-2xl px-4 py-6 pb-24">
-        <div class="flex items-start justify-between mb-1 gap-3">
+        <div class="flex items-start justify-between mb-2 gap-3 flex-wrap">
           <h1 class="text-display-md text-ink-900">
             {@resident.first_name} {@resident.last_name}
           </h1>
-          <div class="flex flex-col items-end gap-1 text-xs">
+          <div class="flex items-center gap-2 flex-wrap">
             <.link
               navigate={~p"/kitchen/order/#{@resident.id}"}
-              class="text-brand hover:text-brand-strong"
+              class="rounded-button bg-brand text-white text-sm font-medium px-4 py-2 hover:bg-brand-strong whitespace-nowrap"
             >
               Order meal &rarr;
             </.link>
             <.link
               navigate={~p"/residents/#{@resident.id}/diet"}
-              class="text-ink-500 hover:text-ink-900"
+              class="rounded-button bg-card border border-divider text-ink-900 text-sm font-medium px-4 py-2 hover:border-brand whitespace-nowrap"
             >
               Diet profile
             </.link>
