@@ -71,6 +71,7 @@ defmodule Caredeck.Aid.Application do
       define_attribute?: false
 
     has_many :sections, Caredeck.Aid.ApplicationSection
+    has_many :answers, Caredeck.Aid.SectionAnswer
   end
 
   calculations do
