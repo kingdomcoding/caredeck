@@ -88,6 +88,13 @@ defmodule CaredeckWeb.Layouts do
             Services
           </.link>
           <.link
+            :if={@current_team && @current_team.role_kind == :care}
+            navigate={~p"/services/inbox"}
+            class="hidden md:inline-block hover:text-ink-900"
+          >
+            Inbox
+          </.link>
+          <.link
             :if={@current_team}
             navigate={~p"/kitchen/weekly-menu"}
             class="hidden md:inline-block hover:text-ink-900"
