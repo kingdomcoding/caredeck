@@ -5,8 +5,12 @@ defmodule Caredeck.Application do
 
   use Application
 
+  @mix_env Mix.env()
+
   @impl true
   def start(_type, _args) do
+    warn_if_aid_stub()
+
     children = [
       CaredeckWeb.Telemetry,
       Caredeck.Repo,
@@ -20,6 +24,16 @@ defmodule Caredeck.Application do
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: Caredeck.Supervisor]
     Supervisor.start_link(children, opts)
+  end
+
+  defp warn_if_aid_stub do
+    if @mix_env == :prod and
+         Application.get_env(:caredeck, :aid_verification_engine, :stub) == :stub do
+      require Logger
+      Logger.warning(
+        "[Aid] verification engine is :stub — replace before real applicants are onboarded."
+      )
+    end
   end
 
   # Tell Phoenix to update the endpoint configuration
