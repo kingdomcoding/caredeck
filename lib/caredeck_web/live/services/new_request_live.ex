@@ -147,6 +147,14 @@ defmodule CaredeckWeb.Services.NewRequestLive do
         if attachment_id, do: link_attachment(attachment_id, request.id, facility.id)
         maybe_create_feed_post(request, provider, payload, facility)
 
+        %{
+          "event" => "service_request_created",
+          "request_id" => request.id,
+          "facility_id" => facility.id
+        }
+        |> Caredeck.Workers.NotificationFanout.new()
+        |> Oban.insert()
+
         {:noreply,
          socket
          |> put_flash(:info, "Request sent.")
