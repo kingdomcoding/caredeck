@@ -4,11 +4,17 @@ defmodule Caredeck.Formfix.SectionKey do
               gifts_given_partner expenses disability foreign_nationality
               spouse)a
 
-  def all, do: @ordered
-  def base, do: @ordered |> Enum.take(13)
+  @conditional ~w(income_partner assets_partner gifts_given_partner spouse)a
 
-  def conditional?(:spouse), do: true
-  def conditional?(_), do: false
+  @positions @ordered |> Enum.with_index(1) |> Map.new()
+
+  def all, do: @ordered
+  def base, do: Enum.reject(@ordered, &conditional?/1)
+  def conditional, do: @conditional
+
+  def conditional?(key), do: key in @conditional
+
+  def position(key), do: Map.fetch!(@positions, key)
 
   def label(:welcome), do: "Welcome"
   def label(:person_needing_care), do: "Person Needing Care"

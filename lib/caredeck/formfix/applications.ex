@@ -89,6 +89,7 @@ defmodule Caredeck.Formfix.Applications do
 
   def refresh_conditional_sections(application) do
     fid = application.facility_id
+    conditional_keys = Caredeck.Formfix.SectionKey.conditional()
 
     marital_atom =
       SectionAnswer
@@ -103,41 +104,44 @@ defmodule Caredeck.Formfix.Applications do
         ans -> ans.value_atom
       end
 
-    needs_spouse? = marital_atom && MaritalStatus.requires_spouse_section?(marital_atom)
+    needed =
+      if marital_atom && MaritalStatus.requires_spouse_section?(marital_atom),
+        do: MapSet.new(conditional_keys),
+        else: MapSet.new()
 
     existing =
       ApplicationSection
-      |> Ash.Query.filter(application_id == ^application.id and section_key == :spouse)
-      |> Ash.read_one!(tenant: fid, authorize?: false)
+      |> Ash.Query.filter(
+        application_id == ^application.id and section_key in ^conditional_keys
+      )
+      |> Ash.read!(tenant: fid, authorize?: false)
 
-    cond do
-      needs_spouse? && is_nil(existing) ->
-        ApplicationSection
-        |> Ash.Changeset.for_create(
-          :create,
-          %{
-            facility_id: fid,
-            application_id: application.id,
-            section_key: :spouse,
-            position: 14,
-            status: :not_started
-          },
-          tenant: fid,
-          authorize?: false
-        )
-        |> Ash.create!(tenant: fid, authorize?: false)
+    existing_keys = MapSet.new(Enum.map(existing, & &1.section_key))
 
-        :ok
+    Enum.each(MapSet.difference(needed, existing_keys), fn key ->
+      ApplicationSection
+      |> Ash.Changeset.for_create(
+        :create,
+        %{
+          facility_id: fid,
+          application_id: application.id,
+          section_key: key,
+          position: Caredeck.Formfix.SectionKey.position(key),
+          status: :not_started
+        },
+        tenant: fid,
+        authorize?: false
+      )
+      |> Ash.create!(tenant: fid, authorize?: false)
+    end)
 
-      !needs_spouse? && existing ->
-        existing
-        |> Ash.destroy!(tenant: fid, authorize?: false)
+    Enum.each(existing, fn section ->
+      unless MapSet.member?(needed, section.section_key) do
+        Ash.destroy!(section, tenant: fid, authorize?: false)
+      end
+    end)
 
-        :ok
-
-      true ->
-        :ok
-    end
+    :ok
   end
 
   defp all_required_documents_verified?(application, sections) do

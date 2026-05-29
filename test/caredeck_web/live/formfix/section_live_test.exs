@@ -91,18 +91,35 @@ defmodule CaredeckWeb.Formfix.SectionLiveTest do
     assert section.status == :complete
   end
 
-  test "Skip button transitions section to :skipped", ctx do
+  test "Skip button transitions a form section to :skipped", ctx do
     conn = sign_in_team(ctx.conn, ctx.care_team)
-    {:ok, view, _html} = live(conn, ~p"/formfix/#{ctx.application.id}/section/welcome")
+    {:ok, view, _html} = live(conn, ~p"/formfix/#{ctx.application.id}/section/applicant")
 
     view |> element("button[phx-click=skip]") |> render_click()
+
+    section =
+      Formfix.ApplicationSection
+      |> Ash.Query.filter(application_id == ^ctx.application.id and section_key == :applicant)
+      |> Ash.read_one!(tenant: ctx.facility.id, authorize?: false)
+
+    assert section.status == :skipped
+  end
+
+  test "Welcome shows Begin button (no Skip) and transitions welcome to :complete", ctx do
+    conn = sign_in_team(ctx.conn, ctx.care_team)
+    {:ok, view, html} = live(conn, ~p"/formfix/#{ctx.application.id}/section/welcome")
+
+    refute html =~ "phx-click=\"skip\""
+    assert html =~ "Begin"
+
+    view |> element("button[phx-click=begin]") |> render_click()
 
     section =
       Formfix.ApplicationSection
       |> Ash.Query.filter(application_id == ^ctx.application.id and section_key == :welcome)
       |> Ash.read_one!(tenant: ctx.facility.id, authorize?: false)
 
-    assert section.status == :skipped
+    assert section.status == :complete
   end
 
   defp sign_in_team(conn, team) do

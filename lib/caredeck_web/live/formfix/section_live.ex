@@ -76,6 +76,35 @@ defmodule CaredeckWeb.Formfix.SectionLive do
     {:noreply, put_flash(socket, :info, "Draft saved.")}
   end
 
+  def handle_event("begin", _, socket) do
+    facility_id = socket.assigns.application.facility_id
+
+    section =
+      ApplicationSection
+      |> Ash.Query.filter(
+        application_id == ^socket.assigns.application.id and
+          section_key == ^socket.assigns.section_key
+      )
+      |> Ash.read_one!(tenant: facility_id, authorize?: false)
+
+    section
+    |> Ash.Changeset.for_update(:transition, %{status: :complete},
+      tenant: facility_id,
+      authorize?: false
+    )
+    |> Ash.update!(tenant: facility_id, authorize?: false)
+
+    :ok = Caredeck.Formfix.Applications.recompute_status(socket.assigns.application)
+
+    next =
+      case socket.assigns.next_key do
+        nil -> ~p"/formfix/#{socket.assigns.application.id}/overview"
+        k -> ~p"/formfix/#{socket.assigns.application.id}/section/#{Atom.to_string(k)}"
+      end
+
+    {:noreply, push_navigate(socket, to: next)}
+  end
+
   def handle_event("skip", _, socket) do
     facility_id = socket.assigns.application.facility_id
 
@@ -106,7 +135,64 @@ defmodule CaredeckWeb.Formfix.SectionLive do
   end
 
   @impl true
-  def render(assigns) do
+  def render(%{section_key: :welcome} = assigns), do: render_welcome(assigns)
+  def render(assigns), do: render_form(assigns)
+
+  defp render_welcome(assigns) do
+    ~H"""
+    <Layouts.app flash={@flash} current_user={@current_user} current_team={@current_team}>
+      <div class="mx-auto max-w-3xl px-4 sm:px-6 py-6">
+        <.formfix_back_link application_id={@application.id} />
+
+        <header class="mb-6">
+          <h1 class="text-display-md text-ink-900">Welcome to Formfix</h1>
+          <p class="text-ink-500 text-sm">
+            For {@application.resident.first_name} {@application.resident.last_name}
+          </p>
+        </header>
+
+        <section class="bg-card rounded-card shadow-card p-6 space-y-4">
+          <p class="text-ink-900">
+            Formfix walks you through the long-term-care assistance application section by section. It usually takes about <strong>30 minutes</strong> to complete. You don't have to finish in one sitting — your answers are saved automatically.
+          </p>
+
+          <div>
+            <p class="text-ink-900 font-medium mb-2">Here's what we'll cover:</p>
+            <ol class="list-decimal pl-5 text-ink-900 text-sm space-y-1">
+              <li>Personal details of the person needing care</li>
+              <li>Your details as the applicant</li>
+              <li>The current care situation</li>
+              <li>Income (yours and your partner's, if applicable)</li>
+              <li>Assets (yours and your partner's, if applicable)</li>
+              <li>Gifts given in the last 10 years</li>
+              <li>Monthly expenses</li>
+              <li>Disability status (if applicable)</li>
+              <li>Foreign-nationality status (if applicable)</li>
+            </ol>
+          </div>
+
+          <p class="text-ink-500 text-sm">
+            You'll be asked to upload a few supporting documents along the way — your ID, a recent pension statement, and so on. The list of what's needed is shown on each section.
+          </p>
+        </section>
+
+        <div class="mt-6 flex justify-end">
+          <button
+            type="button"
+            phx-click="begin"
+            class="rounded-button bg-brand text-white font-medium px-5 py-3 hover:bg-brand-strong"
+          >
+            Begin →
+          </button>
+        </div>
+
+        <.formfix_footer />
+      </div>
+    </Layouts.app>
+    """
+  end
+
+  defp render_form(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user} current_team={@current_team}>
       <div class="mx-auto max-w-4xl px-4 sm:px-6 py-6">
@@ -119,19 +205,14 @@ defmodule CaredeckWeb.Formfix.SectionLive do
           </p>
         </header>
 
-        <p
-          :if={@fields == []}
-          class="text-ink-500 text-sm bg-card rounded-card shadow-card p-4 mb-6"
-        >
-          There's nothing to fill in here yet. You can skip or continue to the next section.
-        </p>
-
         <form phx-change="change" phx-submit="save" class="space-y-6">
           <section :for={sub <- @sub_sections} class="bg-card rounded-card shadow-card p-4">
             <h2 class="text-ink-900 font-medium mb-3">{sub.label}</h2>
 
-            <div :for={f <- Enum.filter(@fields, &(&1.sub == sub.key))}
-                 class="grid gap-4 lg:grid-cols-[1fr_280px] mb-4">
+            <div
+              :for={f <- Enum.filter(@fields, &(&1.sub == sub.key))}
+              class="grid gap-4 lg:grid-cols-[1fr_280px] mb-4"
+            >
               <div>
                 <label class="block">
                   <span class="text-ink-900 text-sm font-medium">
@@ -167,7 +248,10 @@ defmodule CaredeckWeb.Formfix.SectionLive do
           </div>
         </form>
 
-        <div :if={Caredeck.Formfix.RequiredDocuments.for(@section_key) != []} class="mt-4 text-right">
+        <div
+          :if={Caredeck.Formfix.RequiredDocuments.for(@section_key) != []}
+          class="mt-4 text-right"
+        >
           <.link
             navigate={~p"/formfix/#{@application.id}/section/#{Atom.to_string(@section_key)}/documents"}
             class="text-brand text-sm hover:underline"

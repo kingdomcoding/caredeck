@@ -50,19 +50,24 @@ defmodule Caredeck.Formfix.CrossTenancyTest do
     assert rows == []
   end
 
-  test "SectionSeeder.materialise!/1 produces 13 sections, positions 1..13", ctx do
+  test "SectionSeeder.materialise!/1 produces 10 sections in canonical positions", ctx do
     sections =
       ApplicationSection
       |> Ash.Query.filter(application_id == ^ctx.app_a.id)
       |> Ash.Query.sort(position: :asc)
       |> Ash.read!(tenant: ctx.facility_a.id, authorize?: false)
 
-    assert length(sections) == 13
-    assert Enum.map(sections, & &1.position) == Enum.to_list(1..13)
+    assert length(sections) == 10
     assert Enum.all?(sections, &(&1.status == :not_started))
+
+    expected_positions = Caredeck.Formfix.SectionKey.base()
+                         |> Enum.map(&Caredeck.Formfix.SectionKey.position/1)
+                         |> Enum.sort()
+
+    assert Enum.map(sections, & &1.position) == expected_positions
   end
 
-  test "SectionSeeder is idempotent (re-running upserts, count stays 13)", ctx do
+  test "SectionSeeder is idempotent (re-running upserts, count stays 10)", ctx do
     :ok = SectionSeeder.materialise!(ctx.app_a)
 
     count =
@@ -71,7 +76,7 @@ defmodule Caredeck.Formfix.CrossTenancyTest do
       |> Ash.read!(tenant: ctx.facility_a.id, authorize?: false)
       |> length()
 
-    assert count == 13
+    assert count == 10
   end
 
   test "Application starts in :draft state", ctx do

@@ -8,6 +8,9 @@ defmodule Caredeck.Formfix.ApplicationSection do
     table "formfix_application_sections"
     repo Caredeck.Repo
 
+    identity_index_names one_per_section_per_application:
+                           "formfix_application_sections_one_per_section_per_application_in"
+
     references do
       reference :application, on_delete: :delete
     end

@@ -109,7 +109,33 @@ defmodule Caredeck.Formfix.SectionSchema do
         }
       ]
     },
-    %{key: :income_partner, label: "Income — Partner", sub_sections: [], fields: []},
+    %{
+      key: :income_partner,
+      label: "Income — Partner",
+      conditional: :marital_status_requires_partner,
+      sub_sections: [%{key: :monthly, label: "Partner's monthly income"}],
+      fields: [
+        %{
+          key: :partner_pension_eur_month,
+          label: "Partner's pension (per month)",
+          kind: :decimal,
+          sub: :monthly,
+          required: true
+        },
+        %{
+          key: :partner_rent_eur_month,
+          label: "Partner's rental income (per month)",
+          kind: :decimal,
+          sub: :monthly
+        },
+        %{
+          key: :partner_other_eur_month,
+          label: "Partner's other income (per month)",
+          kind: :decimal,
+          sub: :monthly
+        }
+      ]
+    },
     %{
       key: :assets,
       label: "Assets",
@@ -130,7 +156,27 @@ defmodule Caredeck.Formfix.SectionSchema do
         }
       ]
     },
-    %{key: :assets_partner, label: "Assets — Partner", sub_sections: [], fields: []},
+    %{
+      key: :assets_partner,
+      label: "Assets — Partner",
+      conditional: :marital_status_requires_partner,
+      sub_sections: [%{key: :accounts, label: "Partner's bank accounts + savings"}],
+      fields: [
+        %{
+          key: :partner_savings_eur,
+          label: "Partner's savings total",
+          kind: :decimal,
+          sub: :accounts,
+          required: true
+        },
+        %{
+          key: :partner_property_value_eur,
+          label: "Partner's property value",
+          kind: :decimal,
+          sub: :accounts
+        }
+      ]
+    },
     %{
       key: :gifts_given,
       label: "Gifts Given",
@@ -151,7 +197,27 @@ defmodule Caredeck.Formfix.SectionSchema do
         }
       ]
     },
-    %{key: :gifts_given_partner, label: "Gifts Given — Partner", sub_sections: [], fields: []},
+    %{
+      key: :gifts_given_partner,
+      label: "Gifts Given — Partner",
+      conditional: :marital_status_requires_partner,
+      sub_sections: [%{key: :recent, label: "Partner's gifts in the last 10 years"}],
+      fields: [
+        %{
+          key: :partner_any_gifts_over_500,
+          label: "Has your partner given any gifts over €500 in the last 10 years?",
+          kind: :boolean,
+          sub: :recent,
+          required: true
+        },
+        %{
+          key: :partner_gifts_description,
+          label: "If yes, briefly describe",
+          kind: :text,
+          sub: :recent
+        }
+      ]
+    },
     %{
       key: :expenses,
       label: "Expenses",

@@ -56,7 +56,7 @@ defmodule CaredeckWeb.Formfix.OverviewLiveTest do
     %{facility: facility, care_team: care_team, resident: resident, application: application}
   end
 
-  test "renders 13 section tiles and the support card", ctx do
+  test "renders the 10 base section tiles and the support card", ctx do
     conn = sign_in_team(ctx.conn, ctx.care_team)
     {:ok, _view, html} = live(conn, ~p"/formfix/#{ctx.application.id}/overview")
 

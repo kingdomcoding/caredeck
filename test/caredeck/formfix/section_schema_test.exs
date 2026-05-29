@@ -3,12 +3,12 @@ defmodule Caredeck.Formfix.SectionSchemaTest do
 
   alias Caredeck.Formfix.SectionSchema
 
-  test "all/0 returns 14 sections (13 base + 1 conditional)" do
+  test "all/0 returns 14 sections (10 base + 4 conditional)" do
     assert length(SectionSchema.all()) == 14
   end
 
-  test "base/0 returns the 13 non-conditional sections" do
-    assert length(SectionSchema.base()) == 13
+  test "base/0 returns the 10 non-conditional sections" do
+    assert length(SectionSchema.base()) == 10
     refute Enum.any?(SectionSchema.base(), &Map.get(&1, :conditional))
   end
 

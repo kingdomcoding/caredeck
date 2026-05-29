@@ -76,18 +76,17 @@ defmodule Caredeck.Formfix.ProgressCalculationTest do
     end)
   end
 
-  test "0/13 sections complete → 0%", ctx do
+  test "0/10 sections complete → 0%", ctx do
     assert progress(ctx.application, ctx.facility) == 0
   end
 
-  test "7/13 sections complete → ~54%", ctx do
-    mark_n_sections!(ctx.application, ctx.facility, 7)
-    pct = progress(ctx.application, ctx.facility)
-    assert pct in [53, 54]
+  test "5/10 sections complete → 50%", ctx do
+    mark_n_sections!(ctx.application, ctx.facility, 5)
+    assert progress(ctx.application, ctx.facility) == 50
   end
 
-  test "13/13 sections complete → 100%", ctx do
-    mark_n_sections!(ctx.application, ctx.facility, 13)
+  test "10/10 sections complete → 100%", ctx do
+    mark_n_sections!(ctx.application, ctx.facility, 10)
     assert progress(ctx.application, ctx.facility) == 100
   end
 
@@ -110,6 +109,6 @@ defmodule Caredeck.Formfix.ProgressCalculationTest do
       |> Ash.update!(tenant: ctx.facility.id, authorize?: false)
     end)
 
-    assert progress(ctx.application, ctx.facility) == 15
+    assert progress(ctx.application, ctx.facility) == 20
   end
 end

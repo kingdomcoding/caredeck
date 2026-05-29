@@ -15,13 +15,13 @@ defmodule CaredeckWeb.Formfix.OverviewLive do
            load: [:resident, :progress_percent, :sections]
          ) do
       {:ok, app} ->
-        sections_by_key = Map.new(app.sections, &{&1.section_key, &1})
+        ordered_sections = Enum.sort_by(app.sections, & &1.position)
 
         {:ok,
          socket
          |> assign(:page_title, "Formfix overview")
          |> assign(:application, app)
-         |> assign(:sections_by_key, sections_by_key)}
+         |> assign(:ordered_sections, ordered_sections)}
 
       _ ->
         {:ok, push_navigate(socket, to: ~p"/formfix")}
@@ -53,14 +53,16 @@ defmodule CaredeckWeb.Formfix.OverviewLive do
 
         <div class="grid gap-6 lg:grid-cols-[1fr_280px]">
           <ul class="grid gap-3 sm:grid-cols-2">
-            <li :for={key <- SectionKey.base()}>
+            <li :for={section <- @ordered_sections}>
               <.link
-                navigate={~p"/formfix/#{@application.id}/section/#{Atom.to_string(key)}"}
+                navigate={~p"/formfix/#{@application.id}/section/#{Atom.to_string(section.section_key)}"}
                 class="block bg-card rounded-card shadow-card p-4 hover:border-brand border border-transparent transition"
               >
                 <div class="flex items-center justify-between gap-2 flex-wrap">
-                  <p class="text-ink-900 font-medium">{SectionKey.label(key)}</p>
-                  <.section_pill status={section_status(@sections_by_key, key)} />
+                  <p class="text-ink-900 font-medium">
+                    {SectionKey.label(section.section_key)}
+                  </p>
+                  <.section_pill status={section.status} />
                 </div>
               </.link>
             </li>
@@ -91,10 +93,4 @@ defmodule CaredeckWeb.Formfix.OverviewLive do
     """
   end
 
-  defp section_status(map, key) do
-    case Map.get(map, key) do
-      nil -> :not_started
-      s -> s.status
-    end
-  end
 end

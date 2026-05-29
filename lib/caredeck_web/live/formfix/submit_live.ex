@@ -18,12 +18,14 @@ defmodule CaredeckWeb.Formfix.SubmitLive do
          ) do
       {:ok, app} ->
         answers_by_section = load_answers(app)
+        ordered_keys = app.sections |> Enum.sort_by(& &1.position) |> Enum.map(& &1.section_key)
 
         {:ok,
          socket
          |> assign(:page_title, "Review and submit")
          |> assign(:application, app)
-         |> assign(:answers_by_section, answers_by_section)}
+         |> assign(:answers_by_section, answers_by_section)
+         |> assign(:ordered_keys, ordered_keys)}
 
       _ ->
         {:ok, push_navigate(socket, to: ~p"/formfix")}
@@ -86,7 +88,7 @@ defmodule CaredeckWeb.Formfix.SubmitLive do
         </header>
 
         <ul class="space-y-4">
-          <li :for={key <- SectionKey.base()} class="bg-card rounded-card shadow-card p-4">
+          <li :for={key <- @ordered_keys} class="bg-card rounded-card shadow-card p-4">
             <p class="text-ink-900 font-medium mb-2">{SectionKey.label(key)}</p>
             <p
               :if={Map.get(@answers_by_section, key, []) == []}
