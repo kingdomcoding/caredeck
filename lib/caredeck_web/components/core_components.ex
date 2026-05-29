@@ -59,6 +59,32 @@ defmodule CaredeckWeb.CoreComponents do
     """
   end
 
+  attr :name, :string, required: true
+  attr :value, :string, required: true
+  attr :checked, :boolean, default: false
+  attr :label, :string, default: nil
+  attr :class, :string, default: ""
+  attr :rest, :global
+
+  def radio(assigns) do
+    ~H"""
+    <label class={["flex items-center gap-2 text-ink-900 cursor-pointer select-none", @class]}>
+      <input
+        type="radio"
+        name={@name}
+        value={@value}
+        checked={@checked}
+        class="sr-only peer"
+        {@rest}
+      />
+      <span class="h-5 w-5 shrink-0 rounded-full border-2 border-divider flex items-center justify-center transition peer-checked:border-brand peer-checked:[&>span]:opacity-100">
+        <span class="h-2.5 w-2.5 rounded-full bg-brand opacity-0 transition"></span>
+      </span>
+      <span :if={@label} class="text-sm">{@label}</span>
+    </label>
+    """
+  end
+
   @doc """
   Renders flash notices.
 

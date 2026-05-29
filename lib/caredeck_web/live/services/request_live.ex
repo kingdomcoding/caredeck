@@ -253,11 +253,20 @@ defmodule CaredeckWeb.Services.RequestLive do
             Style: {@request.payload["haircut_type"]}
           </p>
           <p
+            :if={@request.payload["details"] not in [nil, ""]}
+            class="text-ink-900 text-sm mt-1 whitespace-pre-wrap"
+          >
+            {@request.payload["details"]}
+          </p>
+          <p
             :if={@request.payload["notes"] not in [nil, ""]}
             class="text-ink-900 text-sm mt-1 whitespace-pre-wrap"
           >
             {@request.payload["notes"]}
           </p>
+        <% "information_request" -> %>
+          <p class="text-ink-500 text-xs uppercase tracking-wide mb-1">Information request</p>
+          <p class="text-ink-900 text-sm whitespace-pre-wrap">{@request.payload["details"]}</p>
         <% "medication_inquiry" -> %>
           <p class="text-ink-500 text-xs uppercase tracking-wide mb-1">Medication inquiry</p>
           <p class="text-ink-900 text-sm mb-1">

@@ -123,7 +123,9 @@ defmodule CaredeckWeb.Services.NewRequestLive do
     form_assigns = merge_form(socket.assigns, params)
     attachment_id = maybe_upload(socket, facility, socket.assigns.subkind)
 
-    payload = build_payload(socket.assigns.subkind, form_assigns, attachment_id)
+    payload =
+      build_payload(provider.kind, socket.assigns.subkind, form_assigns, attachment_id)
+
     summary = derive_summary(provider.kind, socket.assigns.subkind, payload)
 
     requester_user_id = socket.assigns[:current_user] && socket.assigns.current_user.id
@@ -180,7 +182,7 @@ defmodule CaredeckWeb.Services.NewRequestLive do
     }
   end
 
-  defp build_payload("prescription_upload", assigns, attachment_id) do
+  defp build_payload(_kind, "prescription_upload", assigns, attachment_id) do
     %{
       "subkind" => "prescription_upload",
       "attachment_id" => attachment_id,
@@ -188,7 +190,7 @@ defmodule CaredeckWeb.Services.NewRequestLive do
     }
   end
 
-  defp build_payload("medication_inquiry", assigns, _attachment_id) do
+  defp build_payload(_kind, "medication_inquiry", assigns, _attachment_id) do
     %{
       "subkind" => "medication_inquiry",
       "medication_name" => assigns.medication_name,
@@ -196,14 +198,14 @@ defmodule CaredeckWeb.Services.NewRequestLive do
     }
   end
 
-  defp build_payload("general_question", assigns, _attachment_id) do
+  defp build_payload(_kind, "general_question", assigns, _attachment_id) do
     %{
       "subkind" => "general_question",
       "question" => assigns.question
     }
   end
 
-  defp build_payload("complaint", assigns, attachment_id) do
+  defp build_payload(_kind, "complaint", assigns, attachment_id) do
     %{
       "subkind" => "complaint",
       "service" => "Resident laundry",
@@ -213,13 +215,28 @@ defmodule CaredeckWeb.Services.NewRequestLive do
     }
   end
 
-  defp build_payload("appointment_request", assigns, _attachment_id) do
+  defp build_payload(:hairdresser, "appointment_request", assigns, _attachment_id) do
     %{
       "subkind" => "appointment_request",
       "preferred_date" => assigns.preferred_date,
       "haircut_type" => assigns.haircut_type,
       "notes" => assigns.notes,
       "post_to_feed" => assigns.post_to_feed
+    }
+  end
+
+  defp build_payload(_kind, "appointment_request", assigns, _attachment_id) do
+    %{
+      "subkind" => "appointment_request",
+      "preferred_date" => assigns.preferred_date,
+      "details" => assigns.details
+    }
+  end
+
+  defp build_payload(_kind, "information_request", assigns, _attachment_id) do
+    %{
+      "subkind" => "information_request",
+      "details" => assigns.details
     }
   end
 
@@ -282,6 +299,13 @@ defmodule CaredeckWeb.Services.NewRequestLive do
 
   defp derive_summary(:hairdresser, "appointment_request", _),
     do: "Hairdresser appointment"
+
+  defp derive_summary(kind, "appointment_request", _)
+       when kind in [:doctor, :podiatry, :physio],
+       do: "#{kind |> Atom.to_string() |> String.capitalize()} appointment"
+
+  defp derive_summary(:doctor, "information_request", _),
+    do: "Doctor information request"
 
   defp derive_summary(_kind, subkind, _payload), do: subkind
 
@@ -471,7 +495,7 @@ defmodule CaredeckWeb.Services.NewRequestLive do
                 <span class="text-ink-900 text-sm font-medium">Photo</span>
                 <.live_file_input upload={@uploads.laundry_photo} class="mt-1" />
               </label>
-            <% "appointment_request" -> %>
+            <% "appointment_request" when @provider.kind == :hairdresser -> %>
               <label class="block">
                 <span class="text-ink-900 text-sm font-medium">Preferred date</span>
                 <input
@@ -486,16 +510,14 @@ defmodule CaredeckWeb.Services.NewRequestLive do
                 <legend class="text-ink-900 text-sm font-medium mb-1">
                   Haircut type
                 </legend>
-                <label :for={t <- ~w(trim buzz wash_set other)} class="flex items-center gap-2 mb-1">
-                  <input
-                    type="radio"
-                    name="haircut_type"
-                    value={t}
-                    checked={@haircut_type == t}
-                    class="accent-brand"
-                  />
-                  <span class="text-ink-900 text-sm">{humanize_radio(t)}</span>
-                </label>
+                <.radio
+                  :for={t <- ~w(trim buzz wash_set other)}
+                  name="haircut_type"
+                  value={t}
+                  checked={@haircut_type == t}
+                  label={humanize_radio(t)}
+                  class="mb-1"
+                />
               </fieldset>
 
               <label class="block">
@@ -512,6 +534,35 @@ defmodule CaredeckWeb.Services.NewRequestLive do
                 checked={@post_to_feed}
                 label="Also post to family feed"
               />
+            <% "appointment_request" -> %>
+              <label class="block">
+                <span class="text-ink-900 text-sm font-medium">Preferred date</span>
+                <input
+                  type="date"
+                  name="preferred_date"
+                  value={@preferred_date}
+                  class="mt-1 block w-full rounded-input border border-divider px-3 py-2"
+                />
+              </label>
+
+              <label class="block">
+                <span class="text-ink-900 text-sm font-medium">Details</span>
+                <textarea
+                  name="details"
+                  rows="3"
+                  placeholder="Describe what the appointment is for"
+                  class="mt-1 block w-full rounded-input border border-divider px-3 py-2"
+                >{@details}</textarea>
+              </label>
+            <% "information_request" -> %>
+              <label class="block">
+                <span class="text-ink-900 text-sm font-medium">What would you like to know?</span>
+                <textarea
+                  name="details"
+                  rows="4"
+                  class="mt-1 block w-full rounded-input border border-divider px-3 py-2"
+                >{@details}</textarea>
+              </label>
             <% _ -> %>
               <p class="text-ink-500 text-sm">
                 This subkind is not yet implemented.
