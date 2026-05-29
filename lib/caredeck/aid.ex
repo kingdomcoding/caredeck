@@ -8,5 +8,7 @@ defmodule Caredeck.Aid do
     resource Caredeck.Aid.ApplicationSection.Version
     resource Caredeck.Aid.SectionAnswer
     resource Caredeck.Aid.SectionAnswer.Version
+    resource Caredeck.Aid.UploadedDocument
+    resource Caredeck.Aid.UploadedDocument.Version
   end
 end

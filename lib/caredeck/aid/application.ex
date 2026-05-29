@@ -72,6 +72,7 @@ defmodule Caredeck.Aid.Application do
 
     has_many :sections, Caredeck.Aid.ApplicationSection
     has_many :answers, Caredeck.Aid.SectionAnswer
+    has_many :documents, Caredeck.Aid.UploadedDocument
   end
 
   aggregates do
