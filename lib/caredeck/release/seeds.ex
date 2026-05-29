@@ -228,9 +228,76 @@ defmodule Caredeck.Release.Seeds do
         prefill_person_needing_care!(app, resident, facility)
         prefill_applicant!(app, user, facility)
       end
+
+      backfill_verified_documents!(facility)
     else
       _ -> :ok
     end
+  end
+
+  defp backfill_verified_documents!(facility) do
+    Formfix.Application
+    |> Ash.Query.filter(state in [:draft, :missing_documents, :ready_to_submit])
+    |> Ash.read!(tenant: facility.id, authorize?: false)
+    |> Enum.each(fn app ->
+      sections =
+        Formfix.ApplicationSection
+        |> Ash.Query.filter(application_id == ^app.id)
+        |> Ash.read!(tenant: facility.id, authorize?: false)
+
+      if sections != [] and
+           Enum.all?(sections, &(&1.status in [:complete, :skipped])) do
+        ensure_verified_documents!(app, sections, facility)
+        :ok = Formfix.Applications.recompute_status(app)
+      end
+    end)
+  end
+
+  defp ensure_verified_documents!(app, sections, facility) do
+    for section <- sections, section.status == :complete do
+      for slot <- Formfix.RequiredDocuments.for(section.section_key) do
+        existing =
+          Formfix.UploadedDocument
+          |> Ash.Query.filter(
+            application_id == ^app.id and section_key == ^section.section_key and
+              document_key == ^slot.key
+          )
+          |> Ash.read!(tenant: facility.id, authorize?: false)
+
+        if Enum.any?(existing, &(&1.state == :verified)) do
+          :ok
+        else
+          create_verified_demo_document!(app, section.section_key, slot.key, facility)
+        end
+      end
+    end
+  end
+
+  defp create_verified_demo_document!(app, section_key, document_key, facility) do
+    doc =
+      Formfix.UploadedDocument
+      |> Ash.Changeset.for_create(
+        :create,
+        %{
+          facility_id: facility.id,
+          application_id: app.id,
+          section_key: section_key,
+          document_key: document_key,
+          s3_key: "seed/demo-#{section_key}-#{document_key}.pdf",
+          original_filename: "demo-#{document_key}.pdf",
+          bytes: 1024,
+          mime_type: "application/pdf"
+        },
+        tenant: facility.id,
+        authorize?: false
+      )
+      |> Ash.create!(tenant: facility.id, authorize?: false)
+
+    doc
+    |> Ash.Changeset.for_update(:start_verification, %{}, tenant: facility.id, authorize?: false)
+    |> Ash.update!(tenant: facility.id, authorize?: false)
+    |> Ash.Changeset.for_update(:mark_verified, %{}, tenant: facility.id, authorize?: false)
+    |> Ash.update!(tenant: facility.id, authorize?: false)
   end
 
   defp find_demo_relative_user do
