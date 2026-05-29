@@ -81,6 +81,13 @@ defmodule CaredeckWeb.Layouts do
             Residents
           </.link>
           <.link
+            :if={@current_user || @current_team}
+            navigate={~p"/services"}
+            class="hidden md:inline-block hover:text-ink-900"
+          >
+            Services
+          </.link>
+          <.link
             :if={@current_team}
             navigate={~p"/kitchen/weekly-menu"}
             class="hidden md:inline-block hover:text-ink-900"
@@ -117,7 +124,7 @@ defmodule CaredeckWeb.Layouts do
       class="fixed bottom-0 inset-x-0 z-30 md:hidden border-t border-divider bg-card pb-[env(safe-area-inset-bottom)]"
       aria-label="Primary"
     >
-      <ul class="grid grid-cols-4">
+      <ul class="grid grid-cols-5">
         <.nav_tab navigate={~p"/feed"} label="Home" icon={:home} />
         <.nav_tab
           :if={@current_team}
@@ -142,6 +149,11 @@ defmodule CaredeckWeb.Layouts do
           navigate={~p"/residents"}
           label="Residents"
           icon={:user}
+        />
+        <.nav_tab
+          navigate={~p"/services"}
+          label="Services"
+          icon={:briefcase}
         />
         <.nav_tab
           :if={!@current_team}
@@ -264,6 +276,23 @@ defmodule CaredeckWeb.Layouts do
     >
       <circle cx="12" cy="12" r="9" />
       <circle cx="12" cy="12" r="5" />
+    </svg>
+    """
+  end
+
+  defp nav_icon(%{name: :briefcase} = assigns) do
+    ~H"""
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      class="h-6 w-6"
+      aria-hidden="true"
+    >
+      <rect x="3" y="7" width="18" height="13" rx="2" />
+      <path stroke-linecap="round" d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+      <path stroke-linecap="round" d="M3 12h18" />
     </svg>
     """
   end

@@ -83,6 +83,12 @@ defmodule CaredeckWeb.Router do
       live "/notifications", NotificationsLive
       live "/kitchen/order/:resident_id", Kitchen.ResidentOrderLive
       live "/residents/:resident_id/diet", Kitchen.DietProfileLive
+
+      live "/services", Services.IndexLive
+      live "/services/inbox", Services.InboxLive
+      live "/services/requests/:request_id", Services.RequestLive
+      live "/services/:provider_id/new", Services.NewRequestLive
+      live "/services/:provider_id", Services.ProviderLive
     end
   end
 
