@@ -10,5 +10,7 @@ defmodule Caredeck.Formfix do
     resource Caredeck.Formfix.SectionAnswer.Version
     resource Caredeck.Formfix.UploadedDocument
     resource Caredeck.Formfix.UploadedDocument.Version
+    resource Caredeck.Formfix.ApplicationNote
+    resource Caredeck.Formfix.ApplicationNote.Version
   end
 end
