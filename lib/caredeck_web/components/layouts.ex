@@ -131,56 +131,16 @@ defmodule CaredeckWeb.Layouts do
       class="fixed bottom-0 inset-x-0 z-30 md:hidden border-t border-divider bg-card pb-[env(safe-area-inset-bottom)]"
       aria-label="Primary"
     >
-      <ul class="grid grid-cols-5">
-        <.nav_tab navigate={~p"/feed"} label="Home" icon={:home} />
+      <% tabs = mobile_tabs(assigns) %>
+      <ul class={"grid grid-cols-#{length(tabs)}"}>
         <.nav_tab
-          :if={@current_team}
-          navigate={~p"/kitchen/weekly-menu"}
-          label="Kitchen"
-          icon={:plate}
-        />
-        <.nav_tab
-          :if={!@current_team and @profile_rid}
-          navigate={~p"/residents/#{@profile_rid}"}
-          label="Profile"
-          icon={:user}
-        />
-        <.nav_tab
-          :if={!@current_team and !@profile_rid}
-          navigate={~p"/profile/edit"}
-          label="Profile"
-          icon={:user}
-        />
-        <.nav_tab
-          :if={@current_team}
-          navigate={~p"/residents"}
-          label="Residents"
-          icon={:user}
-        />
-        <.nav_tab
-          navigate={~p"/services"}
-          label="Services"
-          icon={:briefcase}
-        />
-        <.nav_tab
-          :if={!@current_team}
-          navigate={~p"/notifications"}
-          label="Inbox"
-          icon={:bell}
-          badge={@unread}
-        />
-        <.nav_tab
-          :if={!@current_team}
-          href={~p"/sign-out"}
-          method={:delete}
-          label="Sign out"
-          icon={:logout}
-        />
-        <.nav_tab
-          :if={@current_team}
-          href={~p"/team/sign-out"}
-          label="Sign out"
-          icon={:logout}
+          :for={tab <- tabs}
+          navigate={tab[:navigate]}
+          href={tab[:href]}
+          method={tab[:method]}
+          label={tab.label}
+          icon={tab.icon}
+          badge={Map.get(tab, :badge, 0)}
         />
       </ul>
     </nav>
@@ -287,6 +247,43 @@ defmodule CaredeckWeb.Layouts do
     """
   end
 
+  defp nav_icon(%{name: :inbox} = assigns) do
+    ~H"""
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      class="h-6 w-6"
+      aria-hidden="true"
+    >
+      <path stroke-linecap="round" stroke-linejoin="round" d="M22 12h-6l-2 3h-4l-2-3H2" />
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"
+      />
+    </svg>
+    """
+  end
+
+  defp nav_icon(%{name: :clipboard} = assigns) do
+    ~H"""
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      class="h-6 w-6"
+      aria-hidden="true"
+    >
+      <rect x="8" y="3" width="8" height="4" rx="1" />
+      <path stroke-linecap="round" stroke-linejoin="round" d="M16 5h2a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V7a2 2 0 012-2h2" />
+      <path stroke-linecap="round" d="M9 12h6M9 16h4" />
+    </svg>
+    """
+  end
+
   defp nav_icon(%{name: :briefcase} = assigns) do
     ~H"""
     <svg
@@ -361,6 +358,59 @@ defmodule CaredeckWeb.Layouts do
 
   defp format_count(n) when n > 99, do: "99+"
   defp format_count(n), do: to_string(n)
+
+  defp mobile_tabs(%{current_team: nil, current_user: user, profile_rid: rid, unread: unread})
+       when not is_nil(user) do
+    profile_path = if rid, do: ~p"/residents/#{rid}", else: ~p"/profile/edit"
+
+    [
+      %{navigate: ~p"/feed", label: "Home", icon: :home},
+      %{navigate: profile_path, label: "Profile", icon: :user},
+      %{navigate: ~p"/services", label: "Services", icon: :briefcase},
+      %{navigate: ~p"/notifications", label: "Inbox", icon: :bell, badge: unread},
+      %{href: ~p"/sign-out", method: :delete, label: "Sign out", icon: :logout}
+    ]
+  end
+
+  defp mobile_tabs(%{current_team: %{role_kind: :care}}) do
+    [
+      %{navigate: ~p"/feed", label: "Home", icon: :home},
+      %{navigate: ~p"/residents", label: "Residents", icon: :user},
+      %{navigate: ~p"/services", label: "Services", icon: :briefcase},
+      %{navigate: ~p"/services/inbox", label: "Inbox", icon: :inbox},
+      %{href: ~p"/team/sign-out", label: "Sign out", icon: :logout}
+    ]
+  end
+
+  defp mobile_tabs(%{current_team: %{role_kind: :kitchen}}) do
+    [
+      %{navigate: ~p"/feed", label: "Home", icon: :home},
+      %{navigate: ~p"/kitchen/weekly-menu", label: "Kitchen", icon: :plate},
+      %{navigate: ~p"/kitchen/summary", label: "Orders", icon: :clipboard},
+      %{navigate: ~p"/services", label: "Services", icon: :briefcase},
+      %{href: ~p"/team/sign-out", label: "Sign out", icon: :logout}
+    ]
+  end
+
+  defp mobile_tabs(%{current_team: %{role_kind: :service}}) do
+    [
+      %{navigate: ~p"/feed", label: "Home", icon: :home},
+      %{navigate: ~p"/services", label: "Services", icon: :briefcase},
+      %{navigate: ~p"/services/inbox", label: "Inbox", icon: :inbox},
+      %{href: ~p"/team/sign-out", label: "Sign out", icon: :logout}
+    ]
+  end
+
+  defp mobile_tabs(%{current_team: %{}}) do
+    [
+      %{navigate: ~p"/feed", label: "Home", icon: :home},
+      %{navigate: ~p"/residents", label: "Residents", icon: :user},
+      %{navigate: ~p"/services", label: "Services", icon: :briefcase},
+      %{href: ~p"/team/sign-out", label: "Sign out", icon: :logout}
+    ]
+  end
+
+  defp mobile_tabs(_), do: []
 
   defp profile_resident_id(nil), do: nil
 
