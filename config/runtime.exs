@@ -89,7 +89,8 @@ if config_env() == :prod do
        crontab: [
          {"0 3 * * *", Caredeck.Workers.ExpireStaleInvitations},
          {"15 3 * * *", Caredeck.Workers.PruneOldNotifications},
-         {"0 20 * * *", Caredeck.Workers.MaterialiseTomorrow}
+         {"0 20 * * *", Caredeck.Workers.MaterialiseTomorrow},
+         {"0 9 * * 1", Caredeck.Workers.FormfixDigestDispatch}
        ]}
     ]
 

@@ -25,6 +25,9 @@ config :caredeck, Oban,
 
 config :caredeck, :s3_bucket, "caredeck-test"
 
+config :caredeck, Caredeck.Mailer, adapter: Swoosh.Adapters.Test
+config :swoosh, :api_client, false
+
 # We don't run a server during test. If one is required,
 # you can enable the server option below.
 config :caredeck, CaredeckWeb.Endpoint,
