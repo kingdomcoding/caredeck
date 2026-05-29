@@ -1,7 +1,7 @@
 defmodule Caredeck.Workers.NotificationFanout do
   use Oban.Worker, queue: :fanout, max_attempts: 3
 
-  alias Caredeck.{Accounts, Feed, People, Services}
+  alias Caredeck.{Accounts, Aid, Feed, Org, People, Services}
   alias Caredeck.Notifications.{Notification, Recipients}
 
   require Ash.Query
@@ -208,6 +208,49 @@ defmodule Caredeck.Workers.NotificationFanout do
         verb: :replied,
         target_kind: :service_message,
         target_id: message.id
+      })
+    end)
+
+    :ok
+  end
+
+  def perform(%Oban.Job{args: %{"event" => "application_submitted"} = args}) do
+    application_id = args["application_id"]
+    facility_id = args["facility_id"]
+
+    application =
+      Aid.Application
+      |> Ash.get!(application_id,
+        tenant: facility_id,
+        authorize?: false,
+        load: [resident: [relative_links: :relative]]
+      )
+
+    relative_user_ids =
+      application.resident.relative_links
+      |> Enum.map(& &1.relative.user_id)
+      |> Enum.reject(&is_nil/1)
+      |> Enum.reject(&(&1 == application.applicant_user_id))
+
+    care_user_ids =
+      Org.FacilityMembership
+      |> Ash.Query.filter(facility_id == ^facility_id and role == :caregiver)
+      |> Ash.read!(authorize?: false)
+      |> Enum.map(& &1.user_id)
+      |> Enum.reject(&is_nil/1)
+      |> Enum.reject(&(&1 == application.applicant_user_id))
+
+    recipients = Enum.uniq(relative_user_ids ++ care_user_ids)
+
+    Enum.each(recipients, fn user_id ->
+      upsert(%{
+        facility_id: facility_id,
+        user_id: user_id,
+        actor_kind: (application.applicant_team_id && :team) || :user,
+        actor_id: application.applicant_team_id || application.applicant_user_id,
+        verb: :submitted,
+        target_kind: :application,
+        target_id: application.id
       })
     end)
 

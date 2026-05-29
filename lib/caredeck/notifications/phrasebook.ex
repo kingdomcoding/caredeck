@@ -17,5 +17,8 @@ defmodule Caredeck.Notifications.Phrasebook do
   def render(%{verb: :replied, actor: actor}),
     do: "#{actor} replied on a service request"
 
+  def render(%{verb: :submitted, actor: actor}),
+    do: "#{actor} submitted a long-term-care assistance application"
+
   def render(_), do: "Someone interacted with a post"
 end

@@ -28,7 +28,9 @@ defmodule Caredeck.Notifications.Notification do
     attribute :actor_id, :uuid, allow_nil?: false, public?: true
 
     attribute :verb, :atom,
-      constraints: [one_of: [:posted, :commented, :liked, :joined, :requested, :replied]],
+      constraints: [
+        one_of: [:posted, :commented, :liked, :joined, :requested, :replied, :submitted]
+      ],
       allow_nil?: false,
       public?: true
 
@@ -40,7 +42,8 @@ defmodule Caredeck.Notifications.Notification do
           :reaction,
           :resident,
           :service_request,
-          :service_message
+          :service_message,
+          :application
         ]
       ],
       allow_nil?: false,

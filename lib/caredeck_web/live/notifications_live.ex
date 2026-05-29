@@ -90,6 +90,9 @@ defmodule CaredeckWeb.NotificationsLive do
     end
   end
 
+  defp target_path(%{target_kind: :application, target_id: aid}),
+    do: ~p"/aid/#{aid}/overview"
+
   defp target_path(_), do: ~p"/notifications"
 
   defp load_notifications(nil, _user), do: []
