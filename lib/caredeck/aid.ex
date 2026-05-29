@@ -6,5 +6,7 @@ defmodule Caredeck.Aid do
     resource Caredeck.Aid.Application.Version
     resource Caredeck.Aid.ApplicationSection
     resource Caredeck.Aid.ApplicationSection.Version
+    resource Caredeck.Aid.SectionAnswer
+    resource Caredeck.Aid.SectionAnswer.Version
   end
 end
