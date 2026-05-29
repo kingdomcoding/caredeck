@@ -22,7 +22,7 @@ defmodule Caredeck.Accounts.TeamIdentity do
 
     attribute :role_kind, :atom,
       constraints: [
-        one_of: [:care, :activities, :therapy, :housekeeping, :kitchen, :service, :custom]
+        one_of: [:admin, :care, :activities, :therapy, :housekeeping, :kitchen, :service, :custom]
       ],
       default: :care,
       public?: true
