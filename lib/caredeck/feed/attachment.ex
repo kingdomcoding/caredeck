@@ -17,7 +17,9 @@ defmodule Caredeck.Feed.Attachment do
     uuid_primary_key :id
 
     attribute :facility_id, :uuid, allow_nil?: false, public?: true
-    attribute :post_id, :uuid, allow_nil?: false, public?: true
+    attribute :post_id, :uuid, public?: true
+    attribute :service_request_id, :uuid, public?: true
+    attribute :service_message_id, :uuid, public?: true
 
     attribute :kind, :atom,
       constraints: [one_of: [:photo, :video, :audio, :document]],
@@ -38,7 +40,9 @@ defmodule Caredeck.Feed.Attachment do
 
   relationships do
     belongs_to :facility, Caredeck.Org.Facility, allow_nil?: false
-    belongs_to :post, Caredeck.Feed.Post, allow_nil?: false
+    belongs_to :post, Caredeck.Feed.Post
+    belongs_to :service_request, Caredeck.Services.ServiceRequest
+    belongs_to :service_message, Caredeck.Services.ServiceMessage
   end
 
   actions do
@@ -50,6 +54,8 @@ defmodule Caredeck.Feed.Attachment do
       accept [
         :facility_id,
         :post_id,
+        :service_request_id,
+        :service_message_id,
         :kind,
         :s3_key,
         :thumbnail_s3_key,
@@ -85,7 +91,7 @@ defmodule Caredeck.Feed.Attachment do
 
     update :update do
       primary? true
-      accept [:caption, :position, :thumbnail_s3_key]
+      accept [:caption, :position, :thumbnail_s3_key, :service_request_id, :service_message_id]
     end
 
     action :request_upload_url, :map do
@@ -108,6 +114,9 @@ defmodule Caredeck.Feed.Attachment do
 
   policies do
     policy action_type(:read) do
+      authorize_if expr(not is_nil(service_request_id))
+      authorize_if expr(not is_nil(service_message_id))
+
       authorize_if expr(exists(post.audience.relative_links.relative, user_id == ^actor(:id)))
 
       authorize_if expr(post.team_identity_id == ^actor(:id))
@@ -119,6 +128,9 @@ defmodule Caredeck.Feed.Attachment do
     end
 
     policy action_type([:create, :update, :destroy]) do
+      authorize_if expr(not is_nil(service_request_id))
+      authorize_if expr(not is_nil(service_message_id))
+
       authorize_if expr(
                      ^actor(:__struct__) == Caredeck.Accounts.TeamIdentity and
                        post.team_identity_id == ^actor(:id)
