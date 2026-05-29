@@ -1,5 +1,5 @@
 defmodule Caredeck.Formfix.SectionSchema do
-  alias Caredeck.Formfix.MaritalStatus
+  alias Caredeck.Formfix.{CareSetting, MaritalStatus}
 
   @sections [
     %{
@@ -76,7 +76,7 @@ defmodule Caredeck.Formfix.SectionSchema do
         %{
           key: :setting,
           label: "Current care setting",
-          kind: {:enum, :care_setting},
+          kind: {:enum, CareSetting},
           sub: :setting,
           required: true
         },

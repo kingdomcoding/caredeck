@@ -360,7 +360,9 @@ defmodule CaredeckWeb.Formfix.SectionLive do
     """
   end
 
-  defp field_input(%{field: %{kind: {:enum, Caredeck.Formfix.MaritalStatus}}} = assigns) do
+  defp field_input(%{field: %{kind: {:enum, mod}}} = assigns) when is_atom(mod) do
+    assigns = assign(assigns, :mod, mod)
+
     ~H"""
     <select
       name={Atom.to_string(@field.key)}
@@ -368,24 +370,13 @@ defmodule CaredeckWeb.Formfix.SectionLive do
     >
       <option value="" selected={@value in [nil, ""]}>—</option>
       <option
-        :for={v <- Caredeck.Formfix.MaritalStatus.all()}
+        :for={v <- @mod.all()}
         value={Atom.to_string(v)}
         selected={@value == Atom.to_string(v)}
       >
-        {Caredeck.Formfix.MaritalStatus.label(v)}
+        {@mod.label(v)}
       </option>
     </select>
-    """
-  end
-
-  defp field_input(%{field: %{kind: {:enum, _other}}} = assigns) do
-    ~H"""
-    <input
-      type="text"
-      name={Atom.to_string(@field.key)}
-      value={@value}
-      class="mt-1 block w-full rounded-input border border-divider px-3 py-2"
-    />
     """
   end
 end

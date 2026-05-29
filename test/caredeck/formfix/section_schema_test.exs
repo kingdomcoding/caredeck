@@ -38,9 +38,16 @@ defmodule Caredeck.Formfix.SectionSchemaTest do
       assert SectionSchema.parse(:boolean, "") == {:ok, false}
     end
 
-    test "enum" do
+    test "enum (MaritalStatus)" do
       assert SectionSchema.parse({:enum, Caredeck.Formfix.MaritalStatus}, "married") ==
                {:ok, :married}
+    end
+
+    test "enum (CareSetting)" do
+      assert SectionSchema.parse({:enum, Caredeck.Formfix.CareSetting}, "day_care") ==
+               {:ok, :day_care}
+
+      assert SectionSchema.parse({:enum, Caredeck.Formfix.CareSetting}, "bogus") == :error
     end
   end
 
