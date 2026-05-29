@@ -88,6 +88,13 @@ defmodule CaredeckWeb.Layouts do
             Services
           </.link>
           <.link
+            :if={@current_user}
+            navigate={~p"/aid"}
+            class="hidden md:inline-block hover:text-ink-900"
+          >
+            Aid
+          </.link>
+          <.link
             :if={@current_team && @current_team.role_kind == :care}
             navigate={~p"/services/inbox"}
             class="hidden md:inline-block hover:text-ink-900"
@@ -365,6 +372,7 @@ defmodule CaredeckWeb.Layouts do
 
     [
       %{navigate: ~p"/feed", label: "Home", icon: :home},
+      %{navigate: ~p"/aid", label: "Aid", icon: :clipboard},
       %{navigate: profile_path, label: "Profile", icon: :user},
       %{navigate: ~p"/services", label: "Services", icon: :briefcase},
       %{navigate: ~p"/notifications", label: "Inbox", icon: :bell, badge: unread},

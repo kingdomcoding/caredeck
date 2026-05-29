@@ -74,12 +74,18 @@ defmodule Caredeck.Aid.Application do
     has_many :answers, Caredeck.Aid.SectionAnswer
   end
 
+  aggregates do
+    count :total_sections, :sections
+    count :sections_done, :sections, filter: expr(status in [:complete, :skipped])
+  end
+
   calculations do
     calculate :progress_percent, :integer, expr(
-      fragment(
-        "GREATEST(0, LEAST(100, ((COUNT(*) FILTER (WHERE status IN ('complete','skipped'))::int) * 100) / GREATEST(COUNT(*), 1)))",
-        sections
-      )
+      if total_sections == 0 do
+        0
+      else
+        (sections_done * 100) / total_sections
+      end
     )
   end
 
