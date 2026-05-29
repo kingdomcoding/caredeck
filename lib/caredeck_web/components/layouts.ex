@@ -102,7 +102,7 @@ defmodule CaredeckWeb.Layouts do
     </main>
 
     <nav
-      :if={@current_user}
+      :if={@current_user || @current_team}
       class="fixed bottom-0 inset-x-0 z-30 md:hidden border-t border-divider bg-card pb-[env(safe-area-inset-bottom)]"
       aria-label="Primary"
     >
@@ -126,8 +126,32 @@ defmodule CaredeckWeb.Layouts do
           label="Profile"
           icon={:user}
         />
-        <.nav_tab navigate={~p"/notifications"} label="Inbox" icon={:bell} badge={@unread} />
-        <.nav_tab href={~p"/sign-out"} method={:delete} label="Sign out" icon={:logout} />
+        <.nav_tab
+          :if={@current_team}
+          navigate={~p"/kitchen/summary"}
+          label="Orders"
+          icon={:bell}
+        />
+        <.nav_tab
+          :if={!@current_team}
+          navigate={~p"/notifications"}
+          label="Inbox"
+          icon={:bell}
+          badge={@unread}
+        />
+        <.nav_tab
+          :if={!@current_team}
+          href={~p"/sign-out"}
+          method={:delete}
+          label="Sign out"
+          icon={:logout}
+        />
+        <.nav_tab
+          :if={@current_team}
+          href={~p"/team/sign-out"}
+          label="Sign out"
+          icon={:logout}
+        />
       </ul>
     </nav>
 
