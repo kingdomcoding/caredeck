@@ -81,3 +81,19 @@
                  0 4px 12px rgba(15, 17, 21, 0.06);
   --shadow-fab:  0 8px 24px rgba(31, 191, 170, 0.35);
 }
+
+@layer base {
+  input, select, textarea {
+    color: var(--color-ink-900);
+    background-color: var(--color-card);
+  }
+
+  input::placeholder, textarea::placeholder {
+    color: var(--color-ink-300);
+  }
+
+  select option {
+    color: var(--color-ink-900);
+    background-color: var(--color-card);
+  }
+}
