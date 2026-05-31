@@ -391,8 +391,18 @@ defmodule CaredeckWeb.Layouts do
     [
       %{navigate: ~p"/feed", label: "Home", icon: :home},
       %{navigate: ~p"/residents", label: "Residents", icon: :user},
-      %{navigate: ~p"/services", label: "Services", icon: :briefcase},
       %{navigate: ~p"/services/inbox", label: "Inbox", icon: :inbox},
+      %{navigate: ~p"/kitchen/weekly-menu", label: "Kitchen", icon: :plate},
+      %{href: ~p"/team/sign-out", label: "Sign out", icon: :logout}
+    ]
+  end
+
+  defp mobile_tabs(%{current_team: %{role_kind: :admin}}) do
+    [
+      %{navigate: ~p"/feed", label: "Home", icon: :home},
+      %{navigate: ~p"/residents", label: "Residents", icon: :user},
+      %{navigate: ~p"/formfix", label: "Formfix", icon: :clipboard},
+      %{navigate: ~p"/formfix/admin", label: "Admin", icon: :briefcase},
       %{href: ~p"/team/sign-out", label: "Sign out", icon: :logout}
     ]
   end
