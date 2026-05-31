@@ -42,11 +42,11 @@ defmodule CaredeckWeb.FormfixComponents do
     ~H"""
     <span class={[
       "text-xs font-medium rounded-full px-2 py-0.5",
-      @status == :draft && "bg-page text-ink-500",
-      @status == :missing_documents && "bg-yellow-100 text-yellow-700",
-      @status == :ready_to_submit && "bg-brand-soft text-brand",
-      @status == :submitted && "bg-green-100 text-green-700",
-      @status == :approved && "bg-green-200 text-green-900"
+      @status == :draft && "bg-page text-ink-700",
+      @status == :missing_documents && "bg-yellow-100 text-yellow-800",
+      @status == :ready_to_submit && "bg-brand-soft text-brand-strong",
+      @status == :submitted && "bg-purple-100 text-purple-800",
+      @status == :approved && "bg-green-100 text-green-800"
     ]}>
       {formfix_status_label(@status)}
     </span>

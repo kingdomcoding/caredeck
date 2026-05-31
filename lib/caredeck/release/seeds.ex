@@ -15,11 +15,11 @@ defmodule Caredeck.Release.Seeds do
   @bulk_password "phase2-bulk-pass"
 
   @team_seeds [
-    %{name: "Team Admin", handle: "team-admin", role_kind: :admin},
-    %{name: "Team Care", handle: "team-care", role_kind: :care},
-    %{name: "Team Activities", handle: "team-activities", role_kind: :activities},
-    %{name: "Team Therapy", handle: "team-therapy", role_kind: :therapy},
-    %{name: "Team Kitchen", handle: "team-kitchen", role_kind: :kitchen}
+    %{name: "Maria Hoffmann", handle: "team-admin", role_kind: :admin},
+    %{name: "Greta Becker", handle: "team-care", role_kind: :care},
+    %{name: "Anika Vogel", handle: "team-activities", role_kind: :activities},
+    %{name: "Lars Hartmann", handle: "team-therapy", role_kind: :therapy},
+    %{name: "Stefan Weber", handle: "team-kitchen", role_kind: :kitchen}
   ]
 
   @resident_count 30
@@ -972,6 +972,11 @@ defmodule Caredeck.Release.Seeds do
           authorize?: false
         )
         |> Ash.create!(authorize?: false)
+
+      {:ok, %{name: current_name} = existing} when current_name != name ->
+        existing
+        |> Ash.Changeset.for_update(:update, %{name: name}, authorize?: false)
+        |> Ash.update!(authorize?: false)
 
       {:ok, _existing} ->
         :ok

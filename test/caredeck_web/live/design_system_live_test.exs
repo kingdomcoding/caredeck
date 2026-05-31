@@ -8,7 +8,7 @@ defmodule CaredeckWeb.DesignSystemLiveTest do
 
     assert html =~ "Caredeck Design System"
     assert html =~ "Brand teal"
-    assert html =~ "Aid status badges"
+    assert html =~ "Formfix status badges"
     assert html =~ "Typography"
     assert html =~ "Cards"
     assert html =~ "Like"

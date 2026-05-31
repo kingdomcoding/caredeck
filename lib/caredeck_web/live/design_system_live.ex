@@ -58,7 +58,7 @@ defmodule CaredeckWeb.DesignSystemLive do
         </section>
 
         <section>
-          <h2 class="text-display-sm text-ink-900 mb-4">Aid status badges</h2>
+          <h2 class="text-display-sm text-ink-900 mb-4">Formfix status badges</h2>
           <div class="flex flex-wrap gap-3">
             <span
               :for={{label, badge_class} <- @status_badges}

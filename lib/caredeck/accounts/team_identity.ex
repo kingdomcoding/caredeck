@@ -73,6 +73,11 @@ defmodule Caredeck.Accounts.TeamIdentity do
 
   actions do
     defaults [:read]
+
+    update :update do
+      primary? true
+      accept [:name, :avatar_url]
+    end
   end
 
   policies do
