@@ -202,12 +202,95 @@ defmodule Caredeck.Release.Seeds do
     refresh_avatars!(facility)
     refresh_feed!(facility)
     refresh_services!(facility)
+    refresh_caregivers!(facility)
 
     IO.puts("")
     IO.puts("Demo data refreshed.")
     IO.puts("")
 
     :ok
+  end
+
+  @caregiver_seeds [
+    %{display_name: "Maria Hoffmann", role_label: "Pflegedienstleitung",
+      email: "maria.hoffmann@spring-hill.demo"},
+    %{display_name: "Tomas Lange", role_label: "Pflegefachkraft",
+      email: "tomas.lange@spring-hill.demo"},
+    %{display_name: "Heike Krüger", role_label: "Pflegehelferin",
+      email: "heike.krueger@spring-hill.demo"},
+    %{display_name: "Jonas Werner", role_label: "Ergotherapeut",
+      email: "jonas.werner@spring-hill.demo"},
+    %{display_name: "Eva Bauer", role_label: "Hauswirtschaft",
+      email: "eva.bauer@spring-hill.demo"},
+    %{display_name: "Klaus Richter", role_label: "Sozialdienst",
+      email: "klaus.richter@spring-hill.demo"}
+  ]
+
+  defp refresh_caregivers!(facility) do
+    IO.puts("  ↺ seeding caregivers")
+    fid = Ecto.UUID.dump!(facility.id)
+
+    Enum.each(
+      ~w(caregiver_profiles_versions caregiver_profiles),
+      fn tbl ->
+        {:ok, _} =
+          Caredeck.Repo.query("DELETE FROM " <> tbl <> " WHERE facility_id = $1", [fid])
+      end
+    )
+
+    Enum.with_index(@caregiver_seeds)
+    |> Enum.each(fn {spec, idx} ->
+      user = find_or_create_caregiver_user!(spec)
+      avatar_key = Caredeck.Release.Assets.upload!(Caredeck.Release.Assets.at(:avatars_caregiver, idx))
+
+      People.CaregiverProfile
+      |> Ash.Changeset.for_create(
+        :create,
+        %{
+          facility_id: facility.id,
+          user_id: user.id,
+          display_name: spec.display_name,
+          role_label: spec.role_label,
+          avatar_url: avatar_key
+        },
+        tenant: facility.id,
+        authorize?: false
+      )
+      |> Ash.create!(tenant: facility.id, authorize?: false)
+    end)
+
+    IO.puts("  ✓ caregivers: #{length(@caregiver_seeds)}")
+    :ok
+  end
+
+  defp find_or_create_caregiver_user!(%{email: email, display_name: name}) do
+    case Accounts.User
+         |> Ash.Query.filter(email == ^email)
+         |> Ash.read_one(authorize?: false) do
+      {:ok, %{} = u} ->
+        u
+
+      _ ->
+        [first, last] =
+          case String.split(name, " ", parts: 2) do
+            [f, l] -> [f, l]
+            [only] -> [only, "Caregiver"]
+          end
+
+        Accounts.User
+        |> Ash.Changeset.for_create(
+          :register_with_password,
+          %{
+            email: email,
+            name: first,
+            family_name: last,
+            password: @bulk_password,
+            password_confirmation: @bulk_password
+          },
+          authorize?: false
+        )
+        |> Ash.create!(authorize?: false)
+    end
   end
 
   @service_request_seeds [
