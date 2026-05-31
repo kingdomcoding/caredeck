@@ -238,24 +238,7 @@ defmodule Caredeck.Release.Seeds do
       ])
 
     Enum.each(dates, fn date ->
-      day = date |> Date.day_of_week() |> day_atom()
-
-      template_slot_count =
-        Kitchen.MenuTemplateSlot
-        |> Ash.Query.filter(day_of_week == ^day)
-        |> Ash.read!(tenant: facility.id, authorize?: false)
-        |> length()
-
-      IO.puts("  debug #{date} (#{day}): #{template_slot_count} template slots for that day")
-
-      try do
-        result = Kitchen.Materialise.materialise_day(facility.id, date)
-        IO.puts("  ✓ materialised #{date}: #{length(result.slots)} slots")
-      rescue
-        e ->
-          IO.puts("  ✗ failed to materialise #{date}: #{Exception.message(e)}")
-          reraise(e, __STACKTRACE__)
-      end
+      Kitchen.Materialise.materialise_day(facility.id, date)
     end)
 
     :ok
@@ -310,10 +293,17 @@ defmodule Caredeck.Release.Seeds do
           |> Ash.create!(tenant: facility.id, authorize?: false)
       end
 
-    Kitchen.MenuTemplateSlot
-    |> Ash.Query.filter(menu_template_id == ^template.id)
-    |> Ash.read!(tenant: facility.id, authorize?: false)
-    |> Enum.each(&Ash.destroy!(&1, tenant: facility.id, authorize?: false))
+    {:ok, _} =
+      Caredeck.Repo.query(
+        "DELETE FROM kitchen_menu_template_slots_versions WHERE facility_id = $1",
+        [Ecto.UUID.dump!(facility.id)]
+      )
+
+    {:ok, _} =
+      Caredeck.Repo.query(
+        "DELETE FROM kitchen_menu_template_slots WHERE menu_template_id = $1",
+        [Ecto.UUID.dump!(template.id)]
+      )
 
     products =
       Enum.flat_map(@kitchen_products, fn {cat, names} ->
@@ -347,14 +337,6 @@ defmodule Caredeck.Release.Seeds do
 
     :ok
   end
-
-  defp day_atom(1), do: :monday
-  defp day_atom(2), do: :tuesday
-  defp day_atom(3), do: :wednesday
-  defp day_atom(4), do: :thursday
-  defp day_atom(5), do: :friday
-  defp day_atom(6), do: :saturday
-  defp day_atom(7), do: :sunday
 
   defp find_or_create_product(facility, category, name) do
     case Kitchen.Product
