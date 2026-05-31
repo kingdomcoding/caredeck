@@ -204,10 +204,72 @@ defmodule Caredeck.Release.Seeds do
     refresh_services!(facility)
     refresh_caregivers!(facility)
     refresh_kitchen_orders_and_diets!(facility)
+    refresh_notifications!(facility)
 
     IO.puts("")
     IO.puts("Demo data refreshed.")
     IO.puts("")
+
+    :ok
+  end
+
+  defp refresh_notifications!(facility) do
+    IO.puts("  ↺ refreshing notifications via fanout worker")
+    fid = Ecto.UUID.dump!(facility.id)
+
+    Enum.each(
+      ~w(notifications_versions notifications),
+      fn tbl ->
+        {:ok, _} =
+          Caredeck.Repo.query("DELETE FROM " <> tbl <> " WHERE facility_id = $1", [fid])
+      end
+    )
+
+    posts =
+      Feed.Post
+      |> Ash.read!(tenant: facility.id, authorize?: false)
+
+    Enum.each(posts, fn post ->
+      Caredeck.Workers.NotificationFanout.perform(%Oban.Job{
+        args: %{
+          "event" => "post_created",
+          "post_id" => post.id,
+          "facility_id" => facility.id
+        }
+      })
+    end)
+
+    comments =
+      Feed.Comment
+      |> Ash.read!(tenant: facility.id, authorize?: false)
+
+    Enum.each(comments, fn comment ->
+      Caredeck.Workers.NotificationFanout.perform(%Oban.Job{
+        args: %{
+          "event" => "comment_created",
+          "comment_id" => comment.id,
+          "facility_id" => facility.id
+        }
+      })
+    end)
+
+    reactions =
+      Feed.Reaction
+      |> Ash.read!(tenant: facility.id, authorize?: false)
+
+    Enum.each(reactions, fn reaction ->
+      Caredeck.Workers.NotificationFanout.perform(%Oban.Job{
+        args: %{
+          "event" => "reaction_created",
+          "reaction_id" => reaction.id,
+          "facility_id" => facility.id
+        }
+      })
+    end)
+
+    IO.puts(
+      "  ✓ notifications fanned out for #{length(posts)} posts, #{length(comments)} comments, #{length(reactions)} reactions"
+    )
 
     :ok
   end
