@@ -238,7 +238,14 @@ defmodule Caredeck.Release.Seeds do
       ])
 
     Enum.each(dates, fn date ->
-      Kitchen.Materialise.materialise_day(facility.id, date)
+      try do
+        result = Kitchen.Materialise.materialise_day(facility.id, date)
+        IO.puts("  ✓ materialised #{date}: #{length(result.slots)} slots")
+      rescue
+        e ->
+          IO.puts("  ✗ failed to materialise #{date}: #{Exception.message(e)}")
+          reraise(e, __STACKTRACE__)
+      end
     end)
 
     :ok
