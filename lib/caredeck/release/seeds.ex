@@ -204,6 +204,7 @@ defmodule Caredeck.Release.Seeds do
     refresh_services!(facility)
     refresh_caregivers!(facility)
     refresh_kitchen_orders_and_diets!(facility)
+    refresh_formfix_apps!(facility)
     refresh_notifications!(facility)
 
     IO.puts("")
@@ -211,6 +212,226 @@ defmodule Caredeck.Release.Seeds do
     IO.puts("")
 
     :ok
+  end
+
+  @extra_formfix_seeds [
+    %{resident: {"Constance", "King"}, target_state: :draft, target_progress: 12},
+    %{resident: {"Penelope", "Davis"}, target_state: :draft, target_progress: 67},
+    %{resident: {"Edward", "Brooks"}, target_state: :draft, target_progress: 85},
+    %{resident: {"Mabel", "Martin"}, target_state: :missing_documents, target_progress: 100},
+    %{resident: {"Beatrice", "Cox"}, target_state: :ready_to_submit, target_progress: 100},
+    %{resident: {"Julian", "Adams"}, target_state: :submitted, target_progress: 100,
+      submitted_days_ago: 3},
+    %{resident: {"Doris", "Hall"}, target_state: :approved, target_progress: 100,
+      submitted_days_ago: 14, decided_days_ago: 4,
+      outcome: "Pflegegrad 4 approved by MDK. Welfare-law allowance granted from 1 May."}
+  ]
+
+  defp refresh_formfix_apps!(facility) do
+    IO.puts("  ↺ seeding extra Formfix applications")
+
+    residents =
+      People.Resident
+      |> Ash.read!(tenant: facility.id, authorize?: false)
+
+    demo_user = find_demo_relative_user()
+
+    Enum.each(@extra_formfix_seeds, fn spec ->
+      case find_resident(residents, spec.resident) do
+        nil ->
+          :ok
+
+        resident ->
+          existing =
+            Formfix.Application
+            |> Ash.Query.filter(resident_id == ^resident.id)
+            |> Ash.read_one(tenant: facility.id, authorize?: false)
+
+          case existing do
+            {:ok, %{} = _} ->
+              :ok
+
+            _ ->
+              create_formfix_app!(spec, resident, facility, demo_user)
+          end
+      end
+    end)
+
+    IO.puts("  ✓ formfix: +#{length(@extra_formfix_seeds)} applications")
+    :ok
+  end
+
+  defp create_formfix_app!(spec, resident, facility, demo_user) do
+    app = Formfix.Applications.start_for_resident!(facility, resident, demo_user)
+
+    sections =
+      Formfix.ApplicationSection
+      |> Ash.Query.filter(application_id == ^app.id)
+      |> Ash.Query.sort(position: :asc)
+      |> Ash.read!(tenant: facility.id, authorize?: false)
+
+    fill_count =
+      case spec.target_progress do
+        12 -> 2
+        67 -> 9
+        85 -> 12
+        100 -> length(sections)
+        _ -> 4
+      end
+
+    sections_to_fill = Enum.take(sections, fill_count)
+
+    Enum.each(sections_to_fill, fn section ->
+      fill_section!(app, resident, section.section_key, facility)
+    end)
+
+    fid = Ecto.UUID.dump!(facility.id)
+    aid = Ecto.UUID.dump!(app.id)
+
+    case spec.target_state do
+      :draft ->
+        :ok
+
+      :missing_documents ->
+        Caredeck.Repo.query(
+          "UPDATE formfix_applications SET state = 'missing_documents' WHERE id = $1",
+          [aid]
+        )
+
+      :ready_to_submit ->
+        backfill_all_docs!(app, facility)
+
+        Caredeck.Repo.query(
+          "UPDATE formfix_applications SET state = 'ready_to_submit' WHERE id = $1",
+          [aid]
+        )
+
+      :submitted ->
+        backfill_all_docs!(app, facility)
+        ts = days_ago_dt(spec.submitted_days_ago)
+
+        Caredeck.Repo.query(
+          "UPDATE formfix_applications SET state = 'submitted', submitted_at = $1 WHERE id = $2",
+          [ts, aid]
+        )
+
+      :approved ->
+        backfill_all_docs!(app, facility)
+        s_ts = days_ago_dt(spec.submitted_days_ago)
+        d_ts = days_ago_dt(spec.decided_days_ago)
+
+        Caredeck.Repo.query(
+          """
+          UPDATE formfix_applications
+          SET state = 'approved', submitted_at = $1, decided_at = $2, outcome = $3
+          WHERE id = $4
+          """,
+          [s_ts, d_ts, spec.outcome, aid]
+        )
+    end
+
+    _ = fid
+    :ok
+  end
+
+  defp fill_section!(_app, _resident, :welcome, _facility), do: :ok
+
+  defp fill_section!(app, resident, :person_needing_care, facility) do
+    prefill_person_needing_care!(app, resident, facility)
+  end
+
+  defp fill_section!(app, _resident, :applicant, facility) do
+    Formfix.SectionWriter.save_answers!(app, :applicant, %{
+      "first_name" => "Demo",
+      "last_name" => "Relative",
+      "relationship" => "Daughter",
+      "phone" => "+49 30 1234567",
+      "email" => @relative_email
+    })
+
+    _ = facility
+    :ok
+  end
+
+  defp fill_section!(app, _resident, :care_situation, facility) do
+    Formfix.SectionWriter.save_answers!(app, :care_situation, %{
+      "care_level_assigned_since" => "2024-06-01",
+      "current_care_setting" => "home",
+      "care_level" => "3"
+    })
+
+    _ = facility
+    :ok
+  end
+
+  defp fill_section!(app, _resident, :income, facility) do
+    Formfix.SectionWriter.save_answers!(app, :income, %{
+      "pension_monthly" => "1842",
+      "rental_income_monthly" => "0"
+    })
+
+    _ = facility
+    :ok
+  end
+
+  defp fill_section!(app, _resident, :assets, facility) do
+    Formfix.SectionWriter.save_answers!(app, :assets, %{
+      "savings_total" => "8420"
+    })
+
+    _ = facility
+    :ok
+  end
+
+  defp fill_section!(app, _resident, :gifts_given, facility) do
+    Formfix.SectionWriter.save_answers!(app, :gifts_given, %{
+      "any_gifts_over_500" => "false"
+    })
+
+    _ = facility
+    :ok
+  end
+
+  defp fill_section!(app, _resident, :expenses, facility) do
+    Formfix.SectionWriter.save_answers!(app, :expenses, %{
+      "rent_monthly" => "780"
+    })
+
+    _ = facility
+    :ok
+  end
+
+  defp fill_section!(app, _resident, :disability, facility) do
+    Formfix.SectionWriter.save_answers!(app, :disability, %{
+      "recognised_disability_status" => "false"
+    })
+
+    _ = facility
+    :ok
+  end
+
+  defp fill_section!(app, _resident, :foreign_nationality, facility) do
+    Formfix.SectionWriter.save_answers!(app, :foreign_nationality, %{
+      "nationality" => "Deutsch"
+    })
+
+    _ = facility
+    :ok
+  end
+
+  defp fill_section!(_app, _resident, _other, _facility), do: :ok
+
+  defp backfill_all_docs!(app, facility) do
+    sections =
+      Formfix.ApplicationSection
+      |> Ash.Query.filter(application_id == ^app.id)
+      |> Ash.read!(tenant: facility.id, authorize?: false)
+
+    ensure_verified_documents!(app, sections, facility)
+  end
+
+  defp days_ago_dt(days) do
+    DateTime.utc_now() |> DateTime.add(-days * 86_400, :second) |> DateTime.to_naive()
   end
 
   defp refresh_notifications!(facility) do
