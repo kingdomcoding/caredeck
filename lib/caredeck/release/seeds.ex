@@ -203,12 +203,155 @@ defmodule Caredeck.Release.Seeds do
     refresh_feed!(facility)
     refresh_services!(facility)
     refresh_caregivers!(facility)
+    refresh_kitchen_orders_and_diets!(facility)
 
     IO.puts("")
     IO.puts("Demo data refreshed.")
     IO.puts("")
 
     :ok
+  end
+
+  @diet_profile_seeds [
+    %{resident: {"Irene", "Cook"}, allergens: ["shellfish"],
+      preferences: ["no spicy food"], skip_categories: [:snack],
+      notes: "Family asked we keep snacks minimal in the afternoon."},
+    %{resident: {"Julian", "Adams"}, allergens: [],
+      preferences: ["vegetarian for religious reasons"], skip_categories: [:dinner],
+      notes: "Late dinner skipped — light evening tea only."},
+    %{resident: {"Isaac", "Allen"}, allergens: ["gluten", "lactose"],
+      preferences: ["soft food only after dental work"], skip_categories: [],
+      notes: "Family noted: no sugary snacks per cardiologist."},
+    %{resident: {"Beatrice", "Cox"}, allergens: ["tree nuts"],
+      preferences: ["decaf coffee only after 14:00"], skip_categories: [],
+      notes: ""},
+    %{resident: {"Penelope", "Davis"}, allergens: [],
+      preferences: ["low-sodium per cardiologist"], skip_categories: [],
+      notes: "Sodium restriction is strict — no added salt please."},
+    %{resident: {"Edward", "Brooks"}, allergens: ["strawberries"],
+      preferences: ["small portions"], skip_categories: [:fruit],
+      notes: ""}
+  ]
+
+  defp refresh_kitchen_orders_and_diets!(facility) do
+    IO.puts("  ↺ seeding kitchen orders + diet profiles")
+    fid = Ecto.UUID.dump!(facility.id)
+
+    Enum.each(
+      ~w(kitchen_resident_meal_orders_versions kitchen_resident_meal_orders
+         kitchen_resident_diet_profiles_versions kitchen_resident_diet_profiles),
+      fn tbl ->
+        {:ok, _} =
+          Caredeck.Repo.query("DELETE FROM " <> tbl <> " WHERE facility_id = $1", [fid])
+      end
+    )
+
+    residents =
+      People.Resident
+      |> Ash.read!(tenant: facility.id, authorize?: false)
+
+    # Seed diet profiles
+    Enum.each(@diet_profile_seeds, fn spec ->
+      case find_resident(residents, spec.resident) do
+        nil ->
+          :ok
+
+        r ->
+          Kitchen.ResidentDietProfile
+          |> Ash.Changeset.for_create(
+            :create,
+            %{
+              facility_id: facility.id,
+              resident_id: r.id,
+              allergens: spec.allergens,
+              preferences: spec.preferences,
+              skip_categories: spec.skip_categories,
+              notes: spec.notes
+            },
+            tenant: facility.id,
+            authorize?: false
+          )
+          |> Ash.create!(tenant: facility.id, authorize?: false)
+      end
+    end)
+
+    care_team =
+      Accounts.TeamIdentity
+      |> Ash.Query.filter(handle == "team-care" and facility_id == ^facility.id)
+      |> Ash.read_one!(authorize?: false)
+
+    today = Date.utc_today()
+
+    # Pick first 8 residents for today's orders, distributed across categories
+    sample_residents = Enum.take(residents, 8)
+
+    # Build product lookup by category
+    products =
+      Kitchen.Product
+      |> Ash.read!(tenant: facility.id, authorize?: false)
+
+    product_by_cat = Enum.group_by(products, & &1.category)
+
+    # Today: 15 orders mixed states
+    seed_orders_for_date!(facility, sample_residents, product_by_cat, care_team,
+      today, %{
+        breakfast: 4, lunch: 5, dinner: 3, snack: 3
+      })
+
+    # Tomorrow: 8 orders
+    seed_orders_for_date!(facility, sample_residents, product_by_cat, care_team,
+      Date.add(today, 1), %{
+        breakfast: 3, lunch: 3, dinner: 2
+      })
+
+    # Day after: 6 orders
+    seed_orders_for_date!(facility, sample_residents, product_by_cat, care_team,
+      Date.add(today, 2), %{
+        breakfast: 2, lunch: 2, dinner: 2
+      })
+
+    IO.puts("  ✓ diet profiles: #{length(@diet_profile_seeds)}; orders seeded for today + 2 days")
+    :ok
+  end
+
+  defp seed_orders_for_date!(facility, residents, product_by_cat, care_team, date, counts) do
+    Enum.each(counts, fn {category, count} ->
+      products = Map.get(product_by_cat, category, [])
+
+      if products != [] do
+        residents
+        |> Enum.take(count)
+        |> Enum.with_index()
+        |> Enum.each(fn {resident, idx} ->
+          product = Enum.at(products, rem(idx, length(products)))
+
+          state =
+            cond do
+              date != Date.utc_today() -> :ordered
+              idx < div(count, 3) -> :served
+              idx == count - 1 -> :cancelled
+              true -> :ordered
+            end
+
+          Kitchen.ResidentMealOrder
+          |> Ash.Changeset.for_create(
+            :create,
+            %{
+              facility_id: facility.id,
+              resident_id: resident.id,
+              date: date,
+              category: category,
+              product_id: product.id,
+              state: state,
+              ordered_by_team_id: care_team.id
+            },
+            tenant: facility.id,
+            authorize?: false
+          )
+          |> Ash.create!(tenant: facility.id, authorize?: false)
+        end)
+      end
+    end)
   end
 
   @caregiver_seeds [
