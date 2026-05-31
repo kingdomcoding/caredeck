@@ -201,10 +201,264 @@ defmodule Caredeck.Release.Seeds do
 
     refresh_avatars!(facility)
     refresh_feed!(facility)
+    refresh_services!(facility)
 
     IO.puts("")
     IO.puts("Demo data refreshed.")
     IO.puts("")
+
+    :ok
+  end
+
+  @service_request_seeds [
+    # Demo Pharmacy
+    %{provider_kind: :pharmacy, subkind: "medication_inquiry", state: :open,
+      payload: %{"subkind" => "medication_inquiry", "medication_name" => "Levothyroxin 25µg",
+        "question" => "Refill needed by Friday — please confirm pickup time."},
+      summary: "Levothyroxin refill — pickup Friday", resident: {"Constance", "King"},
+      requester: :relative, days_ago: 0, messages: []},
+    %{provider_kind: :pharmacy, subkind: "general_question", state: :in_progress,
+      payload: %{"subkind" => "general_question",
+        "question" => "Vitamin D house order — can we set up a quarterly subscription?"},
+      summary: "Vitamin D quarterly order setup", resident: nil,
+      requester: :care, days_ago: 1,
+      messages: [
+        %{author: :provider, body: "Sure — we can do every 3 months. Need a signed form. Sending over."},
+        %{author: :care, body: "Bitte schicken — wir füllen ihn morgen aus."}
+      ]},
+    %{provider_kind: :pharmacy, subkind: "medication_inquiry", state: :resolved,
+      payload: %{"subkind" => "medication_inquiry", "medication_name" => "Ibuprofen 400",
+        "question" => "Refill for Mrs Cook — picked up yesterday, all good."},
+      summary: "Mrs Cook Ibuprofen refill (resolved)", resident: {"Irene", "Cook"},
+      requester: :care, days_ago: 4,
+      messages: [
+        %{author: :provider, body: "Ready for pickup tomorrow morning."},
+        %{author: :care, body: "Danke! Stefan picks up tomorrow."},
+        %{author: :provider, body: "Confirmed received."}
+      ]},
+    # Family Doctor Demo
+    %{provider_kind: :doctor, subkind: "appointment_request", state: :in_progress,
+      payload: %{"subkind" => "appointment_request",
+        "details" => "Mr Hungsinger — follow-up on physio progress (ROM back to baseline).",
+        "preferred_date" => "next Monday"},
+      summary: "Hungsinger physio follow-up", resident: {"Isaac", "Allen"},
+      requester: :care, days_ago: 2,
+      messages: [
+        %{author: :provider, body: "Monday 10:30 works. I'll come to ward 1."},
+        %{author: :care, body: "Bestens, danke. Wir bereiten alles vor."}
+      ]},
+    %{provider_kind: :doctor, subkind: "information_request", state: :open,
+      payload: %{"subkind" => "information_request",
+        "details" => "Mrs Walker flu shot — has she had it this season? Reviewing records."},
+      summary: "Mrs Walker flu shot history", resident: {"Mabel", "Martin"},
+      requester: :care, days_ago: 0, messages: []},
+    %{provider_kind: :doctor, subkind: "information_request", state: :resolved,
+      payload: %{"subkind" => "information_request",
+        "details" => "MDK paperwork for Mrs Cook Pflegegrad 4 — forms attached."},
+      summary: "Mrs Cook Pflegegrad 4 MDK forms", resident: {"Irene", "Cook"},
+      requester: :care, days_ago: 5,
+      messages: [
+        %{author: :provider, body: "Forms received and signed. Returning by courier today."},
+        %{author: :care, body: "Excellent — danke vielmals."}
+      ]},
+    # Salon Demo
+    %{provider_kind: :hairdresser, subkind: "appointment_request", state: :open,
+      payload: %{"subkind" => "appointment_request", "haircut_type" => "Short back and sides",
+        "notes" => "Mr Adams asked for Thursday afternoon if possible.",
+        "post_to_feed" => "false"},
+      summary: "Mr Adams haircut Thursday", resident: {"Julian", "Adams"},
+      requester: :relative, days_ago: 0, messages: []},
+    %{provider_kind: :hairdresser, subkind: "appointment_request", state: :in_progress,
+      payload: %{"subkind" => "appointment_request", "haircut_type" => "Group cuts (3 residents)",
+        "notes" => "Ursula Hall, Penelope Davis, Beatrice Cox — Friday block.",
+        "post_to_feed" => "true"},
+      summary: "Friday group cuts (3 residents)", resident: nil,
+      requester: :care, days_ago: 1,
+      messages: [
+        %{author: :provider, body: "Friday 14:00–16:30 confirmed."},
+        %{author: :care, body: "Perfekt. Bell ward 1 when arriving."}
+      ]},
+    %{provider_kind: :hairdresser, subkind: "appointment_request", state: :resolved,
+      payload: %{"subkind" => "appointment_request", "haircut_type" => "Trim",
+        "notes" => "Monthly schedule confirmation — done.", "post_to_feed" => "false"},
+      summary: "Monthly schedule confirmation", resident: nil,
+      requester: :care, days_ago: 6,
+      messages: [
+        %{author: :provider, body: "All set — same Thursday slot every month."},
+        %{author: :care, body: "Großartig, danke!"}
+      ]},
+    # Linen Service (laundry → uses "complaint" subkind but with payload tweak)
+    %{provider_kind: :laundry, subkind: "complaint", state: :in_progress,
+      payload: %{"subkind" => "complaint", "service" => "bed_linens", "reason" => "schedule",
+        "details" => "Bed linens for ward 1 — biweekly rotation; could we shift to weekly?",
+        "attachment_id" => "00000000-0000-0000-0000-000000000000"},
+      summary: "Ward 1 linens — weekly rotation request", resident: nil,
+      requester: :care, days_ago: 3,
+      messages: [
+        %{author: :provider, body: "Weekly works. Tuesdays + Fridays okay?"},
+        %{author: :care, body: "Tue + Fri ist top. Danke!"}
+      ]},
+    %{provider_kind: :laundry, subkind: "complaint", state: :open,
+      payload: %{"subkind" => "complaint", "service" => "towels", "reason" => "quality",
+        "details" => "Stained towels noted in room 4B — please replace.",
+        "attachment_id" => "00000000-0000-0000-0000-000000000000"},
+      summary: "Stained towels room 4B", resident: nil,
+      requester: :care, days_ago: 0, messages: []},
+    %{provider_kind: :laundry, subkind: "complaint", state: :resolved,
+      payload: %{"subkind" => "complaint", "service" => "blankets", "reason" => "quantity",
+        "details" => "Extra blankets needed before weekend cold snap — delivered Sat.",
+        "attachment_id" => "00000000-0000-0000-0000-000000000000"},
+      summary: "Extra weekend blankets (resolved)", resident: nil,
+      requester: :care, days_ago: 7,
+      messages: [
+        %{author: :provider, body: "Delivering 20 extra blankets Saturday morning."},
+        %{author: :care, body: "Vielen Dank — perfect timing."},
+        %{author: :provider, body: "Delivered. Have a warm weekend!"}
+      ]}
+  ]
+
+  defp refresh_services!(facility) do
+    IO.puts("  ↺ rebuilding service requests + messages")
+
+    fid = Ecto.UUID.dump!(facility.id)
+
+    Enum.each(
+      ~w(service_messages_versions service_messages service_requests_versions service_requests),
+      fn tbl ->
+        {:ok, _} =
+          Caredeck.Repo.query("DELETE FROM " <> tbl <> " WHERE facility_id = $1", [fid])
+      end
+    )
+
+    providers =
+      Services.ServiceProvider
+      |> Ash.read!(tenant: facility.id, authorize?: false)
+      |> Map.new(&{&1.kind, &1})
+
+    residents =
+      People.Resident
+      |> Ash.read!(tenant: facility.id, authorize?: false)
+
+    relative_users = relative_users_with_facility_membership(facility)
+
+    care_team =
+      Accounts.TeamIdentity
+      |> Ash.Query.filter(handle == "team-care" and facility_id == ^facility.id)
+      |> Ash.read_one!(authorize?: false)
+
+    provider_teams =
+      Accounts.TeamIdentity
+      |> Ash.read!(authorize?: false)
+      |> Enum.filter(&(&1.role_kind == :service))
+      |> Map.new(fn t -> {t.handle, t} end)
+
+    Enum.each(@service_request_seeds, fn spec ->
+      seed_service_request!(spec, facility, providers, residents, relative_users, care_team,
+        provider_teams)
+    end)
+
+    IO.puts("  ✓ services: #{length(@service_request_seeds)} requests + messages")
+    :ok
+  end
+
+  defp seed_service_request!(spec, facility, providers, residents, relative_users, care_team,
+         provider_teams) do
+    provider = Map.fetch!(providers, spec.provider_kind)
+    resident_id = case spec.resident do
+      {first, last} ->
+        case find_resident(residents, {first, last}) do
+          %{id: id} -> id
+          _ -> nil
+        end
+
+      _ -> nil
+    end
+
+    {requester_user_id, requester_team_id} =
+      case spec.requester do
+        :relative ->
+          user = Enum.at(relative_users, :erlang.phash2(spec.summary, length(relative_users)))
+          {user && user.id, nil}
+
+        :care ->
+          {nil, care_team.id}
+      end
+
+    inserted_at = DateTime.utc_now() |> DateTime.add(-spec.days_ago * 86_400, :second)
+    naive = DateTime.to_naive(inserted_at)
+
+    req_id = Ecto.UUID.generate()
+
+    {:ok, _} =
+      Caredeck.Repo.query(
+        """
+        INSERT INTO service_requests
+          (id, facility_id, provider_id, resident_id, requester_user_id, requester_team_id,
+           subkind, summary, payload, state, inserted_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $11)
+        """,
+        [
+          Ecto.UUID.dump!(req_id),
+          Ecto.UUID.dump!(facility.id),
+          Ecto.UUID.dump!(provider.id),
+          (resident_id && Ecto.UUID.dump!(resident_id)) || nil,
+          (requester_user_id && Ecto.UUID.dump!(requester_user_id)) || nil,
+          (requester_team_id && Ecto.UUID.dump!(requester_team_id)) || nil,
+          spec.subkind,
+          spec.summary,
+          spec.payload,
+          to_string(spec.state),
+          naive
+        ]
+      )
+
+    Enum.with_index(spec.messages)
+    |> Enum.each(fn {msg, idx} ->
+      msg_time = DateTime.add(inserted_at, (idx + 1) * 3_600, :second)
+      msg_naive = DateTime.to_naive(msg_time)
+
+      {author_user, author_team} =
+        case msg.author do
+          :relative ->
+            user = Enum.at(relative_users, :erlang.phash2({spec.summary, idx}, length(relative_users)))
+            {(user && user.id) || requester_user_id, nil}
+
+          :care ->
+            {nil, care_team.id}
+
+          :provider ->
+            team_handle =
+              case spec.provider_kind do
+                :pharmacy -> "team-pharmacy"
+                :laundry -> "team-laundry"
+                :hairdresser -> "team-hairdresser"
+                :doctor -> "team-doctor"
+                _ -> "team-pharmacy"
+              end
+
+            team = Map.get(provider_teams, team_handle)
+            {nil, team && team.id}
+        end
+
+      {:ok, _} =
+        Caredeck.Repo.query(
+          """
+          INSERT INTO service_messages
+            (id, facility_id, service_request_id, author_user_id, author_team_id, body,
+             inserted_at, updated_at)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $7)
+          """,
+          [
+            Ecto.UUID.dump!(Ecto.UUID.generate()),
+            Ecto.UUID.dump!(facility.id),
+            Ecto.UUID.dump!(req_id),
+            (author_user && Ecto.UUID.dump!(author_user)) || nil,
+            (author_team && Ecto.UUID.dump!(author_team)) || nil,
+            msg.body,
+            msg_naive
+          ]
+        )
+    end)
 
     :ok
   end
