@@ -181,9 +181,11 @@ defmodule CaredeckWeb.ProfileLive do
       <.link
         :if={@current_user}
         navigate={~p"/residents/#{@resident.id}/invite"}
-        class="fixed bottom-6 right-6 inline-flex h-14 w-14 items-center justify-center rounded-full bg-brand text-white text-display-sm shadow-card"
+        title="Invite a relative"
+        aria-label="Invite a relative"
+        class="fixed bottom-6 right-6 inline-flex h-14 w-14 items-center justify-center rounded-full bg-brand text-white shadow-card hover:bg-brand-strong"
       >
-        +
+        <Icons.icon name={:plus} class="h-6 w-6" />
       </.link>
     </Layouts.app>
     """
