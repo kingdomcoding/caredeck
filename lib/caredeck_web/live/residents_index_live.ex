@@ -1,6 +1,7 @@
 defmodule CaredeckWeb.ResidentsIndexLive do
   use CaredeckWeb, :live_view
 
+  alias Caredeck.Feed.ResidentTagOnPost
   alias Caredeck.Kitchen.ResidentDietProfile
   alias Caredeck.Org.Ward
   alias Caredeck.People.{Relative, RelativeOfResident, Resident}
@@ -102,12 +103,29 @@ defmodule CaredeckWeb.ResidentsIndexLive do
     residents = Ash.read!(base, tenant: facility.id, authorize?: false)
 
     allergen_set = load_allergen_set(facility, residents)
+    last_activity_map = load_last_activity_map(facility, residents)
 
     residents
-    |> Enum.map(&Map.put(&1, :has_allergens?, MapSet.member?(allergen_set, &1.id)))
+    |> Enum.map(fn r ->
+      r
+      |> Map.put(:has_allergens?, MapSet.member?(allergen_set, r.id))
+      |> Map.put(:last_activity_at, Map.get(last_activity_map, r.id))
+    end)
     |> then(fn list ->
       if only_allergens, do: Enum.filter(list, & &1.has_allergens?), else: list
     end)
+  end
+
+  defp load_last_activity_map(_facility, []), do: %{}
+
+  defp load_last_activity_map(facility, residents) do
+    ids = Enum.map(residents, & &1.id)
+
+    ResidentTagOnPost
+    |> Ash.Query.filter(resident_id in ^ids)
+    |> Ash.read!(tenant: facility.id, authorize?: false)
+    |> Enum.group_by(& &1.resident_id, & &1.inserted_at)
+    |> Map.new(fn {rid, times} -> {rid, Enum.max(times, DateTime)} end)
   end
 
   defp load_allergen_set(_facility, []), do: MapSet.new()
@@ -157,6 +175,36 @@ defmodule CaredeckWeb.ResidentsIndexLive do
          only_allergens
        )
      )}
+  end
+
+  defp age_label(nil), do: nil
+
+  defp age_label(%Date{} = dob) do
+    today = Date.utc_today()
+    years = today.year - dob.year
+
+    years =
+      if Date.compare(%{dob | year: today.year}, today) == :gt do
+        years - 1
+      else
+        years
+      end
+
+    "#{years} yo"
+  end
+
+  defp activity_suffix(nil), do: ""
+
+  defp activity_suffix(%DateTime{} = dt) do
+    days = DateTime.diff(DateTime.utc_now(), dt, :day)
+
+    cond do
+      days <= 0 -> " · active today"
+      days == 1 -> " · 1 day ago"
+      days < 7 -> " · #{days} days ago"
+      days < 30 -> " · #{div(days, 7)}w ago"
+      true -> ""
+    end
   end
 
   defp relationship_summary(resident) do
@@ -266,6 +314,9 @@ defmodule CaredeckWeb.ResidentsIndexLive do
               <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-2 flex-wrap">
                   <p class="text-ink-900 font-medium">{r.first_name} {r.last_name}</p>
+                  <span :if={age_label(r.date_of_birth)} class="text-ink-500 text-xs">
+                    {age_label(r.date_of_birth)}
+                  </span>
                   <span
                     :if={r.ward}
                     class="text-ink-500 text-xs uppercase tracking-wide bg-page rounded-full px-2 py-0.5"
@@ -280,7 +331,7 @@ defmodule CaredeckWeb.ResidentsIndexLive do
                   </span>
                 </div>
                 <p class="text-ink-500 text-xs mt-0.5 truncate">
-                  {relationship_summary(r)}
+                  {relationship_summary(r)}{activity_suffix(r.last_activity_at)}
                 </p>
               </div>
             </.link>
