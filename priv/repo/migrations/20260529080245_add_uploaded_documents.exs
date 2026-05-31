@@ -17,7 +17,8 @@ defmodule Caredeck.Repo.Migrations.AddUploadedDocuments do
             name: "aid_uploaded_documents_facility_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :application_id,
           references(:aid_applications,
@@ -26,7 +27,8 @@ defmodule Caredeck.Repo.Migrations.AddUploadedDocuments do
             type: :uuid,
             prefix: "public",
             on_delete: :delete_all
-          ), null: false
+          ),
+          null: false
 
       add :section_key, :text, null: false
       add :document_key, :text, null: false
@@ -66,7 +68,8 @@ defmodule Caredeck.Repo.Migrations.AddUploadedDocuments do
             name: "aid_uploaded_documents_versions_version_source_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :changes, :map
 

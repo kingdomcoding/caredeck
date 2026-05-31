@@ -135,7 +135,10 @@ defmodule Caredeck.Formfix.ApplicationNoteTest do
 
     assert :ok ==
              note
-             |> Ash.Changeset.for_destroy(:destroy, %{}, tenant: ctx.facility_a.id, actor: ctx.admin_a)
+             |> Ash.Changeset.for_destroy(:destroy, %{},
+               tenant: ctx.facility_a.id,
+               actor: ctx.admin_a
+             )
              |> Ash.destroy(tenant: ctx.facility_a.id, actor: ctx.admin_a)
   end
 

@@ -120,7 +120,9 @@ defmodule CaredeckWeb.Formfix.OverviewLive do
 
             <.link
               :if={@application.state != :ready_to_submit && @next_actionable}
-              navigate={~p"/formfix/#{@application.id}/section/#{Atom.to_string(@next_actionable.section_key)}"}
+              navigate={
+                ~p"/formfix/#{@application.id}/section/#{Atom.to_string(@next_actionable.section_key)}"
+              }
               class="rounded-button bg-brand text-white text-sm font-medium px-4 py-2 hover:bg-brand-strong"
             >
               {continue_label(@next_actionable)} →
@@ -132,7 +134,9 @@ defmodule CaredeckWeb.Formfix.OverviewLive do
           <ul class="grid gap-3 sm:grid-cols-2">
             <li :for={section <- @ordered_sections}>
               <.link
-                navigate={~p"/formfix/#{@application.id}/section/#{Atom.to_string(section.section_key)}"}
+                navigate={
+                  ~p"/formfix/#{@application.id}/section/#{Atom.to_string(section.section_key)}"
+                }
                 class="block bg-card rounded-card shadow-card p-4 hover:border-brand border border-transparent transition"
               >
                 <div class="flex items-center justify-between gap-2 flex-wrap">

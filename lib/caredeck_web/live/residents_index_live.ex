@@ -253,7 +253,11 @@ defmodule CaredeckWeb.ResidentsIndexLive do
             <.link navigate={~p"/residents/#{r.id}"} class="flex items-center gap-4 flex-1 min-w-0">
               <div class="h-12 w-12 rounded-full bg-brand-soft text-brand text-sm font-semibold flex items-center justify-center overflow-hidden shrink-0">
                 <%= if r.avatar_url do %>
-                  <img src={"/attachments/" <> r.avatar_url} class="h-full w-full object-cover" alt="" />
+                  <img
+                    src={"/attachments/" <> r.avatar_url}
+                    class="h-full w-full object-cover"
+                    alt=""
+                  />
                 <% else %>
                   {initials("#{r.first_name} #{r.last_name}")}
                 <% end %>

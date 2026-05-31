@@ -46,7 +46,8 @@ defmodule Caredeck.Repo.Migrations.AddFormfixApplicationNotes do
             name: "formfix_application_notes_facility_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :application_id,
           references(:formfix_applications,
@@ -55,7 +56,8 @@ defmodule Caredeck.Repo.Migrations.AddFormfixApplicationNotes do
             type: :uuid,
             prefix: "public",
             on_delete: :delete_all
-          ), null: false
+          ),
+          null: false
 
       add :author_team_id,
           references(:team_identities,
@@ -63,7 +65,8 @@ defmodule Caredeck.Repo.Migrations.AddFormfixApplicationNotes do
             name: "formfix_application_notes_author_team_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :body, :text, null: false
 

@@ -112,13 +112,11 @@ defmodule CaredeckWeb.Formfix.RequiredDocumentsComponent do
     assigns = assign(assigns, verified: verified, total: total, all_verified: verified == total)
 
     ~H"""
-    <section
-      class={[
-        @slots == [] && "hidden",
-        "rounded-card border border-divider bg-card",
-        @variant == :embedded && "mt-6"
-      ]}
-    >
+    <section class={[
+      @slots == [] && "hidden",
+      "rounded-card border border-divider bg-card",
+      @variant == :embedded && "mt-6"
+    ]}>
       <header
         :if={@show_header}
         class="flex items-center justify-between gap-3 px-4 py-3 cursor-pointer"

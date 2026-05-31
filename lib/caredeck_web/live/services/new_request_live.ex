@@ -29,7 +29,7 @@ defmodule CaredeckWeb.Services.NewRequestLive do
              |> assign(:provider, provider)
              |> assign(:residents, residents)
              |> assign(:subkind, Atom.to_string(subkind))
-             |> assign(:resident_id, residents |> List.first() |> then(& &1 && &1.id))
+             |> assign(:resident_id, residents |> List.first() |> then(&(&1 && &1.id)))
              |> assign(:instructions, "")
              |> assign(:medication_name, "")
              |> assign(:question, "")

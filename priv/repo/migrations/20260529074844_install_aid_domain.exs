@@ -17,7 +17,8 @@ defmodule Caredeck.Repo.Migrations.InstallAidDomain do
             name: "aid_applications_facility_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :resident_id,
           references(:residents,
@@ -25,7 +26,8 @@ defmodule Caredeck.Repo.Migrations.InstallAidDomain do
             name: "aid_applications_resident_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :applicant_user_id,
           references(:users,
@@ -88,7 +90,8 @@ defmodule Caredeck.Repo.Migrations.InstallAidDomain do
             name: "aid_applications_versions_version_source_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :changes, :map
 
@@ -122,7 +125,8 @@ defmodule Caredeck.Repo.Migrations.InstallAidDomain do
             name: "aid_application_sections_facility_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :application_id,
           references(:aid_applications,
@@ -131,7 +135,8 @@ defmodule Caredeck.Repo.Migrations.InstallAidDomain do
             type: :uuid,
             prefix: "public",
             on_delete: :delete_all
-          ), null: false
+          ),
+          null: false
 
       add :section_key, :text, null: false
       add :position, :bigint, null: false

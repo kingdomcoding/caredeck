@@ -145,5 +145,7 @@ defmodule Caredeck.Formfix.DigestEmail do
     do: "background:#dcfce7;color:#166534;padding:2px 6px;border-radius:9999px;"
 
   defp escape(nil), do: ""
-  defp escape(s), do: s |> to_string() |> Phoenix.HTML.html_escape() |> Phoenix.HTML.safe_to_string()
+
+  defp escape(s),
+    do: s |> to_string() |> Phoenix.HTML.html_escape() |> Phoenix.HTML.safe_to_string()
 end

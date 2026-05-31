@@ -2,7 +2,15 @@ defmodule CaredeckWeb.Formfix.SectionLive do
   use CaredeckWeb, :live_view
 
   alias Caredeck.Formfix.Application, as: AidApplication
-  alias Caredeck.Formfix.{ApplicationSection, FieldRationale, SectionAnswer, SectionKey, SectionSchema, SectionWriter}
+
+  alias Caredeck.Formfix.{
+    ApplicationSection,
+    FieldRationale,
+    SectionAnswer,
+    SectionKey,
+    SectionSchema,
+    SectionWriter
+  }
 
   require Ash.Query
 
@@ -13,7 +21,11 @@ defmodule CaredeckWeb.Formfix.SectionLive do
     section_key = String.to_existing_atom(sk)
 
     with {:ok, application} <-
-           Ash.get(AidApplication, aid, tenant: facility.id, actor: actor, load: [:resident, :sections]),
+           Ash.get(AidApplication, aid,
+             tenant: facility.id,
+             actor: actor,
+             load: [:resident, :sections]
+           ),
          {:ok, _section} <- fetch_section(application, section_key) do
       answers = load_answers(application, section_key)
       form_data = build_initial_form(section_key, answers)
@@ -32,7 +44,10 @@ defmodule CaredeckWeb.Formfix.SectionLive do
        |> assign(:sub_sections, SectionSchema.sub_sections(section_key))
        |> assign(:ordered_sections, ordered_sections)
        |> assign(:form_data, form_data)
-       |> assign(:next_key, Caredeck.Formfix.Applications.next_section_key(application, section_key))}
+       |> assign(
+         :next_key,
+         Caredeck.Formfix.Applications.next_section_key(application, section_key)
+       )}
     else
       {:error, :section_not_applicable} ->
         {:ok,
@@ -47,9 +62,7 @@ defmodule CaredeckWeb.Formfix.SectionLive do
 
   defp fetch_section(application, section_key) do
     case ApplicationSection
-         |> Ash.Query.filter(
-           application_id == ^application.id and section_key == ^section_key
-         )
+         |> Ash.Query.filter(application_id == ^application.id and section_key == ^section_key)
          |> Ash.read_one(tenant: application.facility_id, authorize?: false) do
       {:ok, nil} -> {:error, :section_not_applicable}
       {:ok, section} -> {:ok, section}
@@ -100,7 +113,8 @@ defmodule CaredeckWeb.Formfix.SectionLive do
   end
 
   def handle_event("save", params, socket) do
-    :ok = SectionWriter.save_answers!(socket.assigns.application, socket.assigns.section_key, params)
+    :ok =
+      SectionWriter.save_answers!(socket.assigns.application, socket.assigns.section_key, params)
 
     next =
       case socket.assigns.next_key do
@@ -112,7 +126,9 @@ defmodule CaredeckWeb.Formfix.SectionLive do
   end
 
   def handle_event("save_draft", params, socket) do
-    :ok = SectionWriter.save_answers!(socket.assigns.application, socket.assigns.section_key, params)
+    :ok =
+      SectionWriter.save_answers!(socket.assigns.application, socket.assigns.section_key, params)
+
     {:noreply, put_flash(socket, :info, "Draft saved.")}
   end
 
@@ -207,7 +223,9 @@ defmodule CaredeckWeb.Formfix.SectionLive do
 
         <section class="bg-card rounded-card shadow-card p-6 space-y-4">
           <p class="text-ink-900">
-            Formfix walks you through the long-term-care assistance application section by section. It usually takes about <strong>30 minutes</strong> to complete. You don't have to finish in one sitting — your answers are saved automatically.
+            Formfix walks you through the long-term-care assistance application section by section. It usually takes about
+            <strong>30 minutes</strong>
+            to complete. You don't have to finish in one sitting — your answers are saved automatically.
           </p>
 
           <div>

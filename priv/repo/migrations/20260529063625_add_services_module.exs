@@ -63,7 +63,8 @@ defmodule Caredeck.Repo.Migrations.AddServicesModule do
             name: "service_requests_facility_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :provider_id, :uuid, null: false
       add :resident_id, :uuid
@@ -132,7 +133,8 @@ defmodule Caredeck.Repo.Migrations.AddServicesModule do
             name: "service_providers_facility_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :kind, :text, null: false
       add :name, :text, null: false
@@ -178,7 +180,8 @@ defmodule Caredeck.Repo.Migrations.AddServicesModule do
             name: "service_providers_versions_version_source_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :changes, :map
 
@@ -236,7 +239,8 @@ defmodule Caredeck.Repo.Migrations.AddServicesModule do
             name: "service_messages_facility_id_fkey",
             type: :uuid,
             prefix: "public"
-          ), null: false
+          ),
+          null: false
 
       add :service_request_id,
           references(:service_requests,
@@ -245,7 +249,8 @@ defmodule Caredeck.Repo.Migrations.AddServicesModule do
             type: :uuid,
             prefix: "public",
             on_delete: :delete_all
-          ), null: false
+          ),
+          null: false
 
       add :author_user_id,
           references(:users,

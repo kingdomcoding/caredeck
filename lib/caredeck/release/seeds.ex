@@ -249,7 +249,9 @@ defmodule Caredeck.Release.Seeds do
 
       _ ->
         Formfix.Application
-        |> Ash.Query.filter(state in [:draft, :missing_documents, :ready_to_submit, :submitted, :approved])
+        |> Ash.Query.filter(
+          state in [:draft, :missing_documents, :ready_to_submit, :submitted, :approved]
+        )
         |> Ash.read!(tenant: facility.id, authorize?: false)
         |> Enum.each(&ensure_demo_notes!(&1, admin, facility))
     end
@@ -257,10 +259,22 @@ defmodule Caredeck.Release.Seeds do
 
   @demo_note_pool [
     ["Reviewed initial submission — sections look complete.", "Documents verified by counsel."],
-    ["Applicant called, requesting an update on the decision.", "MDK assessment scheduled for next week."],
-    ["Income proof received, attaching to file.", "Pflegegrad 3 confirmed; escalating to Pflegegrad 4."],
-    ["Returned for amendments — missing partner's pension statement.", "Re-uploaded missing docs, ready for re-review."],
-    ["Awaiting case-worker sign-off.", "Discussed with MDK contact, decision expected within 4 weeks."]
+    [
+      "Applicant called, requesting an update on the decision.",
+      "MDK assessment scheduled for next week."
+    ],
+    [
+      "Income proof received, attaching to file.",
+      "Pflegegrad 3 confirmed; escalating to Pflegegrad 4."
+    ],
+    [
+      "Returned for amendments — missing partner's pension statement.",
+      "Re-uploaded missing docs, ready for re-review."
+    ],
+    [
+      "Awaiting case-worker sign-off.",
+      "Discussed with MDK contact, decision expected within 4 weeks."
+    ]
   ]
 
   defp ensure_demo_notes!(app, admin, facility) do
@@ -465,9 +479,27 @@ defmodule Caredeck.Release.Seeds do
        "Bratwurst with sauerkraut",
        "Maultaschen in broth"
      ]},
-    {:drinks, ["Apple juice", "Herbal tea", "Mineral water", "Coffee", "Berry compote", "Buttermilk", "Black tea"]},
+    {:drinks,
+     [
+       "Apple juice",
+       "Herbal tea",
+       "Mineral water",
+       "Coffee",
+       "Berry compote",
+       "Buttermilk",
+       "Black tea"
+     ]},
     {:fruit, ["Apple", "Pear", "Banana", "Plum", "Seasonal berries", "Orange", "Grapes"]},
-    {:snack, ["Yogurt", "Pretzel", "Trail mix", "Quark dessert", "Cheese cubes", "Cookies", "Apfelstrudel"]}
+    {:snack,
+     [
+       "Yogurt",
+       "Pretzel",
+       "Trail mix",
+       "Quark dessert",
+       "Cheese cubes",
+       "Cookies",
+       "Apfelstrudel"
+     ]}
   ]
 
   @kitchen_days_order ~w(monday tuesday wednesday thursday friday saturday sunday)a

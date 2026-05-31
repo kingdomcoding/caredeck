@@ -69,7 +69,8 @@ defmodule Caredeck.Formfix.SectionAnswer do
   policies do
     policy action_type(:read) do
       authorize_if expr(
-                     exists(application,
+                     exists(
+                       application,
                        applicant_user_id == ^actor(:id) or
                          (^actor(:__struct__) == Caredeck.Accounts.TeamIdentity and
                             ^actor(:role_kind) in [:care, :admin])
@@ -77,14 +78,17 @@ defmodule Caredeck.Formfix.SectionAnswer do
                    )
 
       authorize_if expr(
-                     exists(application.resident.relative_links.relative,
-                       user_id == ^actor(:id))
+                     exists(
+                       application.resident.relative_links.relative,
+                       user_id == ^actor(:id)
+                     )
                    )
     end
 
     policy action_type([:create, :update, :destroy]) do
       authorize_if expr(
-                     exists(application,
+                     exists(
+                       application,
                        applicant_user_id == ^actor(:id) or
                          (^actor(:__struct__) == Caredeck.Accounts.TeamIdentity and
                             ^actor(:role_kind) == :care)
@@ -92,8 +96,10 @@ defmodule Caredeck.Formfix.SectionAnswer do
                    )
 
       authorize_if expr(
-                     exists(application.resident.relative_links.relative,
-                       user_id == ^actor(:id))
+                     exists(
+                       application.resident.relative_links.relative,
+                       user_id == ^actor(:id)
+                     )
                    )
     end
   end

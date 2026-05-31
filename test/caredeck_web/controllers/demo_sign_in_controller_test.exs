@@ -38,9 +38,10 @@ defmodule CaredeckWeb.DemoSignInControllerTest do
     test "POST /demo/admin redirects to /formfix/admin with team session", %{conn: conn} do
       conn = post(conn, ~p"/demo/admin")
       assert redirected_to(conn) == ~p"/formfix/admin"
+
       assert Enum.any?(get_session(conn), fn {k, v} ->
-        String.contains?(to_string(k), "team") and is_binary(v)
-      end)
+               String.contains?(to_string(k), "team") and is_binary(v)
+             end)
     end
 
     test "POST /demo/care redirects to /feed", %{conn: conn} do

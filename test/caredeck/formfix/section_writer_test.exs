@@ -1,7 +1,14 @@
 defmodule Caredeck.Formfix.SectionWriterTest do
   use Caredeck.DataCase, async: false
 
-  alias Caredeck.Formfix.{Application, ApplicationSection, SectionAnswer, SectionSeeder, SectionWriter}
+  alias Caredeck.Formfix.{
+    Application,
+    ApplicationSection,
+    SectionAnswer,
+    SectionSeeder,
+    SectionWriter
+  }
+
   alias Caredeck.{Org, People}
 
   require Ash.Query
@@ -71,8 +78,11 @@ defmodule Caredeck.Formfix.SectionWriterTest do
   end
 
   test "saving the same field twice upserts (single row)", ctx do
-    :ok = SectionWriter.save_answers!(ctx.application, :person_needing_care, %{"first_name" => "Anne"})
-    :ok = SectionWriter.save_answers!(ctx.application, :person_needing_care, %{"first_name" => "Ann"})
+    :ok =
+      SectionWriter.save_answers!(ctx.application, :person_needing_care, %{"first_name" => "Anne"})
+
+    :ok =
+      SectionWriter.save_answers!(ctx.application, :person_needing_care, %{"first_name" => "Ann"})
 
     rows =
       SectionAnswer
@@ -97,7 +107,9 @@ defmodule Caredeck.Formfix.SectionWriterTest do
 
     section =
       ApplicationSection
-      |> Ash.Query.filter(application_id == ^ctx.application.id and section_key == :person_needing_care)
+      |> Ash.Query.filter(
+        application_id == ^ctx.application.id and section_key == :person_needing_care
+      )
       |> Ash.read_one!(tenant: ctx.facility.id, authorize?: false)
 
     assert section.status == :complete

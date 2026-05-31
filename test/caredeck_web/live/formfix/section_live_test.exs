@@ -60,7 +60,10 @@ defmodule CaredeckWeb.Formfix.SectionLiveTest do
 
   test "rendering person_needing_care shows the labels + rationale", ctx do
     conn = sign_in_team(ctx.conn, ctx.care_team)
-    {:ok, _view, html} = live(conn, ~p"/formfix/#{ctx.application.id}/section/person_needing_care")
+
+    {:ok, _view, html} =
+      live(conn, ~p"/formfix/#{ctx.application.id}/section/person_needing_care")
+
     assert html =~ "Person Needing Care"
     assert html =~ "First name"
     assert html =~ "Marital status"
@@ -69,7 +72,9 @@ defmodule CaredeckWeb.Formfix.SectionLiveTest do
 
   test "filling all required fields flips section status to :complete", ctx do
     conn = sign_in_team(ctx.conn, ctx.care_team)
-    {:ok, view, _html} = live(conn, ~p"/formfix/#{ctx.application.id}/section/person_needing_care")
+
+    {:ok, view, _html} =
+      live(conn, ~p"/formfix/#{ctx.application.id}/section/person_needing_care")
 
     view
     |> form("form", %{
@@ -85,7 +90,9 @@ defmodule CaredeckWeb.Formfix.SectionLiveTest do
 
     section =
       Formfix.ApplicationSection
-      |> Ash.Query.filter(application_id == ^ctx.application.id and section_key == :person_needing_care)
+      |> Ash.Query.filter(
+        application_id == ^ctx.application.id and section_key == :person_needing_care
+      )
       |> Ash.read_one!(tenant: ctx.facility.id, authorize?: false)
 
     assert section.status == :complete

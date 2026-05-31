@@ -31,6 +31,7 @@ defmodule Caredeck.Application do
     if @mix_env == :prod and
          Application.get_env(:caredeck, :formfix_verification_engine, :stub) == :stub do
       require Logger
+
       Logger.warning(
         "[Formfix] verification engine is :stub — replace before real applicants are onboarded."
       )

@@ -26,8 +26,8 @@ defmodule Caredeck.Workers.FormfixDigestDispatchTest do
   test "enqueues one FormfixDigest job per facility", ctx do
     :ok = FormfixDigestDispatch.perform(%Oban.Job{})
 
-    assert_enqueued worker: FormfixDigest, args: %{"facility_id" => ctx.fac_a.id}
-    assert_enqueued worker: FormfixDigest, args: %{"facility_id" => ctx.fac_b.id}
+    assert_enqueued(worker: FormfixDigest, args: %{"facility_id" => ctx.fac_a.id})
+    assert_enqueued(worker: FormfixDigest, args: %{"facility_id" => ctx.fac_b.id})
   end
 
   defp create_facility(d, name, slug) do

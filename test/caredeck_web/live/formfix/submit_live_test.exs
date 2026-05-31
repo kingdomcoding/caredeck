@@ -83,7 +83,12 @@ defmodule CaredeckWeb.Formfix.SubmitLiveTest do
     end)
 
     # Recompute → should flip to ready_to_submit (no documents required for skipped sections)
-    app = Ash.get!(Formfix.Application, ctx.application.id, tenant: ctx.facility.id, authorize?: false)
+    app =
+      Ash.get!(Formfix.Application, ctx.application.id,
+        tenant: ctx.facility.id,
+        authorize?: false
+      )
+
     :ok = Formfix.Applications.recompute_status(app)
 
     conn = sign_in_team(ctx.conn, ctx.care_team)
@@ -91,7 +96,12 @@ defmodule CaredeckWeb.Formfix.SubmitLiveTest do
 
     view |> element("button[phx-click=submit]") |> render_click()
 
-    updated = Ash.get!(Formfix.Application, ctx.application.id, tenant: ctx.facility.id, authorize?: false)
+    updated =
+      Ash.get!(Formfix.Application, ctx.application.id,
+        tenant: ctx.facility.id,
+        authorize?: false
+      )
+
     assert updated.state == :submitted
     assert updated.submitted_at != nil
   end

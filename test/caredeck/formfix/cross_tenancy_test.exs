@@ -60,9 +60,10 @@ defmodule Caredeck.Formfix.CrossTenancyTest do
     assert length(sections) == 10
     assert Enum.all?(sections, &(&1.status == :not_started))
 
-    expected_positions = Caredeck.Formfix.SectionKey.base()
-                         |> Enum.map(&Caredeck.Formfix.SectionKey.position/1)
-                         |> Enum.sort()
+    expected_positions =
+      Caredeck.Formfix.SectionKey.base()
+      |> Enum.map(&Caredeck.Formfix.SectionKey.position/1)
+      |> Enum.sort()
 
     assert Enum.map(sections, & &1.position) == expected_positions
   end

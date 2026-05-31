@@ -307,7 +307,11 @@ defmodule CaredeckWeb.Layouts do
       aria-hidden="true"
     >
       <rect x="8" y="3" width="8" height="4" rx="1" />
-      <path stroke-linecap="round" stroke-linejoin="round" d="M16 5h2a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V7a2 2 0 012-2h2" />
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="M16 5h2a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V7a2 2 0 012-2h2"
+      />
       <path stroke-linecap="round" d="M9 12h6M9 16h4" />
     </svg>
     """

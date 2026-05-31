@@ -43,8 +43,7 @@ defmodule Caredeck.Services.ServiceMessage do
       source_attribute: :author_team_id,
       define_attribute?: false
 
-    has_many :attachments, Caredeck.Feed.Attachment,
-      destination_attribute: :service_message_id
+    has_many :attachments, Caredeck.Feed.Attachment, destination_attribute: :service_message_id
   end
 
   actions do
@@ -66,7 +65,8 @@ defmodule Caredeck.Services.ServiceMessage do
   policies do
     policy action_type(:read) do
       authorize_if expr(
-                     exists(service_request,
+                     exists(
+                       service_request,
                        requester_user_id == ^actor(:id) or
                          ^actor(:id) == provider.team_identity_id
                      )
@@ -80,7 +80,8 @@ defmodule Caredeck.Services.ServiceMessage do
 
     policy action(:create) do
       authorize_if expr(
-                     exists(service_request,
+                     exists(
+                       service_request,
                        requester_user_id == ^actor(:id) or
                          ^actor(:id) == provider.team_identity_id
                      )

@@ -109,7 +109,10 @@ defmodule CaredeckWeb.Formfix.AdminLive do
           No applications yet.
         </p>
 
-        <div :if={@applications != []} class="hidden md:block bg-card rounded-card shadow-card overflow-hidden">
+        <div
+          :if={@applications != []}
+          class="hidden md:block bg-card rounded-card shadow-card overflow-hidden"
+        >
           <table class="w-full text-sm">
             <thead class="bg-page text-ink-500 text-xs uppercase tracking-wide">
               <tr>

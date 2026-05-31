@@ -58,8 +58,7 @@ defmodule Caredeck.Services.ServiceRequest do
 
     has_many :messages, Caredeck.Services.ServiceMessage
 
-    has_many :attachments, Caredeck.Feed.Attachment,
-      destination_attribute: :service_request_id
+    has_many :attachments, Caredeck.Feed.Attachment, destination_attribute: :service_request_id
   end
 
   actions do
@@ -124,9 +123,7 @@ defmodule Caredeck.Services.ServiceRequest do
                           ^actor(:id) == provider.team_identity_id)
                    )
 
-      authorize_if expr(
-                     exists(resident.relative_links.relative, user_id == ^actor(:id))
-                   )
+      authorize_if expr(exists(resident.relative_links.relative, user_id == ^actor(:id)))
     end
 
     policy action(:create) do
@@ -135,9 +132,7 @@ defmodule Caredeck.Services.ServiceRequest do
                        ^actor(:role_kind) == :care
                    )
 
-      authorize_if expr(
-                     exists(resident.relative_links.relative, user_id == ^actor(:id))
-                   )
+      authorize_if expr(exists(resident.relative_links.relative, user_id == ^actor(:id)))
     end
 
     policy action_type([:update, :destroy]) do

@@ -46,9 +46,7 @@ defmodule CaredeckWeb.Services.InboxLive do
 
   @impl true
   def handle_info(_, socket),
-    do:
-      {:noreply,
-       assign(socket, :requests, load_open_requests(socket.assigns.current_facility))}
+    do: {:noreply, assign(socket, :requests, load_open_requests(socket.assigns.current_facility))}
 
   @impl true
   def render(assigns) do

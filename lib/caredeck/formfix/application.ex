@@ -85,13 +85,15 @@ defmodule Caredeck.Formfix.Application do
   end
 
   calculations do
-    calculate :progress_percent, :integer, expr(
-      if total_sections == 0 do
-        0
-      else
-        (sections_done * 100) / total_sections
-      end
-    )
+    calculate :progress_percent,
+              :integer,
+              expr(
+                if total_sections == 0 do
+                  0
+                else
+                  sections_done * 100 / total_sections
+                end
+              )
   end
 
   actions do
@@ -135,9 +137,7 @@ defmodule Caredeck.Formfix.Application do
                        ^actor(:role_kind) in [:care, :admin]
                    )
 
-      authorize_if expr(
-                     exists(resident.relative_links.relative, user_id == ^actor(:id))
-                   )
+      authorize_if expr(exists(resident.relative_links.relative, user_id == ^actor(:id)))
     end
 
     policy action(:create) do
@@ -146,9 +146,7 @@ defmodule Caredeck.Formfix.Application do
                        ^actor(:role_kind) == :care
                    )
 
-      authorize_if expr(
-                     exists(resident.relative_links.relative, user_id == ^actor(:id))
-                   )
+      authorize_if expr(exists(resident.relative_links.relative, user_id == ^actor(:id)))
     end
 
     policy action(:submit) do

@@ -19,7 +19,13 @@ defmodule Caredeck.Formfix.SectionSchema do
         %{key: :first_name, label: "First name", kind: :string, sub: :personal, required: true},
         %{key: :last_name, label: "Last name", kind: :string, sub: :personal, required: true},
         %{key: :birth_name, label: "Birth name (if different)", kind: :string, sub: :personal},
-        %{key: :date_of_birth, label: "Date of birth", kind: :date, sub: :personal, required: true},
+        %{
+          key: :date_of_birth,
+          label: "Date of birth",
+          kind: :date,
+          sub: :personal,
+          required: true
+        },
         %{key: :birth_place, label: "Place of birth", kind: :string, sub: :personal},
         %{
           key: :marital_status,

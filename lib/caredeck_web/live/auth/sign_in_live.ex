@@ -13,12 +13,23 @@ defmodule CaredeckWeb.Auth.SignInLive do
       <div class="min-h-[calc(100vh-65px)] flex items-center justify-center px-4 py-12">
         <div class="w-full max-w-md">
           <div class="bg-brand-soft border border-brand/40 rounded-card p-4 mb-6 text-sm text-ink-900">
-            <p class="font-medium mb-1">Caredeck is a portfolio clone of <a href="https://myo.de" class="underline">myo</a>.</p>
+            <p class="font-medium mb-1">
+              Caredeck is a portfolio clone of <a href="https://myo.de" class="underline">myo</a>.
+            </p>
             <p class="text-ink-700 text-xs">
-              Built as my application for the <em>Senior Fullstack Engineer (Elixir/Phoenix)</em> role at Myosotis GmbH. The product is a working demo, not a live SaaS.
-              <a href="https://github.com/kingdomcoding/caredeck" class="text-brand hover:underline whitespace-nowrap">View source →</a>
+              Built as my application for the <em>Senior Fullstack Engineer (Elixir/Phoenix)</em>
+              role at Myosotis GmbH. The product is a working demo, not a live SaaS.
+              <a
+                href="https://github.com/kingdomcoding/caredeck"
+                class="text-brand hover:underline whitespace-nowrap"
+              >
+                View source →
+              </a>
               ·
-              <.link navigate={~p"/design-system"} class="text-brand hover:underline whitespace-nowrap">
+              <.link
+                navigate={~p"/design-system"}
+                class="text-brand hover:underline whitespace-nowrap"
+              >
                 See the design tokens →
               </.link>
             </p>
@@ -121,12 +132,16 @@ defmodule CaredeckWeb.Auth.SignInLive do
             <a
               href="https://github.com/kingdomcoding/caredeck/tree/master/docs/architecture/decisions"
               class="hover:text-ink-900"
-            >ADRs</a>
+            >
+              ADRs
+            </a>
             <span>·</span>
             <a
               href="https://github.com/kingdomcoding/caredeck/tree/master/docs/checkpoints"
               class="hover:text-ink-900"
-            >Phase checkpoints</a>
+            >
+              Phase checkpoints
+            </a>
           </footer>
         </div>
       </div>

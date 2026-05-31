@@ -190,9 +190,7 @@ defmodule Caredeck.Formfix.Applications do
 
     existing =
       ApplicationSection
-      |> Ash.Query.filter(
-        application_id == ^application.id and section_key in ^conditional_keys
-      )
+      |> Ash.Query.filter(application_id == ^application.id and section_key in ^conditional_keys)
       |> Ash.read!(tenant: fid, authorize?: false)
 
     existing_keys = MapSet.new(Enum.map(existing, & &1.section_key))
