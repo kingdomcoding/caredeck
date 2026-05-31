@@ -389,11 +389,11 @@ defmodule CaredeckWeb.PostComposeLive do
     uploaded =
       consume_uploaded_entries(socket, :photos, fn %{path: path}, entry ->
         key = Feed.S3.generate_key("photos", entry.client_name)
-        {:ok, body} = File.read(path)
+        body = strip_exif_or_read!(path)
         {:ok, _} = Feed.S3.put_object(key, body, entry.client_type)
 
         {:ok,
-         %{key: key, mime: entry.client_type, bytes: entry.client_size, name: entry.client_name}}
+         %{key: key, mime: entry.client_type, bytes: byte_size(body), name: entry.client_name}}
       end)
 
     uploaded
@@ -735,4 +735,18 @@ defmodule CaredeckWeb.PostComposeLive do
   defp error_to_string(:too_many_files), do: "Too many files (max 9)."
   defp error_to_string(:not_accepted), do: "Unsupported file type."
   defp error_to_string(err), do: "Upload error: #{inspect(err)}"
+
+  defp strip_exif_or_read!(path) do
+    tmp = Path.join(System.tmp_dir!(), "caredeck_strip_" <> Path.basename(path))
+
+    case System.cmd("mogrify", ["-strip", "-write", tmp, path], stderr_to_stdout: true) do
+      {_, 0} ->
+        body = File.read!(tmp)
+        File.rm(tmp)
+        body
+
+      _ ->
+        File.read!(path)
+    end
+  end
 end

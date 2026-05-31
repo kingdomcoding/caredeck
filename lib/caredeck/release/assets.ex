@@ -43,9 +43,35 @@ defmodule Caredeck.Release.Assets do
         key
 
       _ ->
-        {:ok, body} = File.read(path)
+        body = read_with_strip(path)
         {:ok, _} = S3.put_object(key, body, content_type(path))
         key
+    end
+  end
+
+  defp read_with_strip(path) do
+    ext = Path.extname(path) |> String.downcase()
+
+    if ext in [".jpg", ".jpeg", ".png"] do
+      strip_exif(path)
+    else
+      {:ok, body} = File.read(path)
+      body
+    end
+  end
+
+  defp strip_exif(path) do
+    tmp = Path.join(System.tmp_dir!(), "caredeck_strip_" <> Path.basename(path))
+
+    case System.cmd("mogrify", ["-strip", "-write", tmp, path], stderr_to_stdout: true) do
+      {_, 0} ->
+        {:ok, body} = File.read(tmp)
+        File.rm(tmp)
+        body
+
+      _ ->
+        {:ok, body} = File.read(path)
+        body
     end
   end
 
