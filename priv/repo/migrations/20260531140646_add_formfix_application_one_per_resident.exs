@@ -9,21 +9,7 @@ defmodule Caredeck.Repo.Migrations.AddFormfixApplicationOnePerResident do
 
   def up do
     execute("""
-    WITH ranked AS (
-      SELECT
-        id,
-        ROW_NUMBER() OVER (
-          PARTITION BY facility_id, resident_id
-          ORDER BY inserted_at ASC, id ASC
-        ) AS rn
-      FROM formfix_applications
-    ),
-    dupes AS (SELECT id FROM ranked WHERE rn > 1)
-    DELETE FROM formfix_applications_versions
-    WHERE version_source_id IN (SELECT id FROM dupes)
-    """)
-
-    execute("""
+    CREATE TEMP TABLE dupe_app_ids AS
     WITH ranked AS (
       SELECT
         id,
@@ -33,9 +19,52 @@ defmodule Caredeck.Repo.Migrations.AddFormfixApplicationOnePerResident do
         ) AS rn
       FROM formfix_applications
     )
-    DELETE FROM formfix_applications
-    WHERE id IN (SELECT id FROM ranked WHERE rn > 1)
+    SELECT id FROM ranked WHERE rn > 1
     """)
+
+    execute("""
+    DELETE FROM formfix_application_sections_versions
+    WHERE version_source_id IN (
+      SELECT id FROM formfix_application_sections
+      WHERE application_id IN (SELECT id FROM dupe_app_ids)
+    )
+    """)
+
+    execute("""
+    DELETE FROM formfix_section_answers_versions
+    WHERE version_source_id IN (
+      SELECT id FROM formfix_section_answers
+      WHERE application_id IN (SELECT id FROM dupe_app_ids)
+    )
+    """)
+
+    execute("""
+    DELETE FROM formfix_uploaded_documents_versions
+    WHERE version_source_id IN (
+      SELECT id FROM formfix_uploaded_documents
+      WHERE application_id IN (SELECT id FROM dupe_app_ids)
+    )
+    """)
+
+    execute("""
+    DELETE FROM formfix_application_notes_versions
+    WHERE version_source_id IN (
+      SELECT id FROM formfix_application_notes
+      WHERE application_id IN (SELECT id FROM dupe_app_ids)
+    )
+    """)
+
+    execute("""
+    DELETE FROM formfix_applications_versions
+    WHERE version_source_id IN (SELECT id FROM dupe_app_ids)
+    """)
+
+    execute("""
+    DELETE FROM formfix_applications
+    WHERE id IN (SELECT id FROM dupe_app_ids)
+    """)
+
+    execute("DROP TABLE dupe_app_ids")
 
     create unique_index(:formfix_applications, [:facility_id, :resident_id],
              name: "formfix_applications_one_per_resident_index"
