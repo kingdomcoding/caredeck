@@ -206,11 +206,78 @@ defmodule Caredeck.Release.Seeds do
     refresh_kitchen_orders_and_diets!(facility)
     refresh_formfix_apps!(facility)
     refresh_notifications!(facility)
+    refresh_pending_invitations!(facility)
 
     IO.puts("")
     IO.puts("Demo data refreshed.")
     IO.puts("")
 
+    :ok
+  end
+
+  @pending_invitation_seeds [
+    %{resident: {"Edward", "Brooks"}, email: "thomas.brooks@example.test",
+      relationship: :son},
+    %{resident: {"Audrey", "Edwards"}, email: "lisa.edwards@example.test",
+      relationship: :daughter},
+    %{resident: {"Doris", "Hall"}, email: "robert.hall@example.test",
+      relationship: :nephew}
+  ]
+
+  defp refresh_pending_invitations!(facility) do
+    IO.puts("  ↺ seeding pending invitations")
+    fid = Ecto.UUID.dump!(facility.id)
+
+    {:ok, _} =
+      Caredeck.Repo.query(
+        "DELETE FROM relative_invitations_versions WHERE facility_id = $1 AND id IN (SELECT id FROM relative_invitations WHERE accepted_at IS NULL AND email LIKE '%@example.test' AND facility_id = $1)",
+        [fid]
+      )
+
+    {:ok, _} =
+      Caredeck.Repo.query(
+        "DELETE FROM relative_invitations WHERE accepted_at IS NULL AND email LIKE '%@example.test' AND facility_id = $1",
+        [fid]
+      )
+
+    residents =
+      People.Resident
+      |> Ash.read!(tenant: facility.id, authorize?: false)
+
+    demo_user = find_demo_relative_user()
+
+    seeded =
+      Enum.reduce(@pending_invitation_seeds, [], fn spec, acc ->
+        case find_resident(residents, spec.resident) do
+          nil ->
+            acc
+
+          resident ->
+            try do
+              {:ok, _inv} =
+                People.RelativeInvitation
+                |> Ash.Changeset.for_create(
+                  :create,
+                  %{
+                    facility_id: facility.id,
+                    inviter_user_id: demo_user.id,
+                    resident_id: resident.id,
+                    email: spec.email,
+                    suggested_relationship: spec.relationship
+                  },
+                  tenant: facility.id,
+                  authorize?: false
+                )
+                |> Ash.create(tenant: facility.id, authorize?: false)
+
+              [spec.email | acc]
+            rescue
+              _ -> acc
+            end
+        end
+      end)
+
+    IO.puts("  ✓ pending invitations: #{length(seeded)}")
     :ok
   end
 
