@@ -200,12 +200,537 @@ defmodule Caredeck.Release.Seeds do
     rematerialise_kitchen_days!(facility)
 
     refresh_avatars!(facility)
+    refresh_feed!(facility)
 
     IO.puts("")
     IO.puts("Demo data refreshed.")
     IO.puts("")
 
     :ok
+  end
+
+  @seed_posts [
+    %{
+      key: :birthday_muller,
+      team: "team-care",
+      body:
+        "Heute war Beatrice Cox' 88. Geburtstag — Schokoladenkuchen, Lieder und viele Gäste. Sie hat sich riesig gefreut!",
+      photos: {:feed_birthday, [0, 1, 2]},
+      photo_captions: [
+        "Beatrice blowing out her 88th candles.",
+        "The whole common room joined in for Happy Birthday.",
+        "Family card and gifts ready on the table."
+      ],
+      audience_residents: ["Beatrice", "Cox"],
+      tagged_residents: ["Beatrice", "Cox"],
+      reactions: 7,
+      comment_bodies: [
+        "Vielen Dank für die wunderschönen Bilder!",
+        "Bitte richten Sie liebe Grüße aus.",
+        "Wie schön, sie so glücklich zu sehen ❤"
+      ],
+      days_ago: 1
+    },
+    %{
+      key: :painting_workshop,
+      team: "team-activities",
+      body:
+        "Group photo from this week's painting workshop — everyone in great spirits. Anika brought new watercolour sets and Maria showed brush technique. Three watercolours headed to the family display wall already.",
+      photos: {:feed_painting, [0, 1, 2, 3]},
+      photo_captions: [
+        "Maria from team-activities helping with brush technique.",
+        "Concentration on the watercolour piece.",
+        "Finished pieces on display.",
+        "Mid-workshop laughter."
+      ],
+      audience_residents: [{"Constance", "King"}, {"Audrey", "Edwards"}],
+      tagged_residents: [{"Constance", "King"}, {"Audrey", "Edwards"}],
+      reactions: 4,
+      comment_bodies: [
+        "Tolles Bild! Mama liebt es zu malen.",
+        "Please save one of the watercolours for us to pick up."
+      ],
+      days_ago: 2
+    },
+    %{
+      key: :physio_hungsinger,
+      team: "team-care",
+      body:
+        "Good news! Mr Hungsinger had a very good report from his physiotherapist today. Range of motion is back to where it was before the fall — Lars is delighted with progress.",
+      photos: {:feed_physio, [0, 1, 2]},
+      photo_captions: [
+        "Lars guiding the arm-raise sequence.",
+        "Mid-session — good range now.",
+        "Cool-down stretches."
+      ],
+      audience_residents: [{"Isaac", "Allen"}],
+      tagged_residents: [{"Isaac", "Allen"}],
+      reactions: 6,
+      comment_bodies: [
+        "Das ist wundervoll zu hören. Danke an Lars!",
+        "We'll bring his favourite blanket on Sunday."
+      ],
+      days_ago: 1
+    },
+    %{
+      key: :handmotor,
+      team: "team-therapy",
+      body:
+        "Two short clips from today's hand-motor exercises. Constance and Audrey both worked on the peg board — steady improvement week-on-week.",
+      photos: {:feed_handmotor, [0, 1]},
+      photo_captions: [
+        "Therapy putty work.",
+        "Peg-board exercise — Constance on the left."
+      ],
+      audience_residents: [{"Constance", "King"}, {"Audrey", "Edwards"}, {"Isaac", "Allen"}],
+      tagged_residents: [{"Constance", "King"}, {"Audrey", "Edwards"}],
+      reactions: 3,
+      comment_bodies: ["Make sure she does her exercises at home too 😉"],
+      days_ago: 3
+    },
+    %{
+      key: :music_therapy,
+      team: "team-activities",
+      body:
+        "Music therapy session this afternoon — Schlager sing-along. Six residents joined, lots of singing. Audio attached if you want to hear.",
+      photos: {:feed_music, [0, 1]},
+      photo_captions: [
+        "Group around the music therapist.",
+        "Lieblings-Schlager: Marmor, Stein und Eisen."
+      ],
+      audio: {:audio, 2},
+      audio_caption: "Singing along to a Schlager classic.",
+      audience_residents: [
+        {"Beatrice", "Cox"},
+        {"Penelope", "Davis"},
+        {"Edward", "Brooks"},
+        {"Isaac", "Allen"},
+        {"Ursula", "Hall"}
+      ],
+      tagged_residents: [{"Beatrice", "Cox"}, {"Edward", "Brooks"}],
+      reactions: 8,
+      comment_bodies: [
+        "Marmor, Stein und Eisen — Mamas Lieblingslied!",
+        "Could you share the playlist with us?"
+      ],
+      days_ago: 2
+    },
+    %{
+      key: :wochenmarkt,
+      team: "team-activities",
+      body:
+        "Wochenmarkt outing today — small group, lots of fresh produce. Constance Rogers picked her own strawberries which are now in the kitchen for tomorrow's breakfast.",
+      photos: {:feed_market, [0, 1]},
+      photo_captions: [
+        "At the produce stand on Karl-Marx-Allee.",
+        "Frische Erdbeeren — picked by Constance herself."
+      ],
+      audience_residents: [
+        {"Constance", "Rogers"},
+        {"Phyllis", "Lee"},
+        {"Doris", "Hall"},
+        {"Isaac", "Allen"}
+      ],
+      tagged_residents: [{"Constance", "Rogers"}, {"Phyllis", "Lee"}],
+      reactions: 4,
+      comment_bodies: ["Schöne Idee! Mama liebt Erdbeeren."],
+      days_ago: 1
+    },
+    %{
+      key: :spargel,
+      team: "team-kitchen",
+      body:
+        "Spargelzeit! Frischer weißer Spargel von einem regionalen Hof — wir servieren ihn diese Woche mit Sauce hollandaise. Wer Spargel mag, bitte beim Pflegeteam anmelden.",
+      photos: {:feed_spargel, [0]},
+      photo_captions: ["Weißer Spargel from a regional farm — Saturday's main."],
+      audience_residents: [],
+      tagged_residents: [],
+      reactions: 5,
+      comment_bodies: [],
+      days_ago: 0
+    },
+    %{
+      key: :school_visit,
+      team: "team-activities",
+      body:
+        "Today the Gymnasium am Park visited — eight students from the choir came to sing for the residents. Lots of smiles, a few tears (of joy). They've already asked when they can come back.",
+      photos: {:feed_school, [0, 1]},
+      photo_captions: [
+        "Intergenerational moment.",
+        "Choir singing — the students wrote out song sheets in big print."
+      ],
+      audience_residents: [],
+      tagged_residents: [{"Isaac", "Allen"}, {"Edward", "Brooks"}],
+      reactions: 8,
+      comment_bodies: [
+        "Wundervolle Idee, vielen Dank!",
+        "Could the choir come for Mum's birthday next month?",
+        "Lovely."
+      ],
+      days_ago: 2
+    },
+    %{
+      key: :garden_walk,
+      team: "team-care",
+      body:
+        "Spaziergang im Garten this morning — three residents joined despite the cool weather. Short video below of the path through the rose garden.",
+      photos: {:feed_garden, [0]},
+      photo_captions: ["After the walk — sunny corner near the pond."],
+      video: {:videos, 1},
+      video_caption: "Path through the rose garden.",
+      audience_residents: [{"Doris", "Young"}, {"Bernice", "Collins"}, {"Isaac", "Allen"}],
+      tagged_residents: [{"Doris", "Young"}, {"Bernice", "Collins"}],
+      reactions: 5,
+      comment_bodies: [
+        "Looks so peaceful 🌹",
+        "Dad will love seeing this — thank you for sharing."
+      ],
+      days_ago: 1
+    },
+    %{
+      key: :new_resident_bauer,
+      team: "team-care",
+      body:
+        "Welcome to Klaus Bauer who moved into Erdgeschoss this week. Klaus loves jazz, chess, and gardening — please say hi if you're visiting. His daughter Anna will be joining the family group.",
+      photos: {:feed_welcome, [0]},
+      photo_captions: ["Klaus settling into his new room."],
+      audience_residents: [],
+      tagged_residents: [],
+      reactions: 6,
+      comment_bodies: [
+        "Welcome Klaus! 👋",
+        "Schön, jemanden hier zu haben, der gerne Schach spielt."
+      ],
+      days_ago: 3
+    },
+    %{
+      key: :doctor_internal,
+      team: "team-admin",
+      body:
+        "Quick care-team note — Dr Weber's office confirms Mrs Walker's MDK reassessment is on the books for next Tuesday. Please prep her file in the morning.",
+      photos: {:feed_doctor, [0]},
+      photo_captions: ["Today's clinical paperwork."],
+      is_internal: true,
+      audience_residents: [],
+      tagged_residents: [{"Mabel", "Martin"}],
+      reactions: 0,
+      comment_bodies: ["Noted — file will be ready by 09:30."],
+      days_ago: 0
+    },
+    %{
+      key: :voice_schlager,
+      team: "team-activities",
+      body:
+        "Mr Hungsinger entertained the lunch crowd today — short audio clip below. Pure joy.",
+      audio: {:audio, 0},
+      audio_caption: "Mr Hungsinger humming Marmor, Stein und Eisen.",
+      audience_residents: [{"Isaac", "Allen"}],
+      tagged_residents: [{"Isaac", "Allen"}],
+      reactions: 6,
+      comment_bodies: [
+        "Wundervoll. Danke fürs Teilen!",
+        "We'll bring his Schlager CDs next visit."
+      ],
+      days_ago: 0
+    }
+  ]
+
+  defp refresh_feed!(facility) do
+    IO.puts("  ↺ rebuilding feed")
+    Feed.S3.ensure_bucket!()
+
+    wipe_existing_feed!(facility.id)
+
+    teams_by_handle =
+      Accounts.TeamIdentity
+      |> Ash.Query.filter(facility_id == ^facility.id)
+      |> Ash.read!(authorize?: false)
+      |> Map.new(&{&1.handle, &1})
+
+    residents =
+      People.Resident
+      |> Ash.read!(tenant: facility.id, authorize?: false)
+
+    relative_users =
+      relative_users_with_facility_membership(facility)
+
+    Enum.each(@seed_posts, fn spec ->
+      seed_post!(spec, facility, teams_by_handle, residents, relative_users)
+    end)
+
+    IO.puts("  ✓ feed rebuilt: #{length(@seed_posts)} posts")
+    :ok
+  end
+
+  defp wipe_existing_feed!(facility_id) do
+    fid = Ecto.UUID.dump!(facility_id)
+
+    sql_tables = [
+      "attachments_versions",
+      "attachments",
+      "comments_versions",
+      "comments",
+      "reactions_versions",
+      "reactions",
+      "post_audiences_versions",
+      "post_audiences",
+      "resident_tags_on_posts_versions",
+      "resident_tags_on_posts",
+      "posts_versions",
+      "posts"
+    ]
+
+    Enum.each(sql_tables, fn tbl ->
+      {:ok, _} =
+        Caredeck.Repo.query("DELETE FROM " <> tbl <> " WHERE facility_id = $1", [fid])
+    end)
+  end
+
+  defp seed_post!(spec, facility, teams_by_handle, residents, relative_users) do
+    team = Map.fetch!(teams_by_handle, spec.team)
+
+    {:ok, post} =
+      Feed.Post
+      |> Ash.Changeset.for_create(
+        :create,
+        %{
+          facility_id: facility.id,
+          team_identity_id: team.id,
+          body: spec.body,
+          is_internal: Map.get(spec, :is_internal, false)
+        },
+        tenant: facility.id,
+        authorize?: false
+      )
+      |> Ash.create(tenant: facility.id, authorize?: false)
+
+    inserted_at = DateTime.utc_now() |> DateTime.add(-Map.get(spec, :days_ago, 0) * 86_400, :second)
+    backdate!(:posts, post.id, inserted_at)
+
+    Enum.each(spec.audience_residents, fn match ->
+      case find_resident(residents, match) do
+        nil ->
+          :ok
+
+        r ->
+          Feed.PostAudience
+          |> Ash.Changeset.for_create(
+            :create,
+            %{facility_id: facility.id, post_id: post.id, resident_id: r.id},
+            tenant: facility.id,
+            authorize?: false
+          )
+          |> Ash.create!(tenant: facility.id, authorize?: false)
+      end
+    end)
+
+    Enum.each(spec.tagged_residents, fn match ->
+      case find_resident(residents, match) do
+        nil ->
+          :ok
+
+        r ->
+          Feed.ResidentTagOnPost
+          |> Ash.Changeset.for_create(
+            :create,
+            %{facility_id: facility.id, post_id: post.id, resident_id: r.id},
+            tenant: facility.id,
+            authorize?: false
+          )
+          |> Ash.create!(tenant: facility.id, authorize?: false)
+      end
+    end)
+
+    case Map.get(spec, :photos) do
+      {group, indices} ->
+        captions = Map.get(spec, :photo_captions, [])
+
+        Enum.with_index(indices)
+        |> Enum.each(fn {idx, position} ->
+          path = Caredeck.Release.Assets.at(group, idx)
+          meta = Caredeck.Release.Assets.upload_with_meta!(path)
+          caption = Enum.at(captions, position)
+
+          Feed.Attachment
+          |> Ash.Changeset.for_create(
+            :create,
+            %{
+              facility_id: facility.id,
+              post_id: post.id,
+              kind: :photo,
+              s3_key: meta.s3_key,
+              thumbnail_s3_key: meta.s3_key,
+              mime_type: meta.mime_type,
+              bytes: meta.bytes,
+              caption: caption,
+              position: position
+            },
+            tenant: facility.id,
+            authorize?: false
+          )
+          |> Ash.create!(tenant: facility.id, authorize?: false)
+        end)
+
+      _ ->
+        :ok
+    end
+
+    case Map.get(spec, :video) do
+      {group, idx} ->
+        video_path = Caredeck.Release.Assets.at(group, idx)
+        video_meta = Caredeck.Release.Assets.upload_with_meta!(video_path)
+        poster_path = Caredeck.Release.Assets.video_poster_path(video_path)
+        poster_meta = Caredeck.Release.Assets.upload_with_meta!(poster_path)
+
+        Feed.Attachment
+        |> Ash.Changeset.for_create(
+          :create,
+          %{
+            facility_id: facility.id,
+            post_id: post.id,
+            kind: :video,
+            s3_key: video_meta.s3_key,
+            thumbnail_s3_key: poster_meta.s3_key,
+            mime_type: video_meta.mime_type,
+            bytes: video_meta.bytes,
+            duration_sec: video_meta.duration_sec,
+            caption: Map.get(spec, :video_caption),
+            position: 99
+          },
+          tenant: facility.id,
+          authorize?: false
+        )
+        |> Ash.create!(tenant: facility.id, authorize?: false)
+
+      _ ->
+        :ok
+    end
+
+    case Map.get(spec, :audio) do
+      {group, idx} ->
+        path = Caredeck.Release.Assets.at(group, idx)
+        meta = Caredeck.Release.Assets.upload_with_meta!(path)
+
+        Feed.Attachment
+        |> Ash.Changeset.for_create(
+          :create,
+          %{
+            facility_id: facility.id,
+            post_id: post.id,
+            kind: :audio,
+            s3_key: meta.s3_key,
+            mime_type: meta.mime_type,
+            bytes: meta.bytes,
+            duration_sec: meta.duration_sec,
+            caption: Map.get(spec, :audio_caption),
+            position: 98
+          },
+          tenant: facility.id,
+          authorize?: false
+        )
+        |> Ash.create!(tenant: facility.id, authorize?: false)
+
+      _ ->
+        :ok
+    end
+
+    seed_reactions!(post, facility, relative_users, Map.get(spec, :reactions, 0))
+    seed_comments!(post, facility, relative_users, Map.get(spec, :comment_bodies, []), inserted_at)
+
+    :ok
+  end
+
+  defp seed_reactions!(_post, _facility, [], _n), do: :ok
+  defp seed_reactions!(_post, _facility, _users, 0), do: :ok
+
+  defp seed_reactions!(post, facility, users, n) do
+    users
+    |> Enum.sort_by(&:erlang.phash2({post.id, &1.id}))
+    |> Enum.take(n)
+    |> Enum.each(fn user ->
+      kind = if rem(:erlang.phash2({post.id, user.id}), 10) < 3, do: :heart, else: :like
+
+      Feed.Reaction
+      |> Ash.Changeset.for_create(
+        :create,
+        %{
+          facility_id: facility.id,
+          post_id: post.id,
+          user_id: user.id,
+          kind: kind
+        },
+        tenant: facility.id,
+        authorize?: false
+      )
+      |> Ash.create!(tenant: facility.id, authorize?: false)
+    end)
+  end
+
+  defp seed_comments!(_post, _facility, [], _bodies, _base), do: :ok
+  defp seed_comments!(_post, _facility, _users, [], _base), do: :ok
+
+  defp seed_comments!(post, facility, users, bodies, base_time) do
+    users
+    |> Enum.sort_by(&:erlang.phash2({post.id, :comment, &1.id}))
+    |> Enum.take(length(bodies))
+    |> Enum.with_index()
+    |> Enum.each(fn {user, idx} ->
+      body = Enum.at(bodies, idx)
+      ts = DateTime.add(base_time, idx * 600, :second)
+
+      {:ok, comment} =
+        Feed.Comment
+        |> Ash.Changeset.for_create(
+          :create,
+          %{
+            facility_id: facility.id,
+            post_id: post.id,
+            author_user_id: user.id,
+            body: body
+          },
+          tenant: facility.id,
+          authorize?: false
+        )
+        |> Ash.create(tenant: facility.id, authorize?: false)
+
+      backdate!(:comments, comment.id, ts)
+    end)
+  end
+
+  defp backdate!(table, id, %DateTime{} = ts) do
+    naive = DateTime.to_naive(ts)
+
+    {:ok, _} =
+      Caredeck.Repo.query(
+        "UPDATE #{table} SET inserted_at = $1, updated_at = $1 WHERE id = $2",
+        [naive, Ecto.UUID.dump!(id)]
+      )
+  end
+
+  defp find_resident(residents, {first, last}) do
+    Enum.find(residents, fn r ->
+      r.first_name == first and r.last_name == last
+    end)
+  end
+
+  defp find_resident(residents, [first | _rest]), do: find_resident(residents, {first, ""})
+
+  defp find_resident(_residents, _), do: nil
+
+  defp relative_users_with_facility_membership(facility) do
+    case Caredeck.Org.FacilityMembership
+         |> Ash.Query.filter(facility_id == ^facility.id)
+         |> Ash.read(authorize?: false) do
+      {:ok, memberships} ->
+        user_ids = Enum.map(memberships, & &1.user_id) |> Enum.uniq()
+
+        Caredeck.Accounts.User
+        |> Ash.Query.filter(id in ^user_ids)
+        |> Ash.read!(authorize?: false)
+
+      _ ->
+        []
+    end
   end
 
   @team_avatar_map %{
