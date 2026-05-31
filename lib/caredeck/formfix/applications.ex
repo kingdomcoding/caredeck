@@ -83,30 +83,38 @@ defmodule Caredeck.Formfix.Applications do
   end
 
   def start_for_resident!(facility, resident, actor) do
-    {applicant_user_id, applicant_team_id} =
-      case actor do
-        %Caredeck.Accounts.User{id: id} -> {id, nil}
-        %Caredeck.Accounts.TeamIdentity{id: id} -> {nil, id}
-        _ -> {nil, nil}
-      end
+    case Application
+         |> Ash.Query.filter(resident_id == ^resident.id)
+         |> Ash.read_one(tenant: facility.id, authorize?: false) do
+      {:ok, %Application{} = existing} ->
+        existing
 
-    {:ok, app} =
-      Application
-      |> Ash.Changeset.for_create(
-        :create,
-        %{
-          facility_id: facility.id,
-          resident_id: resident.id,
-          applicant_user_id: applicant_user_id,
-          applicant_team_id: applicant_team_id
-        },
-        tenant: facility.id,
-        actor: actor
-      )
-      |> Ash.create(tenant: facility.id, actor: actor)
+      _ ->
+        {applicant_user_id, applicant_team_id} =
+          case actor do
+            %Caredeck.Accounts.User{id: id} -> {id, nil}
+            %Caredeck.Accounts.TeamIdentity{id: id} -> {nil, id}
+            _ -> {nil, nil}
+          end
 
-    :ok = SectionSeeder.materialise!(app)
-    app
+        {:ok, app} =
+          Application
+          |> Ash.Changeset.for_create(
+            :create,
+            %{
+              facility_id: facility.id,
+              resident_id: resident.id,
+              applicant_user_id: applicant_user_id,
+              applicant_team_id: applicant_team_id
+            },
+            tenant: facility.id,
+            actor: actor
+          )
+          |> Ash.create(tenant: facility.id, actor: actor)
+
+        :ok = SectionSeeder.materialise!(app)
+        app
+    end
   end
 
   def recompute_status(application) do

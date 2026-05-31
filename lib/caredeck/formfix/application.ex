@@ -35,6 +35,10 @@ defmodule Caredeck.Formfix.Application do
     end
   end
 
+  identities do
+    identity :one_per_resident, [:facility_id, :resident_id]
+  end
+
   attributes do
     uuid_primary_key :id
     attribute :facility_id, :uuid, allow_nil?: false, public?: true
