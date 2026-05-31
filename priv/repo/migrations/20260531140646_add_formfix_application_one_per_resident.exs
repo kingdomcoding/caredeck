@@ -17,6 +17,21 @@ defmodule Caredeck.Repo.Migrations.AddFormfixApplicationOnePerResident do
           ORDER BY inserted_at ASC, id ASC
         ) AS rn
       FROM formfix_applications
+    ),
+    dupes AS (SELECT id FROM ranked WHERE rn > 1)
+    DELETE FROM formfix_applications_versions
+    WHERE version_source_id IN (SELECT id FROM dupes)
+    """)
+
+    execute("""
+    WITH ranked AS (
+      SELECT
+        id,
+        ROW_NUMBER() OVER (
+          PARTITION BY facility_id, resident_id
+          ORDER BY inserted_at ASC, id ASC
+        ) AS rn
+      FROM formfix_applications
     )
     DELETE FROM formfix_applications
     WHERE id IN (SELECT id FROM ranked WHERE rn > 1)
