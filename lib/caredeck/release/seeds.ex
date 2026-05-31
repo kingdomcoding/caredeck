@@ -338,8 +338,28 @@ defmodule Caredeck.Release.Seeds do
     :ok
   end
 
+  defp seed_create_formfix_app!(facility, resident, demo_user) do
+    {:ok, app} =
+      Formfix.Application
+      |> Ash.Changeset.for_create(
+        :create,
+        %{
+          facility_id: facility.id,
+          resident_id: resident.id,
+          applicant_user_id: demo_user.id,
+          applicant_team_id: nil
+        },
+        tenant: facility.id,
+        authorize?: false
+      )
+      |> Ash.create(tenant: facility.id, authorize?: false)
+
+    :ok = Caredeck.Formfix.SectionSeeder.materialise!(app)
+    app
+  end
+
   defp create_formfix_app!(spec, resident, facility, demo_user) do
-    app = Formfix.Applications.start_for_resident!(facility, resident, demo_user)
+    app = seed_create_formfix_app!(facility, resident, demo_user)
 
     sections =
       Formfix.ApplicationSection
