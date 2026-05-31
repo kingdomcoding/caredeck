@@ -20,6 +20,7 @@ defmodule CaredeckWeb.ProfileLive do
 
         case Ash.get(Resident, id, tenant: facility.id, actor: actor) do
           {:ok, resident} ->
+            resident = Ash.load!(resident, [:ward], tenant: facility.id, authorize?: false)
             relatives = load_relatives(facility, resident)
             caregivers = load_caregivers(facility)
 
@@ -61,27 +62,51 @@ defmodule CaredeckWeb.ProfileLive do
     <Layouts.app flash={@flash} current_user={@current_user} current_team={@current_team}>
       <div class="mx-auto max-w-2xl px-4 py-6 pb-24">
         <div class="flex items-start justify-between mb-2 gap-3 flex-wrap">
-          <h1 class="text-display-md text-ink-900">
-            {@resident.first_name} {@resident.last_name}
-          </h1>
+          <div class="flex items-center gap-4">
+            <.avatar url={@resident.avatar_url} initials={initials(full_name(@resident))} />
+            <div>
+              <h1 class="text-display-md text-ink-900">
+                {@resident.first_name} {@resident.last_name}
+              </h1>
+              <p :if={@resident.birth_name} class="text-ink-500 text-sm">
+                {@resident.birth_name}
+              </p>
+            </div>
+          </div>
           <div class="flex items-center gap-2 flex-wrap">
             <.link
-              navigate={~p"/kitchen/order/#{@resident.id}"}
-              class="rounded-button bg-brand text-white text-sm font-medium px-4 py-2 hover:bg-brand-strong whitespace-nowrap"
-            >
-              Order meal &rarr;
-            </.link>
-            <.link
               navigate={~p"/residents/#{@resident.id}/diet"}
-              class="rounded-button bg-card border border-divider text-ink-900 text-sm font-medium px-4 py-2 hover:border-brand whitespace-nowrap"
+              class="rounded-button bg-brand text-white text-sm font-medium px-4 py-2 hover:bg-brand-strong whitespace-nowrap"
             >
               Diet profile
             </.link>
+            <.link
+              navigate={~p"/kitchen/order/#{@resident.id}"}
+              class="rounded-button bg-card border border-divider text-ink-700 text-sm font-medium px-4 py-2 hover:border-brand whitespace-nowrap"
+            >
+              Order meal
+            </.link>
           </div>
         </div>
-        <p :if={@resident.birth_name} class="text-ink-500 text-sm mb-4">
-          {@resident.birth_name}
-        </p>
+
+        <section class="grid gap-3 sm:grid-cols-4 text-sm bg-card rounded-card shadow-card p-4 mb-6">
+          <div>
+            <p class="text-ink-500 text-xs uppercase tracking-wide">Date of birth</p>
+            <p class="text-ink-900">{format_dob(@resident.date_of_birth)}</p>
+          </div>
+          <div>
+            <p class="text-ink-500 text-xs uppercase tracking-wide">Age</p>
+            <p class="text-ink-900">{format_age(@resident.date_of_birth)}</p>
+          </div>
+          <div>
+            <p class="text-ink-500 text-xs uppercase tracking-wide">Ward</p>
+            <p class="text-ink-900">{ward_label(@resident.ward)}</p>
+          </div>
+          <div>
+            <p class="text-ink-500 text-xs uppercase tracking-wide">Admitted</p>
+            <p class="text-ink-900">{format_admitted(@resident.admitted_at)}</p>
+          </div>
+        </section>
 
         <nav class="flex gap-4 border-b border-divider mb-4">
           <button
@@ -194,5 +219,29 @@ defmodule CaredeckWeb.ProfileLive do
 
   defp humanize_relationship(atom) do
     atom |> Atom.to_string() |> String.replace("_", " ") |> String.capitalize()
+  end
+
+  defp full_name(%{first_name: f, last_name: l}), do: "#{f} #{l}"
+  defp full_name(_), do: ""
+
+  defp format_dob(nil), do: "—"
+  defp format_dob(%Date{} = d), do: Calendar.strftime(d, "%d %b %Y")
+
+  defp format_age(nil), do: "—"
+
+  defp format_age(%Date{} = dob) do
+    today = Date.utc_today()
+    years = today.year - dob.year
+    years = if Date.compare(%{dob | year: today.year}, today) == :gt, do: years - 1, else: years
+    "#{years} years"
+  end
+
+  defp ward_label(%{name: name}), do: name
+  defp ward_label(_), do: "—"
+
+  defp format_admitted(nil), do: "—"
+
+  defp format_admitted(%DateTime{} = dt) do
+    Calendar.strftime(dt, "%d %b %Y")
   end
 end

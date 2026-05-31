@@ -66,6 +66,21 @@ defmodule CaredeckWeb.Services.ProviderLive do
           </.link>
         </header>
 
+        <section class="bg-card rounded-card shadow-card p-4 mb-6 grid gap-3 sm:grid-cols-3 text-sm">
+          <div>
+            <p class="text-ink-500 text-xs uppercase tracking-wide">Address</p>
+            <p class="text-ink-900">Demo Allee 12 · Berlin</p>
+          </div>
+          <div>
+            <p class="text-ink-500 text-xs uppercase tracking-wide">Contact</p>
+            <p class="text-ink-900">+49 30 0000 0000</p>
+          </div>
+          <div>
+            <p class="text-ink-500 text-xs uppercase tracking-wide">Next visit</p>
+            <p class="text-ink-900">{provider_next_visit(@provider.kind)}</p>
+          </div>
+        </section>
+
         <h2 class="text-ink-900 font-medium mb-2">Recent requests</h2>
 
         <p :if={@requests == []} class="text-ink-500 text-sm text-center py-12 bg-card rounded-card">
@@ -113,4 +128,10 @@ defmodule CaredeckWeb.Services.ProviderLive do
   defp humanize_state(:in_progress), do: "In progress"
   defp humanize_state(:resolved), do: "Resolved"
   defp humanize_state(:cancelled), do: "Cancelled"
+
+  defp provider_next_visit(:doctor), do: "Mon · 10:00"
+  defp provider_next_visit(:pharmacy), do: "Daily delivery"
+  defp provider_next_visit(:hairdresser), do: "Thu · 13:00"
+  defp provider_next_visit(:laundry), do: "Tue + Fri"
+  defp provider_next_visit(_), do: "On request"
 end
