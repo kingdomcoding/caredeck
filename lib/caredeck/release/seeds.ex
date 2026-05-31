@@ -197,10 +197,34 @@ defmodule Caredeck.Release.Seeds do
     |> Enum.each(&refresh_application!(&1, admin, facility))
 
     refresh_kitchen_slots!(facility)
+    rematerialise_kitchen_days!(facility)
 
     IO.puts("")
     IO.puts("Demo data refreshed.")
     IO.puts("")
+
+    :ok
+  end
+
+  defp rematerialise_kitchen_days!(facility) do
+    existing_days =
+      Kitchen.DayMenu
+      |> Ash.read!(tenant: facility.id, authorize?: false)
+
+    dates = Enum.map(existing_days, & &1.date)
+
+    Enum.each(existing_days, fn d ->
+      Kitchen.DayMenuSlot
+      |> Ash.Query.filter(day_menu_id == ^d.id)
+      |> Ash.read!(tenant: facility.id, authorize?: false)
+      |> Enum.each(&Ash.destroy!(&1, tenant: facility.id, authorize?: false))
+
+      Ash.destroy!(d, tenant: facility.id, authorize?: false)
+    end)
+
+    Enum.each(dates, fn date ->
+      Kitchen.Materialise.materialise_day(facility.id, date)
+    end)
 
     :ok
   end
@@ -611,6 +635,7 @@ defmodule Caredeck.Release.Seeds do
       "first_name" => resident.first_name,
       "last_name" => resident.last_name,
       "date_of_birth" => Date.to_iso8601(dob),
+      "place_of_birth" => addr.city,
       "marital_status" => "widowed",
       "postal_code" => addr.postal_code,
       "street" => addr.street,
