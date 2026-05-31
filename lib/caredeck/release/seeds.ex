@@ -255,6 +255,14 @@ defmodule Caredeck.Release.Seeds do
     end
   end
 
+  @demo_note_pool [
+    ["Reviewed initial submission — sections look complete.", "Documents verified by counsel."],
+    ["Applicant called, requesting an update on the decision.", "MDK assessment scheduled for next week."],
+    ["Income proof received, attaching to file.", "Pflegegrad 3 confirmed; escalating to Pflegegrad 4."],
+    ["Returned for amendments — missing partner's pension statement.", "Re-uploaded missing docs, ready for re-review."],
+    ["Awaiting case-worker sign-off.", "Discussed with MDK contact, decision expected within 4 weeks."]
+  ]
+
   defp ensure_demo_notes!(app, admin, facility) do
     existing =
       Formfix.ApplicationNote
@@ -262,27 +270,24 @@ defmodule Caredeck.Release.Seeds do
       |> Ash.read!(tenant: facility.id, authorize?: false)
 
     if existing == [] do
-      Enum.each(
-        [
-          "Reviewed initial submission, all sections look complete.",
-          "Documents verified by counsel."
-        ],
-        fn body ->
-          Formfix.ApplicationNote
-          |> Ash.Changeset.for_create(
-            :create,
-            %{
-              facility_id: facility.id,
-              application_id: app.id,
-              author_team_id: admin.id,
-              body: body
-            },
-            tenant: facility.id,
-            authorize?: false
-          )
-          |> Ash.create!(tenant: facility.id, authorize?: false)
-        end
-      )
+      idx = :erlang.phash2(app.id, length(@demo_note_pool))
+      bodies = Enum.at(@demo_note_pool, idx)
+
+      Enum.each(bodies, fn body ->
+        Formfix.ApplicationNote
+        |> Ash.Changeset.for_create(
+          :create,
+          %{
+            facility_id: facility.id,
+            application_id: app.id,
+            author_team_id: admin.id,
+            body: body
+          },
+          tenant: facility.id,
+          authorize?: false
+        )
+        |> Ash.create!(tenant: facility.id, authorize?: false)
+      end)
     end
   end
 
@@ -388,20 +393,35 @@ defmodule Caredeck.Release.Seeds do
     end
   end
 
+  @demo_addresses [
+    %{postal_code: "10115", street: "Invalidenstraße 12", city: "Berlin"},
+    %{postal_code: "10243", street: "Karl-Marx-Allee 84", city: "Berlin"},
+    %{postal_code: "10999", street: "Oranienstraße 41", city: "Berlin"},
+    %{postal_code: "12047", street: "Hermannstraße 217", city: "Berlin"},
+    %{postal_code: "13409", street: "Residenzstraße 50", city: "Berlin"}
+  ]
+
   defp prefill_person_needing_care!(application, resident, facility) do
+    addr = pick_demo_address(resident)
+    dob = resident.date_of_birth || ~D[1942-03-15]
+
     Formfix.SectionWriter.save_answers!(application, :person_needing_care, %{
       "first_name" => resident.first_name,
       "last_name" => resident.last_name,
-      "date_of_birth" =>
-        if(resident.date_of_birth, do: Date.to_iso8601(resident.date_of_birth), else: ""),
+      "date_of_birth" => Date.to_iso8601(dob),
       "marital_status" => "widowed",
-      "postal_code" => "12345",
-      "street" => "1 Demo Lane",
-      "city" => "Demo City"
+      "postal_code" => addr.postal_code,
+      "street" => addr.street,
+      "city" => addr.city
     })
 
     _ = facility
     :ok
+  end
+
+  defp pick_demo_address(resident) do
+    idx = :erlang.phash2(resident.id, length(@demo_addresses))
+    Enum.at(@demo_addresses, idx)
   end
 
   defp prefill_applicant!(application, user, facility) do
@@ -415,13 +435,42 @@ defmodule Caredeck.Release.Seeds do
   end
 
   @kitchen_products [
-    {:breakfast, ["Granola bowl", "Porridge", "Scrambled eggs"]},
-    {:lunch, ["Roast chicken", "Vegetable curry", "Pasta primavera"]},
-    {:dinner, ["Soup of the day", "Fish & potatoes", "Chickpea stew"]},
-    {:drinks, ["Apple juice", "Herbal tea", "Mineral water"]},
-    {:fruit, ["Apple", "Banana", "Seasonal mix"]},
-    {:snack, ["Yogurt", "Pretzel", "Trail mix"]}
+    {:breakfast,
+     [
+       "Porridge with berries",
+       "Granola bowl",
+       "Brötchen with cold cuts",
+       "Bircher muesli",
+       "Scrambled eggs",
+       "Pancakes with apple sauce",
+       "Frühstücksei with toast"
+     ]},
+    {:lunch,
+     [
+       "Wiener Schnitzel",
+       "Beef Goulash with Spätzle",
+       "Pan-fried fish with potatoes",
+       "Rouladen with red cabbage",
+       "Lentil stew",
+       "Käsespätzle",
+       "Königsberger Klopse"
+     ]},
+    {:dinner,
+     [
+       "Vegetable soup",
+       "Bauernbrot with cheese",
+       "Quark with chives",
+       "Leberwurst sandwich",
+       "Kartoffelsalat",
+       "Bratwurst with sauerkraut",
+       "Maultaschen in broth"
+     ]},
+    {:drinks, ["Apple juice", "Herbal tea", "Mineral water", "Coffee", "Berry compote", "Buttermilk", "Black tea"]},
+    {:fruit, ["Apple", "Pear", "Banana", "Plum", "Seasonal berries", "Orange", "Grapes"]},
+    {:snack, ["Yogurt", "Pretzel", "Trail mix", "Quark dessert", "Cheese cubes", "Cookies", "Apfelstrudel"]}
   ]
+
+  @kitchen_days_order ~w(monday tuesday wednesday thursday friday saturday sunday)a
 
   defp seed_kitchen(facility) do
     existing_count =
@@ -461,9 +510,10 @@ defmodule Caredeck.Release.Seeds do
 
       product_by_category = Enum.group_by(products, & &1.category)
 
-      for day <- ~w(monday tuesday wednesday thursday friday saturday sunday)a,
+      for {day, day_index} <- Enum.with_index(@kitchen_days_order),
           cat <- Kitchen.MealCategory.all() do
-        product = product_by_category |> Map.fetch!(cat) |> hd()
+        category_products = Map.fetch!(product_by_category, cat)
+        product = Enum.at(category_products, rem(day_index, length(category_products)))
 
         Kitchen.MenuTemplateSlot
         |> Ash.Changeset.for_create(
@@ -871,11 +921,20 @@ defmodule Caredeck.Release.Seeds do
   end
 
   defp find_or_create_facility(district) do
-    find_or_create(
-      Org.Facility |> Ash.Query.filter(slug == "sandbox-home"),
-      Org.Facility,
-      %{district_id: district.id, name: "Sandbox Care Home", slug: "sandbox-home"}
-    )
+    facility =
+      find_or_create(
+        Org.Facility |> Ash.Query.filter(slug == "sandbox-home"),
+        Org.Facility,
+        %{district_id: district.id, name: "Spring Hill Care Home", slug: "sandbox-home"}
+      )
+
+    if facility.name != "Spring Hill Care Home" do
+      facility
+      |> Ash.Changeset.for_update(:update, %{name: "Spring Hill Care Home"}, authorize?: false)
+      |> Ash.update!(authorize?: false)
+    else
+      facility
+    end
   end
 
   defp find_or_create_primary_ward(facility) do
