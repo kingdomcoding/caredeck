@@ -1,6 +1,7 @@
 defmodule CaredeckWeb.ProfileLive do
   use CaredeckWeb, :live_view
 
+  alias Caredeck.Feed.{Post, ResidentTagOnPost}
   alias Caredeck.People.{CaregiverProfile, RelativeOfResident, Resident}
 
   require Ash.Query
@@ -23,12 +24,14 @@ defmodule CaredeckWeb.ProfileLive do
             resident = Ash.load!(resident, [:ward], tenant: facility.id, authorize?: false)
             relatives = load_relatives(facility, resident)
             caregivers = load_caregivers(facility)
+            recent = load_recent_activity(facility, resident)
 
             {:ok,
              socket
              |> assign(:resident, resident)
              |> assign(:relatives, relatives)
              |> assign(:caregivers, caregivers)
+             |> assign(:recent_activity, recent)
              |> assign(:tab, tab)
              |> assign(:page_title, "Profile · #{resident.first_name}")}
 
@@ -49,6 +52,27 @@ defmodule CaredeckWeb.ProfileLive do
   defp load_caregivers(facility) do
     CaregiverProfile
     |> Ash.read!(tenant: facility.id, authorize?: false)
+  end
+
+  defp load_recent_activity(facility, resident) do
+    post_ids =
+      ResidentTagOnPost
+      |> Ash.Query.filter(resident_id == ^resident.id)
+      |> Ash.read!(tenant: facility.id, authorize?: false)
+      |> Enum.map(& &1.post_id)
+
+    case post_ids do
+      [] ->
+        []
+
+      ids ->
+        Post
+        |> Ash.Query.filter(id in ^ids)
+        |> Ash.Query.sort(inserted_at: :desc)
+        |> Ash.Query.limit(5)
+        |> Ash.Query.load([:team_identity, :attachments])
+        |> Ash.read!(tenant: facility.id, authorize?: false)
+    end
   end
 
   @impl true
@@ -137,6 +161,20 @@ defmodule CaredeckWeb.ProfileLive do
           >
             Caregivers ({length(@caregivers)})
           </button>
+          <button
+            type="button"
+            phx-click="switch_tab"
+            phx-value-tab="activity"
+            class={[
+              "py-3 -mb-px border-b-2",
+              if(@tab == "activity",
+                do: "border-brand text-brand",
+                else: "border-transparent text-ink-500 hover:text-ink-900"
+              )
+            ]}
+          >
+            Recent activity ({length(@recent_activity)})
+          </button>
         </nav>
 
         <ul
@@ -174,6 +212,30 @@ defmodule CaredeckWeb.ProfileLive do
               <p class="text-ink-900 font-medium">{c.display_name}</p>
               <p class="text-ink-500 text-xs">{c.role_label || "Caregiver"}</p>
             </div>
+          </li>
+        </ul>
+
+        <ul
+          :if={@tab == "activity"}
+          class="divide-y divide-divider bg-card rounded-card shadow-card"
+        >
+          <li :if={@recent_activity == []} class="px-4 py-6 text-ink-500 text-sm text-center">
+            No recent activity for {@resident.first_name}.
+          </li>
+          <li :for={post <- @recent_activity} class="px-4 py-3">
+            <div class="flex items-center gap-3 mb-1">
+              <.avatar initials={initials(post.team_identity && post.team_identity.name)} />
+              <div class="flex-1">
+                <p class="text-ink-900 text-sm font-medium">
+                  {post.team_identity && post.team_identity.name}
+                </p>
+                <p class="text-ink-500 text-xs">{format_post_time(post.inserted_at)}</p>
+              </div>
+              <.link navigate={~p"/feed/#{post.id}"} class="text-brand text-xs hover:underline">
+                View →
+              </.link>
+            </div>
+            <p class="text-ink-700 text-sm">{post_excerpt(post.body)}</p>
           </li>
         </ul>
       </div>
@@ -245,5 +307,15 @@ defmodule CaredeckWeb.ProfileLive do
 
   defp format_admitted(%DateTime{} = dt) do
     Calendar.strftime(dt, "%d %b %Y")
+  end
+
+  defp format_post_time(%DateTime{} = dt) do
+    Calendar.strftime(dt, "%d %b · %H:%M")
+  end
+
+  defp post_excerpt(nil), do: ""
+
+  defp post_excerpt(body) when is_binary(body) do
+    if String.length(body) > 140, do: String.slice(body, 0, 137) <> "…", else: body
   end
 end
