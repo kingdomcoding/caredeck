@@ -148,7 +148,7 @@ defmodule CaredeckWeb.EditProfileLive do
             </div>
             <.live_file_input
               upload={@uploads.avatar}
-              class="block w-full text-sm text-ink-500 file:mr-4 file:py-2 file:px-4 file:rounded-button file:border-0 file:text-sm file:font-medium file:bg-brand-soft file:text-brand hover:file:bg-brand hover:file:text-white file:cursor-pointer"
+              class="block w-full text-sm text-ink-500 file:mr-4 file:py-2 file:px-4 file:rounded-button file:border-0 file:text-sm file:font-medium file:bg-brand file:text-white hover:file:bg-brand-strong file:cursor-pointer"
             />
             <div class="flex gap-2 mt-2">
               <article :for={entry <- @uploads.avatar.entries} class="h-20 w-20">

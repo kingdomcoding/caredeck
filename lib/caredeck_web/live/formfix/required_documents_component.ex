@@ -176,7 +176,13 @@ defmodule CaredeckWeb.Formfix.RequiredDocumentsComponent do
               class="mt-3 flex items-center gap-2"
             >
               <input type="hidden" name="slot" value={Atom.to_string(slot.key)} />
-              <.live_file_input upload={@uploads[slot.key]} class="text-xs" />
+              <.live_file_input upload={@uploads[slot.key]} class="sr-only" />
+              <label
+                for={@uploads[slot.key].ref}
+                class="rounded-button border border-divider bg-card text-ink-700 text-xs font-medium px-3 py-1.5 hover:border-brand cursor-pointer whitespace-nowrap"
+              >
+                Choose file
+              </label>
               <button
                 type="submit"
                 phx-disable-with="Uploading…"

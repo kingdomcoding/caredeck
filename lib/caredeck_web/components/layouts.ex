@@ -115,13 +115,6 @@ defmodule CaredeckWeb.Layouts do
           >
             Kitchen
           </.link>
-          <.link
-            :if={@current_team}
-            navigate={~p"/kitchen/summary"}
-            class="hidden md:inline-block hover:text-ink-900"
-          >
-            Today's orders
-          </.link>
           <span :if={@current_team} class="text-ink-900 truncate max-w-[14ch]">
             {@current_team.name}
           </span>

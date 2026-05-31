@@ -372,6 +372,7 @@ defmodule CaredeckWeb.Services.NewRequestLive do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user} current_team={@current_team}>
       <div class="mx-auto max-w-md px-4 py-6">
+        <p class="text-ink-500 text-xs uppercase tracking-wide">{@provider.name}</p>
         <h1 class="text-display-sm text-ink-900 mb-4">
           New {ProviderKind.label(@provider.kind) |> String.downcase()} request
         </h1>

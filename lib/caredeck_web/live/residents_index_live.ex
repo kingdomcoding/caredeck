@@ -283,16 +283,16 @@ defmodule CaredeckWeb.ResidentsIndexLive do
 
             <div class="flex items-center gap-2 shrink-0">
               <.link
-                navigate={~p"/kitchen/order/#{r.id}"}
+                navigate={~p"/residents/#{r.id}/diet"}
                 class="rounded-button bg-brand text-white text-xs font-medium px-3 py-2 hover:bg-brand-strong whitespace-nowrap"
               >
-                Order meal &rarr;
+                Diet profile
               </.link>
               <.link
-                navigate={~p"/residents/#{r.id}/diet"}
-                class="rounded-button bg-card border border-divider text-ink-900 text-xs font-medium px-3 py-2 hover:border-brand whitespace-nowrap hidden sm:inline-block"
+                navigate={~p"/kitchen/order/#{r.id}"}
+                class="rounded-button bg-card border border-divider text-ink-700 text-xs font-medium px-3 py-2 hover:border-brand whitespace-nowrap hidden sm:inline-block"
               >
-                Diet profile
+                Order meal
               </.link>
             </div>
           </li>

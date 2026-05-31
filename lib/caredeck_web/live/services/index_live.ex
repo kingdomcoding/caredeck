@@ -1,17 +1,23 @@
 defmodule CaredeckWeb.Services.IndexLive do
   use CaredeckWeb, :live_view
 
-  alias Caredeck.Services.{ProviderKind, ServiceProvider}
+  alias Caredeck.Services.{ProviderKind, ServiceProvider, ServiceRequest}
+
+  require Ash.Query
 
   @impl true
   def mount(_params, _session, socket) do
     facility = socket.assigns[:current_facility]
     providers = list_providers(facility)
+    open_counts = open_request_counts(facility)
+    recent = recent_requests(facility)
 
     {:ok,
      socket
      |> assign(:page_title, "Services")
-     |> assign(:providers, providers)}
+     |> assign(:providers, providers)
+     |> assign(:open_counts, open_counts)
+     |> assign(:recent_requests, recent)}
   end
 
   defp list_providers(nil), do: []
@@ -19,6 +25,25 @@ defmodule CaredeckWeb.Services.IndexLive do
   defp list_providers(facility) do
     ServiceProvider
     |> Ash.Query.sort(kind: :asc)
+    |> Ash.read!(tenant: facility.id, authorize?: false)
+  end
+
+  defp open_request_counts(nil), do: %{}
+
+  defp open_request_counts(facility) do
+    ServiceRequest
+    |> Ash.Query.filter(state in [:open, :in_progress])
+    |> Ash.read!(tenant: facility.id, authorize?: false)
+    |> Enum.frequencies_by(& &1.provider_id)
+  end
+
+  defp recent_requests(nil), do: []
+
+  defp recent_requests(facility) do
+    ServiceRequest
+    |> Ash.Query.sort(inserted_at: :desc)
+    |> Ash.Query.limit(5)
+    |> Ash.Query.load([:provider])
     |> Ash.read!(tenant: facility.id, authorize?: false)
   end
 
@@ -52,6 +77,12 @@ defmodule CaredeckWeb.Services.IndexLive do
                     {ProviderKind.label(p.kind)}
                   </p>
                 </div>
+                <span
+                  :if={Map.get(@open_counts, p.id, 0) > 0}
+                  class="ml-auto rounded-full bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-0.5"
+                >
+                  {Map.get(@open_counts, p.id)} open
+                </span>
               </div>
               <p :if={p.response_window_label} class="text-ink-500 text-xs">
                 Hours: {p.response_window_label}
@@ -59,6 +90,30 @@ defmodule CaredeckWeb.Services.IndexLive do
             </.link>
           </li>
         </ul>
+
+        <section :if={@recent_requests != []} class="mt-10">
+          <h2 class="text-ink-500 text-xs uppercase tracking-wide mb-2">
+            Recent requests
+          </h2>
+          <ul class="bg-card rounded-card shadow-card divide-y divide-divider">
+            <li :for={r <- @recent_requests}>
+              <.link
+                navigate={~p"/services/requests/#{r.id}"}
+                class="flex items-center justify-between gap-2 px-4 py-3 hover:bg-page"
+              >
+                <div>
+                  <p class="text-ink-900 text-sm font-medium">
+                    {r.summary || r.subkind || "Service request"}
+                  </p>
+                  <p class="text-ink-500 text-xs">
+                    {r.provider.name} · {Calendar.strftime(r.inserted_at, "%d %b")}
+                  </p>
+                </div>
+                <span class="text-ink-500 text-xs uppercase tracking-wide">{r.state}</span>
+              </.link>
+            </li>
+          </ul>
+        </section>
       </div>
     </Layouts.app>
     """

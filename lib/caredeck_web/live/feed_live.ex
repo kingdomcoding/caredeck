@@ -172,7 +172,7 @@ defmodule CaredeckWeb.FeedLive do
         controls
         preload="metadata"
         playsinline
-        class="w-full rounded-input bg-black"
+        class="w-full max-h-[480px] rounded-input bg-black"
       >
       </video>
     </div>
@@ -233,16 +233,17 @@ defmodule CaredeckWeb.FeedLive do
     """
   end
 
-  defp photo_layout(1), do: %{classes: "grid-cols-1 aspect-square", visible: 1}
-  defp photo_layout(2), do: %{classes: "grid-cols-2 aspect-[2/1]", visible: 2}
+  defp photo_layout(1), do: %{classes: "grid-cols-1 max-h-[480px] aspect-[4/3]", visible: 1}
+  defp photo_layout(2), do: %{classes: "grid-cols-2 max-h-[320px] aspect-[2/1]", visible: 2}
 
   defp photo_layout(3),
     do: %{
-      classes: "grid-cols-2 grid-rows-2 aspect-square [&>*:first-child]:row-span-2",
+      classes: "grid-cols-2 grid-rows-2 max-h-[480px] aspect-square [&>*:first-child]:row-span-2",
       visible: 3
     }
 
-  defp photo_layout(_n), do: %{classes: "grid-cols-2 grid-rows-2 aspect-square", visible: 4}
+  defp photo_layout(_n),
+    do: %{classes: "grid-cols-2 grid-rows-2 max-h-[480px] aspect-square", visible: 4}
 
   attr :tags, :list, required: true
   attr :post_id, :string, required: true

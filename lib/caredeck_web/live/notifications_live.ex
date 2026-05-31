@@ -174,6 +174,22 @@ defmodule CaredeckWeb.NotificationsLive do
           </svg>
           <p class="text-ink-500 text-sm mt-4">No notifications yet.</p>
           <p class="text-ink-300 text-xs mt-1">We'll let you know when there's family news.</p>
+          <div class="mt-6 flex justify-center">
+            <.link
+              :if={@current_user}
+              navigate={~p"/profile/edit"}
+              class="text-brand text-sm hover:text-brand-strong"
+            >
+              Manage email preferences →
+            </.link>
+            <.link
+              :if={@current_team && @current_team.role_kind in [:admin, :care]}
+              navigate={~p"/feed"}
+              class="text-brand text-sm hover:text-brand-strong"
+            >
+              Post an update to the Feed →
+            </.link>
+          </div>
         </div>
 
         <section :if={@recent != []}>
