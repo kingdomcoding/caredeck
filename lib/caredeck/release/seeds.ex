@@ -207,20 +207,26 @@ defmodule Caredeck.Release.Seeds do
   end
 
   defp rematerialise_kitchen_days!(facility) do
-    existing_days =
-      Kitchen.DayMenu
-      |> Ash.read!(tenant: facility.id, authorize?: false)
+    {:ok, %{rows: rows}} =
+      Caredeck.Repo.query("SELECT date FROM kitchen_day_menus WHERE facility_id = $1", [
+        Ecto.UUID.dump!(facility.id)
+      ])
 
-    dates = Enum.map(existing_days, & &1.date)
+    dates =
+      rows
+      |> Enum.map(fn [d] -> d end)
 
-    Enum.each(existing_days, fn d ->
-      Kitchen.DayMenuSlot
-      |> Ash.Query.filter(day_menu_id == ^d.id)
-      |> Ash.read!(tenant: facility.id, authorize?: false)
-      |> Enum.each(&Ash.destroy!(&1, tenant: facility.id, authorize?: false))
+    IO.puts("  ↺ rematerialising #{length(dates)} kitchen day(s)")
 
-      Ash.destroy!(d, tenant: facility.id, authorize?: false)
-    end)
+    {:ok, _} =
+      Caredeck.Repo.query("DELETE FROM kitchen_day_menu_slots WHERE facility_id = $1", [
+        Ecto.UUID.dump!(facility.id)
+      ])
+
+    {:ok, _} =
+      Caredeck.Repo.query("DELETE FROM kitchen_day_menus WHERE facility_id = $1", [
+        Ecto.UUID.dump!(facility.id)
+      ])
 
     Enum.each(dates, fn date ->
       Kitchen.Materialise.materialise_day(facility.id, date)
@@ -635,7 +641,7 @@ defmodule Caredeck.Release.Seeds do
       "first_name" => resident.first_name,
       "last_name" => resident.last_name,
       "date_of_birth" => Date.to_iso8601(dob),
-      "place_of_birth" => addr.city,
+      "birth_place" => addr.city,
       "marital_status" => "widowed",
       "postal_code" => addr.postal_code,
       "street" => addr.street,
