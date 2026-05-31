@@ -388,16 +388,38 @@ defmodule CaredeckWeb.Formfix.SectionLive do
     """
   end
 
-  defp field_input(%{field: %{kind: kind}} = assigns) when kind in [:integer, :decimal] do
+  defp field_input(%{field: %{kind: kind, key: key}} = assigns) when kind in [:integer, :decimal] do
+    money = Caredeck.Formfix.Money.money?(key)
+    monthly = Caredeck.Formfix.Money.monthly?(key)
+    assigns = assign(assigns, money: money, monthly: monthly)
+
     ~H"""
-    <input
-      type="number"
-      step={if @field.kind == :decimal, do: "0.01", else: "1"}
-      name={Atom.to_string(@field.key)}
-      value={@value}
-      aria-required={field_required?(@field)}
-      class="mt-1 block w-full rounded-input border border-divider px-3 py-2"
-    />
+    <div class="mt-1 relative">
+      <span
+        :if={@money}
+        class="absolute left-3 top-1/2 -translate-y-1/2 text-ink-500 pointer-events-none"
+      >
+        €
+      </span>
+      <input
+        type="number"
+        step={if @field.kind == :decimal, do: "0.01", else: "1"}
+        name={Atom.to_string(@field.key)}
+        value={@value}
+        aria-required={field_required?(@field)}
+        class={[
+          "block w-full rounded-input border border-divider py-2",
+          @money && "pl-7 pr-12",
+          !@money && "px-3"
+        ]}
+      />
+      <span
+        :if={@monthly}
+        class="absolute right-3 top-1/2 -translate-y-1/2 text-ink-500 text-xs pointer-events-none"
+      >
+        /Monat
+      </span>
+    </div>
     """
   end
 

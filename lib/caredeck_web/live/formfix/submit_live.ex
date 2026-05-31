@@ -189,11 +189,18 @@ defmodule CaredeckWeb.Formfix.SubmitLive do
     end
   end
 
+  defp render_value(%{field_key: fk, value_decimal: v}) when not is_nil(v) do
+    if Caredeck.Formfix.Money.money?(fk) do
+      Caredeck.Formfix.Money.format_for_field(v, fk)
+    else
+      Decimal.to_string(v)
+    end
+  end
+
   defp render_value(%{value_text: v}) when not is_nil(v), do: v
   defp render_value(%{value_date: v}) when not is_nil(v), do: Date.to_string(v)
   defp render_value(%{value_bool: true}), do: "Yes"
   defp render_value(%{value_bool: false}), do: "No"
-  defp render_value(%{value_decimal: v}) when not is_nil(v), do: Decimal.to_string(v)
   defp render_value(%{value_atom: v}) when not is_nil(v), do: Atom.to_string(v)
   defp render_value(_), do: "—"
 
