@@ -12,6 +12,15 @@ defmodule CaredeckWeb.Auth.TeamSignInLive do
     <Layouts.app flash={@flash}>
       <div class="min-h-[calc(100vh-65px)] flex items-center justify-center px-4 py-12">
         <div class="w-full max-w-md">
+          <div class="flex justify-center mb-4">
+            <img src={~p"/images/brand/caredeck-mark.svg"} alt="Caredeck" class="h-12 w-12" />
+          </div>
+
+          <h1 class="text-display-sm text-center text-ink-900 mb-2">Team sign in</h1>
+          <p class="text-center text-ink-500 text-sm mb-8">
+            Sign in to your shared caregiver account.
+          </p>
+
           <div class="bg-brand-soft border border-brand/40 rounded-card p-4 mb-6 text-sm text-ink-900">
             <p class="font-medium mb-1">
               Caredeck is a portfolio clone of <a href="https://myo.de" class="underline">myo</a>.
@@ -38,20 +47,15 @@ defmodule CaredeckWeb.Auth.TeamSignInLive do
           <section class="bg-card rounded-card shadow-card p-5 mb-6">
             <p class="text-ink-500 text-xs uppercase tracking-wide mb-3">Jump in as a demo account</p>
             <div class="grid gap-2 sm:grid-cols-3">
-              <.demo_button to={~p"/demo/admin"} label="Admin" sub="Phase 11 dashboard" />
+              <.demo_button
+                to={~p"/demo/admin"}
+                label="Admin"
+                sub="Review Formfix applications"
+              />
               <.demo_button to={~p"/demo/care"} label="Care Team" sub="Feed · Residents · Inbox" />
               <.demo_button to={~p"/demo/relative"} label="Relative" sub="Family feed · Formfix" />
             </div>
           </section>
-
-          <div class="flex justify-center mb-6">
-            <img src={~p"/images/brand/caredeck-mark.svg"} alt="Caredeck" class="h-12 w-12" />
-          </div>
-
-          <h1 class="text-display-sm text-center text-ink-900 mb-2">Team sign in</h1>
-          <p class="text-center text-ink-500 text-sm mb-8">
-            Or sign in to your shared caregiver account.
-          </p>
 
           <form
             action={~p"/team/auth/team_identity/password/sign_in"}
