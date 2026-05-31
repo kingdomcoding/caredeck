@@ -341,6 +341,7 @@ defmodule CaredeckWeb.Formfix.SectionLive do
       type="text"
       name={Atom.to_string(@field.key)}
       value={@value}
+      aria-required={field_required?(@field)}
       class="mt-1 block w-full rounded-input border border-divider px-3 py-2"
     />
     """
@@ -351,6 +352,7 @@ defmodule CaredeckWeb.Formfix.SectionLive do
     <textarea
       name={Atom.to_string(@field.key)}
       rows="3"
+      aria-required={field_required?(@field)}
       class="mt-1 block w-full rounded-input border border-divider px-3 py-2"
     >{@value}</textarea>
     """
@@ -362,6 +364,7 @@ defmodule CaredeckWeb.Formfix.SectionLive do
       type="date"
       name={Atom.to_string(@field.key)}
       value={@value}
+      aria-required={field_required?(@field)}
       class="mt-1 block w-full rounded-input border border-divider px-3 py-2"
     />
     """
@@ -374,6 +377,7 @@ defmodule CaredeckWeb.Formfix.SectionLive do
       step={if @field.kind == :decimal, do: "0.01", else: "1"}
       name={Atom.to_string(@field.key)}
       value={@value}
+      aria-required={field_required?(@field)}
       class="mt-1 block w-full rounded-input border border-divider px-3 py-2"
     />
     """
@@ -417,6 +421,10 @@ defmodule CaredeckWeb.Formfix.SectionLive do
       </option>
     </select>
     """
+  end
+
+  defp field_required?(field) do
+    if Map.get(field, :required), do: "true", else: "false"
   end
 
   defp yes_no_radios(assigns) do

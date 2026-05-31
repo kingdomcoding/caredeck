@@ -140,7 +140,7 @@ defmodule CaredeckWeb.Auth.SignInLive do
       <input type="hidden" name="_csrf_token" value={Plug.CSRFProtection.get_csrf_token()} />
       <button
         type="submit"
-        class="w-full rounded-card border border-divider bg-card hover:border-brand text-left px-3 py-2 transition"
+        class="w-full rounded-card border border-divider bg-card hover:border-brand text-left px-3 py-2 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-300 focus-visible:border-brand"
       >
         <p class="text-ink-900 font-medium text-sm">{@label}</p>
         <p class="text-ink-500 text-xs mt-0.5">{@sub}</p>

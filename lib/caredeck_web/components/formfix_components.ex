@@ -41,13 +41,24 @@ defmodule CaredeckWeb.FormfixComponents do
   def formfix_status_pill(assigns) do
     ~H"""
     <span class={[
-      "text-xs font-medium rounded-full px-2 py-0.5",
+      "inline-flex items-center gap-1.5 text-xs font-medium rounded-full px-2 py-0.5",
       @status == :draft && "bg-page text-ink-700",
       @status == :missing_documents && "bg-yellow-100 text-yellow-800",
       @status == :ready_to_submit && "bg-brand-soft text-brand-strong",
       @status == :submitted && "bg-purple-100 text-purple-800",
       @status == :approved && "bg-green-100 text-green-800"
     ]}>
+      <span
+        aria-hidden="true"
+        class={[
+          "h-1.5 w-1.5 rounded-full",
+          @status == :draft && "bg-ink-500",
+          @status == :missing_documents && "bg-yellow-600",
+          @status == :ready_to_submit && "bg-brand",
+          @status == :submitted && "bg-purple-600",
+          @status == :approved && "bg-green-600"
+        ]}
+      />
       {formfix_status_label(@status)}
     </span>
     """

@@ -21,6 +21,12 @@ defmodule CaredeckWeb.Layouts do
       |> assign(:unread, unread)
 
     ~H"""
+    <a
+      href="#main-content"
+      class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-button focus:bg-brand focus:text-white focus:px-3 focus:py-2"
+    >
+      Skip to main content
+    </a>
     <header class="border-b border-divider bg-card">
       <div class="mx-auto flex max-w-6xl items-center justify-between px-4 sm:px-6 py-4">
         <a href="/" class="flex items-center">
@@ -142,7 +148,7 @@ defmodule CaredeckWeb.Layouts do
       </div>
     </header>
 
-    <main class="bg-page min-h-[calc(100vh-65px)] pb-16 md:pb-0">
+    <main id="main-content" tabindex="-1" class="bg-page min-h-[calc(100vh-65px)] pb-16 md:pb-0">
       {render_slot(@inner_block)}
       <p class="text-ink-500 text-xs text-center mt-10 mb-4 flex items-center justify-center gap-1.5">
         <Icons.icon name={:lock} class="h-3.5 w-3.5" /> Your data is safe with us.
