@@ -102,7 +102,7 @@ defmodule CaredeckWeb.Layouts do
             Admin
           </.link>
           <.link
-            :if={@current_team && @current_team.role_kind == :care}
+            :if={@current_team && @current_team.role_kind in [:care, :admin, :service]}
             navigate={~p"/services/inbox"}
             class="hidden md:inline-block hover:text-ink-900"
           >

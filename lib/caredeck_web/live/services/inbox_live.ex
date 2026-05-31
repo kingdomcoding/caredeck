@@ -33,7 +33,7 @@ defmodule CaredeckWeb.Services.InboxLive do
 
   defp allowed?(socket) do
     team = socket.assigns[:current_team]
-    team && team.role_kind in [:care, :service]
+    team && team.role_kind in [:care, :service, :admin]
   end
 
   defp load_open_requests(facility) do
