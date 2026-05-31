@@ -127,9 +127,17 @@ defmodule Caredeck.Release.Assets do
   defp duration(path) do
     case Path.extname(path) |> String.downcase() do
       ext when ext in [".mp4", ".mp3"] ->
-        case System.cmd("ffprobe",
-               ["-v", "error", "-show_entries", "format=duration", "-of",
-                "default=noprint_wrappers=1:nokey=1", path],
+        case System.cmd(
+               "ffprobe",
+               [
+                 "-v",
+                 "error",
+                 "-show_entries",
+                 "format=duration",
+                 "-of",
+                 "default=noprint_wrappers=1:nokey=1",
+                 path
+               ],
                stderr_to_stdout: true
              ) do
           {out, 0} -> out |> String.trim() |> Float.parse() |> elem(0) |> trunc()
@@ -142,9 +150,19 @@ defmodule Caredeck.Release.Assets do
   end
 
   defp ffprobe_int(path, field) do
-    case System.cmd("ffprobe",
-           ["-v", "error", "-select_streams", "v:0", "-show_entries",
-            "stream=" <> field, "-of", "default=noprint_wrappers=1:nokey=1", path],
+    case System.cmd(
+           "ffprobe",
+           [
+             "-v",
+             "error",
+             "-select_streams",
+             "v:0",
+             "-show_entries",
+             "stream=" <> field,
+             "-of",
+             "default=noprint_wrappers=1:nokey=1",
+             path
+           ],
            stderr_to_stdout: true
          ) do
       {out, 0} ->

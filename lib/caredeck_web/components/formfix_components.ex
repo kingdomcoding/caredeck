@@ -89,7 +89,7 @@ defmodule CaredeckWeb.FormfixComponents do
         <span class="text-ink-500">
           {Calendar.strftime(n.inserted_at, "%d %b %y")} · {author_label(n)}
         </span>
-        <span class="text-ink-900"> —  {n.body}</span>
+        <span class="text-ink-900"> —   {n.body}</span>
       </li>
     </ul>
     <p :if={@notes == []} class="text-ink-500 text-xs italic">No notes yet.</p>

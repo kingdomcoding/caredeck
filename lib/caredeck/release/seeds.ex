@@ -216,12 +216,13 @@ defmodule Caredeck.Release.Seeds do
   end
 
   @pending_invitation_seeds [
-    %{resident: {"Edward", "Brooks"}, email: "thomas.brooks@example.test",
-      relationship: :son},
-    %{resident: {"Audrey", "Edwards"}, email: "lisa.edwards@example.test",
-      relationship: :daughter},
-    %{resident: {"Doris", "Hall"}, email: "robert.hall@example.test",
-      relationship: :nephew}
+    %{resident: {"Edward", "Brooks"}, email: "thomas.brooks@example.test", relationship: :son},
+    %{
+      resident: {"Audrey", "Edwards"},
+      email: "lisa.edwards@example.test",
+      relationship: :daughter
+    },
+    %{resident: {"Doris", "Hall"}, email: "robert.hall@example.test", relationship: :nephew}
   ]
 
   defp refresh_pending_invitations!(facility) do
@@ -287,11 +288,20 @@ defmodule Caredeck.Release.Seeds do
     %{resident: {"Edward", "Brooks"}, target_state: :draft, target_progress: 85},
     %{resident: {"Mabel", "Martin"}, target_state: :missing_documents, target_progress: 100},
     %{resident: {"Beatrice", "Cox"}, target_state: :ready_to_submit, target_progress: 100},
-    %{resident: {"Julian", "Adams"}, target_state: :submitted, target_progress: 100,
-      submitted_days_ago: 3},
-    %{resident: {"Doris", "Hall"}, target_state: :approved, target_progress: 100,
-      submitted_days_ago: 14, decided_days_ago: 4,
-      outcome: "Pflegegrad 4 approved by MDK. Welfare-law allowance granted from 1 May."}
+    %{
+      resident: {"Julian", "Adams"},
+      target_state: :submitted,
+      target_progress: 100,
+      submitted_days_ago: 3
+    },
+    %{
+      resident: {"Doris", "Hall"},
+      target_state: :approved,
+      target_progress: 100,
+      submitted_days_ago: 14,
+      decided_days_ago: 4,
+      outcome: "Pflegegrad 4 approved by MDK. Welfare-law allowance granted from 1 May."
+    }
   ]
 
   defp refresh_formfix_apps!(facility) do
@@ -563,24 +573,48 @@ defmodule Caredeck.Release.Seeds do
   end
 
   @diet_profile_seeds [
-    %{resident: {"Irene", "Cook"}, allergens: ["shellfish"],
-      preferences: ["no spicy food"], skip_categories: [:snack],
-      notes: "Family asked we keep snacks minimal in the afternoon."},
-    %{resident: {"Julian", "Adams"}, allergens: [],
-      preferences: ["vegetarian for religious reasons"], skip_categories: [:dinner],
-      notes: "Late dinner skipped — light evening tea only."},
-    %{resident: {"Isaac", "Allen"}, allergens: ["gluten", "lactose"],
-      preferences: ["soft food only after dental work"], skip_categories: [],
-      notes: "Family noted: no sugary snacks per cardiologist."},
-    %{resident: {"Beatrice", "Cox"}, allergens: ["tree nuts"],
-      preferences: ["decaf coffee only after 14:00"], skip_categories: [],
-      notes: ""},
-    %{resident: {"Penelope", "Davis"}, allergens: [],
-      preferences: ["low-sodium per cardiologist"], skip_categories: [],
-      notes: "Sodium restriction is strict — no added salt please."},
-    %{resident: {"Edward", "Brooks"}, allergens: ["strawberries"],
-      preferences: ["small portions"], skip_categories: [:fruit],
-      notes: ""}
+    %{
+      resident: {"Irene", "Cook"},
+      allergens: ["shellfish"],
+      preferences: ["no spicy food"],
+      skip_categories: [:snack],
+      notes: "Family asked we keep snacks minimal in the afternoon."
+    },
+    %{
+      resident: {"Julian", "Adams"},
+      allergens: [],
+      preferences: ["vegetarian for religious reasons"],
+      skip_categories: [:dinner],
+      notes: "Late dinner skipped — light evening tea only."
+    },
+    %{
+      resident: {"Isaac", "Allen"},
+      allergens: ["gluten", "lactose"],
+      preferences: ["soft food only after dental work"],
+      skip_categories: [],
+      notes: "Family noted: no sugary snacks per cardiologist."
+    },
+    %{
+      resident: {"Beatrice", "Cox"},
+      allergens: ["tree nuts"],
+      preferences: ["decaf coffee only after 14:00"],
+      skip_categories: [],
+      notes: ""
+    },
+    %{
+      resident: {"Penelope", "Davis"},
+      allergens: [],
+      preferences: ["low-sodium per cardiologist"],
+      skip_categories: [],
+      notes: "Sodium restriction is strict — no added salt please."
+    },
+    %{
+      resident: {"Edward", "Brooks"},
+      allergens: ["strawberries"],
+      preferences: ["small portions"],
+      skip_categories: [:fruit],
+      notes: ""
+    }
   ]
 
   defp refresh_kitchen_orders_and_diets!(facility) do
@@ -643,22 +677,40 @@ defmodule Caredeck.Release.Seeds do
     product_by_cat = Enum.group_by(products, & &1.category)
 
     # Today: 15 orders mixed states
-    seed_orders_for_date!(facility, sample_residents, product_by_cat, care_team,
-      today, %{
-        breakfast: 4, lunch: 5, dinner: 3, snack: 3
-      })
+    seed_orders_for_date!(facility, sample_residents, product_by_cat, care_team, today, %{
+      breakfast: 4,
+      lunch: 5,
+      dinner: 3,
+      snack: 3
+    })
 
     # Tomorrow: 8 orders
-    seed_orders_for_date!(facility, sample_residents, product_by_cat, care_team,
-      Date.add(today, 1), %{
-        breakfast: 3, lunch: 3, dinner: 2
-      })
+    seed_orders_for_date!(
+      facility,
+      sample_residents,
+      product_by_cat,
+      care_team,
+      Date.add(today, 1),
+      %{
+        breakfast: 3,
+        lunch: 3,
+        dinner: 2
+      }
+    )
 
     # Day after: 6 orders
-    seed_orders_for_date!(facility, sample_residents, product_by_cat, care_team,
-      Date.add(today, 2), %{
-        breakfast: 2, lunch: 2, dinner: 2
-      })
+    seed_orders_for_date!(
+      facility,
+      sample_residents,
+      product_by_cat,
+      care_team,
+      Date.add(today, 2),
+      %{
+        breakfast: 2,
+        lunch: 2,
+        dinner: 2
+      }
+    )
 
     IO.puts("  ✓ diet profiles: #{length(@diet_profile_seeds)}; orders seeded for today + 2 days")
     :ok
@@ -705,18 +757,36 @@ defmodule Caredeck.Release.Seeds do
   end
 
   @caregiver_seeds [
-    %{display_name: "Maria Hoffmann", role_label: "Pflegedienstleitung",
-      email: "maria.hoffmann@spring-hill.demo"},
-    %{display_name: "Tomas Lange", role_label: "Pflegefachkraft",
-      email: "tomas.lange@spring-hill.demo"},
-    %{display_name: "Heike Krüger", role_label: "Pflegehelferin",
-      email: "heike.krueger@spring-hill.demo"},
-    %{display_name: "Jonas Werner", role_label: "Ergotherapeut",
-      email: "jonas.werner@spring-hill.demo"},
-    %{display_name: "Eva Bauer", role_label: "Hauswirtschaft",
-      email: "eva.bauer@spring-hill.demo"},
-    %{display_name: "Klaus Richter", role_label: "Sozialdienst",
-      email: "klaus.richter@spring-hill.demo"}
+    %{
+      display_name: "Maria Hoffmann",
+      role_label: "Pflegedienstleitung",
+      email: "maria.hoffmann@spring-hill.demo"
+    },
+    %{
+      display_name: "Tomas Lange",
+      role_label: "Pflegefachkraft",
+      email: "tomas.lange@spring-hill.demo"
+    },
+    %{
+      display_name: "Heike Krüger",
+      role_label: "Pflegehelferin",
+      email: "heike.krueger@spring-hill.demo"
+    },
+    %{
+      display_name: "Jonas Werner",
+      role_label: "Ergotherapeut",
+      email: "jonas.werner@spring-hill.demo"
+    },
+    %{
+      display_name: "Eva Bauer",
+      role_label: "Hauswirtschaft",
+      email: "eva.bauer@spring-hill.demo"
+    },
+    %{
+      display_name: "Klaus Richter",
+      role_label: "Sozialdienst",
+      email: "klaus.richter@spring-hill.demo"
+    }
   ]
 
   defp refresh_caregivers!(facility) do
@@ -734,7 +804,9 @@ defmodule Caredeck.Release.Seeds do
     Enum.with_index(@caregiver_seeds)
     |> Enum.each(fn {spec, idx} ->
       user = find_or_create_caregiver_user!(spec)
-      avatar_key = Caredeck.Release.Assets.upload!(Caredeck.Release.Assets.at(:avatars_caregiver, idx))
+
+      avatar_key =
+        Caredeck.Release.Assets.upload!(Caredeck.Release.Assets.at(:avatars_caregiver, idx))
 
       People.CaregiverProfile
       |> Ash.Changeset.for_create(
@@ -788,109 +860,224 @@ defmodule Caredeck.Release.Seeds do
 
   @service_request_seeds [
     # Demo Pharmacy
-    %{provider_kind: :pharmacy, subkind: "medication_inquiry", state: :open,
-      payload: %{"subkind" => "medication_inquiry", "medication_name" => "Levothyroxin 25µg",
-        "question" => "Refill needed by Friday — please confirm pickup time."},
-      summary: "Levothyroxin refill — pickup Friday", resident: {"Constance", "King"},
-      requester: :relative, days_ago: 0, messages: []},
-    %{provider_kind: :pharmacy, subkind: "general_question", state: :in_progress,
-      payload: %{"subkind" => "general_question",
-        "question" => "Vitamin D house order — can we set up a quarterly subscription?"},
-      summary: "Vitamin D quarterly order setup", resident: nil,
-      requester: :care, days_ago: 1,
+    %{
+      provider_kind: :pharmacy,
+      subkind: "medication_inquiry",
+      state: :open,
+      payload: %{
+        "subkind" => "medication_inquiry",
+        "medication_name" => "Levothyroxin 25µg",
+        "question" => "Refill needed by Friday — please confirm pickup time."
+      },
+      summary: "Levothyroxin refill — pickup Friday",
+      resident: {"Constance", "King"},
+      requester: :relative,
+      days_ago: 0,
+      messages: []
+    },
+    %{
+      provider_kind: :pharmacy,
+      subkind: "general_question",
+      state: :in_progress,
+      payload: %{
+        "subkind" => "general_question",
+        "question" => "Vitamin D house order — can we set up a quarterly subscription?"
+      },
+      summary: "Vitamin D quarterly order setup",
+      resident: nil,
+      requester: :care,
+      days_ago: 1,
       messages: [
-        %{author: :provider, body: "Sure — we can do every 3 months. Need a signed form. Sending over."},
+        %{
+          author: :provider,
+          body: "Sure — we can do every 3 months. Need a signed form. Sending over."
+        },
         %{author: :care, body: "Bitte schicken — wir füllen ihn morgen aus."}
-      ]},
-    %{provider_kind: :pharmacy, subkind: "medication_inquiry", state: :resolved,
-      payload: %{"subkind" => "medication_inquiry", "medication_name" => "Ibuprofen 400",
-        "question" => "Refill for Mrs Cook — picked up yesterday, all good."},
-      summary: "Mrs Cook Ibuprofen refill (resolved)", resident: {"Irene", "Cook"},
-      requester: :care, days_ago: 4,
+      ]
+    },
+    %{
+      provider_kind: :pharmacy,
+      subkind: "medication_inquiry",
+      state: :resolved,
+      payload: %{
+        "subkind" => "medication_inquiry",
+        "medication_name" => "Ibuprofen 400",
+        "question" => "Refill for Mrs Cook — picked up yesterday, all good."
+      },
+      summary: "Mrs Cook Ibuprofen refill (resolved)",
+      resident: {"Irene", "Cook"},
+      requester: :care,
+      days_ago: 4,
       messages: [
         %{author: :provider, body: "Ready for pickup tomorrow morning."},
         %{author: :care, body: "Danke! Stefan picks up tomorrow."},
         %{author: :provider, body: "Confirmed received."}
-      ]},
+      ]
+    },
     # Family Doctor Demo
-    %{provider_kind: :doctor, subkind: "appointment_request", state: :in_progress,
-      payload: %{"subkind" => "appointment_request",
+    %{
+      provider_kind: :doctor,
+      subkind: "appointment_request",
+      state: :in_progress,
+      payload: %{
+        "subkind" => "appointment_request",
         "details" => "Mr Hungsinger — follow-up on physio progress (ROM back to baseline).",
-        "preferred_date" => "next Monday"},
-      summary: "Hungsinger physio follow-up", resident: {"Isaac", "Allen"},
-      requester: :care, days_ago: 2,
+        "preferred_date" => "next Monday"
+      },
+      summary: "Hungsinger physio follow-up",
+      resident: {"Isaac", "Allen"},
+      requester: :care,
+      days_ago: 2,
       messages: [
         %{author: :provider, body: "Monday 10:30 works. I'll come to ward 1."},
         %{author: :care, body: "Bestens, danke. Wir bereiten alles vor."}
-      ]},
-    %{provider_kind: :doctor, subkind: "information_request", state: :open,
-      payload: %{"subkind" => "information_request",
-        "details" => "Mrs Walker flu shot — has she had it this season? Reviewing records."},
-      summary: "Mrs Walker flu shot history", resident: {"Mabel", "Martin"},
-      requester: :care, days_ago: 0, messages: []},
-    %{provider_kind: :doctor, subkind: "information_request", state: :resolved,
-      payload: %{"subkind" => "information_request",
-        "details" => "MDK paperwork for Mrs Cook Pflegegrad 4 — forms attached."},
-      summary: "Mrs Cook Pflegegrad 4 MDK forms", resident: {"Irene", "Cook"},
-      requester: :care, days_ago: 5,
+      ]
+    },
+    %{
+      provider_kind: :doctor,
+      subkind: "information_request",
+      state: :open,
+      payload: %{
+        "subkind" => "information_request",
+        "details" => "Mrs Walker flu shot — has she had it this season? Reviewing records."
+      },
+      summary: "Mrs Walker flu shot history",
+      resident: {"Mabel", "Martin"},
+      requester: :care,
+      days_ago: 0,
+      messages: []
+    },
+    %{
+      provider_kind: :doctor,
+      subkind: "information_request",
+      state: :resolved,
+      payload: %{
+        "subkind" => "information_request",
+        "details" => "MDK paperwork for Mrs Cook Pflegegrad 4 — forms attached."
+      },
+      summary: "Mrs Cook Pflegegrad 4 MDK forms",
+      resident: {"Irene", "Cook"},
+      requester: :care,
+      days_ago: 5,
       messages: [
         %{author: :provider, body: "Forms received and signed. Returning by courier today."},
         %{author: :care, body: "Excellent — danke vielmals."}
-      ]},
+      ]
+    },
     # Salon Demo
-    %{provider_kind: :hairdresser, subkind: "appointment_request", state: :open,
-      payload: %{"subkind" => "appointment_request", "haircut_type" => "Short back and sides",
+    %{
+      provider_kind: :hairdresser,
+      subkind: "appointment_request",
+      state: :open,
+      payload: %{
+        "subkind" => "appointment_request",
+        "haircut_type" => "Short back and sides",
         "notes" => "Mr Adams asked for Thursday afternoon if possible.",
-        "post_to_feed" => "false"},
-      summary: "Mr Adams haircut Thursday", resident: {"Julian", "Adams"},
-      requester: :relative, days_ago: 0, messages: []},
-    %{provider_kind: :hairdresser, subkind: "appointment_request", state: :in_progress,
-      payload: %{"subkind" => "appointment_request", "haircut_type" => "Group cuts (3 residents)",
+        "post_to_feed" => "false"
+      },
+      summary: "Mr Adams haircut Thursday",
+      resident: {"Julian", "Adams"},
+      requester: :relative,
+      days_ago: 0,
+      messages: []
+    },
+    %{
+      provider_kind: :hairdresser,
+      subkind: "appointment_request",
+      state: :in_progress,
+      payload: %{
+        "subkind" => "appointment_request",
+        "haircut_type" => "Group cuts (3 residents)",
         "notes" => "Ursula Hall, Penelope Davis, Beatrice Cox — Friday block.",
-        "post_to_feed" => "true"},
-      summary: "Friday group cuts (3 residents)", resident: nil,
-      requester: :care, days_ago: 1,
+        "post_to_feed" => "true"
+      },
+      summary: "Friday group cuts (3 residents)",
+      resident: nil,
+      requester: :care,
+      days_ago: 1,
       messages: [
         %{author: :provider, body: "Friday 14:00–16:30 confirmed."},
         %{author: :care, body: "Perfekt. Bell ward 1 when arriving."}
-      ]},
-    %{provider_kind: :hairdresser, subkind: "appointment_request", state: :resolved,
-      payload: %{"subkind" => "appointment_request", "haircut_type" => "Trim",
-        "notes" => "Monthly schedule confirmation — done.", "post_to_feed" => "false"},
-      summary: "Monthly schedule confirmation", resident: nil,
-      requester: :care, days_ago: 6,
+      ]
+    },
+    %{
+      provider_kind: :hairdresser,
+      subkind: "appointment_request",
+      state: :resolved,
+      payload: %{
+        "subkind" => "appointment_request",
+        "haircut_type" => "Trim",
+        "notes" => "Monthly schedule confirmation — done.",
+        "post_to_feed" => "false"
+      },
+      summary: "Monthly schedule confirmation",
+      resident: nil,
+      requester: :care,
+      days_ago: 6,
       messages: [
         %{author: :provider, body: "All set — same Thursday slot every month."},
         %{author: :care, body: "Großartig, danke!"}
-      ]},
+      ]
+    },
     # Linen Service (laundry → uses "complaint" subkind but with payload tweak)
-    %{provider_kind: :laundry, subkind: "complaint", state: :in_progress,
-      payload: %{"subkind" => "complaint", "service" => "bed_linens", "reason" => "schedule",
+    %{
+      provider_kind: :laundry,
+      subkind: "complaint",
+      state: :in_progress,
+      payload: %{
+        "subkind" => "complaint",
+        "service" => "bed_linens",
+        "reason" => "schedule",
         "details" => "Bed linens for ward 1 — biweekly rotation; could we shift to weekly?",
-        "attachment_id" => "00000000-0000-0000-0000-000000000000"},
-      summary: "Ward 1 linens — weekly rotation request", resident: nil,
-      requester: :care, days_ago: 3,
+        "attachment_id" => "00000000-0000-0000-0000-000000000000"
+      },
+      summary: "Ward 1 linens — weekly rotation request",
+      resident: nil,
+      requester: :care,
+      days_ago: 3,
       messages: [
         %{author: :provider, body: "Weekly works. Tuesdays + Fridays okay?"},
         %{author: :care, body: "Tue + Fri ist top. Danke!"}
-      ]},
-    %{provider_kind: :laundry, subkind: "complaint", state: :open,
-      payload: %{"subkind" => "complaint", "service" => "towels", "reason" => "quality",
+      ]
+    },
+    %{
+      provider_kind: :laundry,
+      subkind: "complaint",
+      state: :open,
+      payload: %{
+        "subkind" => "complaint",
+        "service" => "towels",
+        "reason" => "quality",
         "details" => "Stained towels noted in room 4B — please replace.",
-        "attachment_id" => "00000000-0000-0000-0000-000000000000"},
-      summary: "Stained towels room 4B", resident: nil,
-      requester: :care, days_ago: 0, messages: []},
-    %{provider_kind: :laundry, subkind: "complaint", state: :resolved,
-      payload: %{"subkind" => "complaint", "service" => "blankets", "reason" => "quantity",
+        "attachment_id" => "00000000-0000-0000-0000-000000000000"
+      },
+      summary: "Stained towels room 4B",
+      resident: nil,
+      requester: :care,
+      days_ago: 0,
+      messages: []
+    },
+    %{
+      provider_kind: :laundry,
+      subkind: "complaint",
+      state: :resolved,
+      payload: %{
+        "subkind" => "complaint",
+        "service" => "blankets",
+        "reason" => "quantity",
         "details" => "Extra blankets needed before weekend cold snap — delivered Sat.",
-        "attachment_id" => "00000000-0000-0000-0000-000000000000"},
-      summary: "Extra weekend blankets (resolved)", resident: nil,
-      requester: :care, days_ago: 7,
+        "attachment_id" => "00000000-0000-0000-0000-000000000000"
+      },
+      summary: "Extra weekend blankets (resolved)",
+      resident: nil,
+      requester: :care,
+      days_ago: 7,
       messages: [
         %{author: :provider, body: "Delivering 20 extra blankets Saturday morning."},
         %{author: :care, body: "Vielen Dank — perfect timing."},
         %{author: :provider, body: "Delivered. Have a warm weekend!"}
-      ]}
+      ]
+    }
   ]
 
   defp refresh_services!(facility) do
@@ -929,26 +1116,43 @@ defmodule Caredeck.Release.Seeds do
       |> Map.new(fn t -> {t.handle, t} end)
 
     Enum.each(@service_request_seeds, fn spec ->
-      seed_service_request!(spec, facility, providers, residents, relative_users, care_team,
-        provider_teams)
+      seed_service_request!(
+        spec,
+        facility,
+        providers,
+        residents,
+        relative_users,
+        care_team,
+        provider_teams
+      )
     end)
 
     IO.puts("  ✓ services: #{length(@service_request_seeds)} requests + messages")
     :ok
   end
 
-  defp seed_service_request!(spec, facility, providers, residents, relative_users, care_team,
-         provider_teams) do
+  defp seed_service_request!(
+         spec,
+         facility,
+         providers,
+         residents,
+         relative_users,
+         care_team,
+         provider_teams
+       ) do
     provider = Map.fetch!(providers, spec.provider_kind)
-    resident_id = case spec.resident do
-      {first, last} ->
-        case find_resident(residents, {first, last}) do
-          %{id: id} -> id
-          _ -> nil
-        end
 
-      _ -> nil
-    end
+    resident_id =
+      case spec.resident do
+        {first, last} ->
+          case find_resident(residents, {first, last}) do
+            %{id: id} -> id
+            _ -> nil
+          end
+
+        _ ->
+          nil
+      end
 
     {requester_user_id, requester_team_id} =
       case spec.requester do
@@ -996,7 +1200,9 @@ defmodule Caredeck.Release.Seeds do
       {author_user, author_team} =
         case msg.author do
           :relative ->
-            user = Enum.at(relative_users, :erlang.phash2({spec.summary, idx}, length(relative_users)))
+            user =
+              Enum.at(relative_users, :erlang.phash2({spec.summary, idx}, length(relative_users)))
+
             {(user && user.id) || requester_user_id, nil}
 
           :care ->
@@ -1250,8 +1456,7 @@ defmodule Caredeck.Release.Seeds do
     %{
       key: :voice_schlager,
       team: "team-activities",
-      body:
-        "Mr Hungsinger entertained the lunch crowd today — short audio clip below. Pure joy.",
+      body: "Mr Hungsinger entertained the lunch crowd today — short audio clip below. Pure joy.",
       audio: {:audio, 0},
       audio_caption: "Mr Hungsinger humming Marmor, Stein und Eisen.",
       audience_residents: [{"Isaac", "Allen"}],
@@ -1334,7 +1539,9 @@ defmodule Caredeck.Release.Seeds do
       )
       |> Ash.create(tenant: facility.id, authorize?: false)
 
-    inserted_at = DateTime.utc_now() |> DateTime.add(-Map.get(spec, :days_ago, 0) * 86_400, :second)
+    inserted_at =
+      DateTime.utc_now() |> DateTime.add(-Map.get(spec, :days_ago, 0) * 86_400, :second)
+
     backdate!(:posts, post.id, inserted_at)
 
     Enum.each(spec.audience_residents, fn match ->
@@ -1465,7 +1672,14 @@ defmodule Caredeck.Release.Seeds do
     end
 
     seed_reactions!(post, facility, relative_users, Map.get(spec, :reactions, 0))
-    seed_comments!(post, facility, relative_users, Map.get(spec, :comment_bodies, []), inserted_at)
+
+    seed_comments!(
+      post,
+      facility,
+      relative_users,
+      Map.get(spec, :comment_bodies, []),
+      inserted_at
+    )
 
     :ok
   end
@@ -1630,7 +1844,9 @@ defmodule Caredeck.Release.Seeds do
       |> Ash.update!(tenant: facility.id, authorize?: false)
     end)
 
-    IO.puts("  ✓ avatars: #{length(residents)} residents, #{length(relatives)} relatives, #{map_size(@team_avatar_map)} teams")
+    IO.puts(
+      "  ✓ avatars: #{length(residents)} residents, #{length(relatives)} relatives, #{map_size(@team_avatar_map)} teams"
+    )
 
     :ok
   end

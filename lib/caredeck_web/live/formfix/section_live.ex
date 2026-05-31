@@ -388,7 +388,8 @@ defmodule CaredeckWeb.Formfix.SectionLive do
     """
   end
 
-  defp field_input(%{field: %{kind: kind, key: key}} = assigns) when kind in [:integer, :decimal] do
+  defp field_input(%{field: %{kind: kind, key: key}} = assigns)
+       when kind in [:integer, :decimal] do
     money = Caredeck.Formfix.Money.money?(key)
     monthly = Caredeck.Formfix.Money.monthly?(key)
     assigns = assign(assigns, money: money, monthly: monthly)

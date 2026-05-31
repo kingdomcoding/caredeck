@@ -191,7 +191,11 @@ defmodule CaredeckWeb.Icons do
       aria-hidden="true"
       {@rest}
     >
-      <path stroke-linecap="round" stroke-linejoin="round" d="M9 21c-2 0-3-2-3-4 0-1 .5-2 .5-3 0-2-1.5-3-1.5-6 0-3 2-6 5-6s4 2 4 5c0 4-1 5-1 8 0 4-2 6-4 6z" />
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="M9 21c-2 0-3-2-3-4 0-1 .5-2 .5-3 0-2-1.5-3-1.5-6 0-3 2-6 5-6s4 2 4 5c0 4-1 5-1 8 0 4-2 6-4 6z"
+      />
       <circle cx="14" cy="6" r="1.2" />
       <circle cx="16.5" cy="8" r="1" />
       <circle cx="17" cy="11" r="1" />
@@ -210,7 +214,11 @@ defmodule CaredeckWeb.Icons do
       aria-hidden="true"
       {@rest}
     >
-      <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v6M12 15v6M3 12h6M15 12h6M5 5l4 4M15 15l4 4M5 19l4-4M15 9l4-4" />
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="M12 3v6M12 15v6M3 12h6M15 12h6M5 5l4 4M15 15l4 4M5 19l4-4M15 9l4-4"
+      />
     </svg>
     """
   end
