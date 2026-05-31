@@ -68,8 +68,8 @@ defmodule CaredeckWeb.Services.IndexLive do
               class="block bg-card rounded-card shadow-card p-5 hover:border-brand border border-transparent transition"
             >
               <div class="flex items-center gap-3 mb-2">
-                <span class="h-10 w-10 rounded-full bg-brand-soft text-brand flex items-center justify-center text-lg">
-                  {kind_emoji(p.kind)}
+                <span class="h-10 w-10 rounded-full bg-brand-soft text-brand flex items-center justify-center">
+                  <Icons.icon name={kind_icon(p.kind)} class="h-5 w-5" />
                 </span>
                 <div>
                   <p class="text-ink-900 font-medium">{p.name}</p>
@@ -119,11 +119,12 @@ defmodule CaredeckWeb.Services.IndexLive do
     """
   end
 
-  defp kind_emoji(:pharmacy), do: "💊"
-  defp kind_emoji(:laundry), do: "🧺"
-  defp kind_emoji(:podiatry), do: "🦶"
-  defp kind_emoji(:hairdresser), do: "✂"
-  defp kind_emoji(:doctor), do: "🩺"
-  defp kind_emoji(:physio), do: "🤸"
-  defp kind_emoji(:florist), do: "💐"
+  defp kind_icon(:pharmacy), do: :pill
+  defp kind_icon(:laundry), do: :basket
+  defp kind_icon(:podiatry), do: :foot
+  defp kind_icon(:hairdresser), do: :scissors
+  defp kind_icon(:doctor), do: :stethoscope
+  defp kind_icon(:physio), do: :sparkle
+  defp kind_icon(:florist), do: :flower
+  defp kind_icon(_), do: :stethoscope
 end

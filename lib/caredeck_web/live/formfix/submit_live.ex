@@ -18,13 +18,16 @@ defmodule CaredeckWeb.Formfix.SubmitLive do
          ) do
       {:ok, app} ->
         answers_by_section = load_answers(app)
-        ordered_keys = app.sections |> Enum.sort_by(& &1.position) |> Enum.map(& &1.section_key)
+        ordered = Enum.sort_by(app.sections, & &1.position)
+        ordered_keys = Enum.map(ordered, & &1.section_key)
+        status_by_section = Map.new(ordered, &{&1.section_key, &1.status})
 
         {:ok,
          socket
          |> assign(:page_title, "Review and submit")
          |> assign(:application, app)
          |> assign(:answers_by_section, answers_by_section)
+         |> assign(:status_by_section, status_by_section)
          |> assign(:ordered_keys, ordered_keys)
          |> assign(:total_progress, Caredeck.Formfix.Applications.total_progress_percent(app))}
 
@@ -117,15 +120,21 @@ defmodule CaredeckWeb.Formfix.SubmitLive do
 
         <ul class="space-y-4">
           <li :for={key <- @ordered_keys} class="bg-card rounded-card shadow-card p-4">
-            <p class="text-ink-900 font-medium mb-2">{SectionKey.label(key)}</p>
+            <div class="flex items-center justify-between gap-2 mb-2">
+              <p class="text-ink-900 font-medium">{SectionKey.label(key)}</p>
+              <.section_pill status={Map.get(@status_by_section, key, :not_started)} />
+            </div>
             <p
-              :if={Map.get(@answers_by_section, key, []) == []}
-              class="text-ink-500 text-xs"
+              :if={Map.get(@status_by_section, key) == :skipped}
+              class="text-ink-500 text-xs italic"
             >
-              No answers provided.
+              Skipped by the applicant.
             </p>
             <dl
-              :if={Map.get(@answers_by_section, key, []) != []}
+              :if={
+                Map.get(@status_by_section, key) != :skipped and
+                  Map.get(@answers_by_section, key, []) != []
+              }
               class="grid gap-1 text-sm"
             >
               <div
@@ -136,6 +145,15 @@ defmodule CaredeckWeb.Formfix.SubmitLive do
                 <dd class="text-ink-900">{render_value(a)}</dd>
               </div>
             </dl>
+            <p
+              :if={
+                Map.get(@status_by_section, key) not in [:skipped, :complete] and
+                  Map.get(@answers_by_section, key, []) == []
+              }
+              class="text-ink-500 text-xs"
+            >
+              No answers yet.
+            </p>
           </li>
         </ul>
 

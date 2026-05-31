@@ -22,6 +22,62 @@ defmodule Caredeck.Release.Seeds do
     %{name: "Stefan Weber", handle: "team-kitchen", role_kind: :kitchen}
   ]
 
+  @kitchen_products [
+    {:breakfast,
+     [
+       "Porridge with berries",
+       "Granola bowl",
+       "Brötchen with cold cuts",
+       "Bircher muesli",
+       "Scrambled eggs",
+       "Pancakes with apple sauce",
+       "Frühstücksei with toast"
+     ]},
+    {:lunch,
+     [
+       "Wiener Schnitzel",
+       "Beef Goulash with Spätzle",
+       "Pan-fried fish with potatoes",
+       "Rouladen with red cabbage",
+       "Lentil stew",
+       "Käsespätzle",
+       "Königsberger Klopse"
+     ]},
+    {:dinner,
+     [
+       "Vegetable soup",
+       "Bauernbrot with cheese",
+       "Quark with chives",
+       "Leberwurst sandwich",
+       "Kartoffelsalat",
+       "Bratwurst with sauerkraut",
+       "Maultaschen in broth"
+     ]},
+    {:drinks,
+     [
+       "Apple juice",
+       "Herbal tea",
+       "Mineral water",
+       "Coffee",
+       "Berry compote",
+       "Buttermilk",
+       "Black tea"
+     ]},
+    {:fruit, ["Apple", "Pear", "Banana", "Plum", "Seasonal berries", "Orange", "Grapes"]},
+    {:snack,
+     [
+       "Yogurt",
+       "Pretzel",
+       "Trail mix",
+       "Quark dessert",
+       "Cheese cubes",
+       "Cookies",
+       "Apfelstrudel"
+     ]}
+  ]
+
+  @kitchen_days_order ~w(monday tuesday wednesday thursday friday saturday sunday)a
+
   @resident_count 30
   @relative_count_target 80
   @relationship_pool ~w(daughter son niece nephew granddaughter grandson spouse sibling)a
@@ -121,6 +177,138 @@ defmodule Caredeck.Release.Seeds do
     IO.puts("")
 
     :ok
+  end
+
+  def refresh! do
+    Application.put_env(:caredeck, :thumbnailer_mode, :sync)
+
+    district = find_or_create_district()
+    facility = find_or_create_facility(district)
+    Enum.each(@team_seeds, &find_or_create_team(&1, facility))
+
+    admin =
+      Accounts.TeamIdentity
+      |> Ash.Query.filter(handle == "team-admin" and facility_id == ^facility.id)
+      |> Ash.read_one!(authorize?: false)
+
+    Formfix.Application
+    |> Ash.read!(tenant: facility.id, authorize?: false)
+    |> Ash.load!(:resident, tenant: facility.id, authorize?: false)
+    |> Enum.each(&refresh_application!(&1, admin, facility))
+
+    refresh_kitchen_slots!(facility)
+
+    IO.puts("")
+    IO.puts("Demo data refreshed.")
+    IO.puts("")
+
+    :ok
+  end
+
+  defp refresh_application!(app, admin, facility) do
+    user =
+      case app.applicant_user_id do
+        nil ->
+          nil
+
+        id ->
+          Accounts.User
+          |> Ash.Query.filter(id == ^id)
+          |> Ash.read_one(authorize?: false)
+          |> case do
+            {:ok, u} -> u
+            _ -> nil
+          end
+      end
+
+    prefill_person_needing_care!(app, app.resident, facility)
+    if user, do: prefill_applicant!(app, user, facility)
+
+    Formfix.ApplicationNote
+    |> Ash.Query.filter(application_id == ^app.id)
+    |> Ash.read!(tenant: facility.id, authorize?: false)
+    |> Enum.each(&Ash.destroy!(&1, tenant: facility.id, authorize?: false))
+
+    if admin, do: ensure_demo_notes!(app, admin, facility)
+
+    :ok
+  end
+
+  defp refresh_kitchen_slots!(facility) do
+    template =
+      Kitchen.MenuTemplate
+      |> Ash.Query.filter(is_active == true)
+      |> Ash.read_one(tenant: facility.id, authorize?: false)
+      |> case do
+        {:ok, %{} = t} ->
+          t
+
+        _ ->
+          Kitchen.MenuTemplate
+          |> Ash.Changeset.for_create(
+            :create,
+            %{facility_id: facility.id, name: "Default week", is_active: true},
+            tenant: facility.id,
+            authorize?: false
+          )
+          |> Ash.create!(tenant: facility.id, authorize?: false)
+      end
+
+    Kitchen.MenuTemplateSlot
+    |> Ash.Query.filter(menu_template_id == ^template.id)
+    |> Ash.read!(tenant: facility.id, authorize?: false)
+    |> Enum.each(&Ash.destroy!(&1, tenant: facility.id, authorize?: false))
+
+    products =
+      Enum.flat_map(@kitchen_products, fn {cat, names} ->
+        Enum.map(names, fn name ->
+          find_or_create_product(facility, cat, name)
+        end)
+      end)
+
+    product_by_category = Enum.group_by(products, & &1.category)
+
+    for {day, day_index} <- Enum.with_index(@kitchen_days_order),
+        cat <- Kitchen.MealCategory.all() do
+      category_products = Map.fetch!(product_by_category, cat)
+      product = Enum.at(category_products, rem(day_index, length(category_products)))
+
+      Kitchen.MenuTemplateSlot
+      |> Ash.Changeset.for_create(
+        :create,
+        %{
+          facility_id: facility.id,
+          menu_template_id: template.id,
+          day_of_week: day,
+          category: cat,
+          product_id: product.id
+        },
+        tenant: facility.id,
+        authorize?: false
+      )
+      |> Ash.create!(tenant: facility.id, authorize?: false)
+    end
+
+    :ok
+  end
+
+  defp find_or_create_product(facility, category, name) do
+    case Kitchen.Product
+         |> Ash.Query.filter(category == ^category and name == ^name)
+         |> Ash.read_one(tenant: facility.id, authorize?: false) do
+      {:ok, %{} = p} ->
+        p
+
+      _ ->
+        Kitchen.Product
+        |> Ash.Changeset.for_create(
+          :create,
+          %{facility_id: facility.id, name: name, category: category, is_default: true},
+          tenant: facility.id,
+          authorize?: false
+        )
+        |> Ash.create!(tenant: facility.id, authorize?: false)
+    end
   end
 
   @service_provider_seeds [
@@ -447,62 +635,6 @@ defmodule Caredeck.Release.Seeds do
     _ = facility
     :ok
   end
-
-  @kitchen_products [
-    {:breakfast,
-     [
-       "Porridge with berries",
-       "Granola bowl",
-       "Brötchen with cold cuts",
-       "Bircher muesli",
-       "Scrambled eggs",
-       "Pancakes with apple sauce",
-       "Frühstücksei with toast"
-     ]},
-    {:lunch,
-     [
-       "Wiener Schnitzel",
-       "Beef Goulash with Spätzle",
-       "Pan-fried fish with potatoes",
-       "Rouladen with red cabbage",
-       "Lentil stew",
-       "Käsespätzle",
-       "Königsberger Klopse"
-     ]},
-    {:dinner,
-     [
-       "Vegetable soup",
-       "Bauernbrot with cheese",
-       "Quark with chives",
-       "Leberwurst sandwich",
-       "Kartoffelsalat",
-       "Bratwurst with sauerkraut",
-       "Maultaschen in broth"
-     ]},
-    {:drinks,
-     [
-       "Apple juice",
-       "Herbal tea",
-       "Mineral water",
-       "Coffee",
-       "Berry compote",
-       "Buttermilk",
-       "Black tea"
-     ]},
-    {:fruit, ["Apple", "Pear", "Banana", "Plum", "Seasonal berries", "Orange", "Grapes"]},
-    {:snack,
-     [
-       "Yogurt",
-       "Pretzel",
-       "Trail mix",
-       "Quark dessert",
-       "Cheese cubes",
-       "Cookies",
-       "Apfelstrudel"
-     ]}
-  ]
-
-  @kitchen_days_order ~w(monday tuesday wednesday thursday friday saturday sunday)a
 
   defp seed_kitchen(facility) do
     existing_count =

@@ -20,6 +20,12 @@ defmodule Caredeck.Release do
     Caredeck.Release.Seeds.run()
   end
 
+  def refresh_demo_data do
+    load_app()
+    Application.ensure_all_started(:caredeck)
+    Caredeck.Release.Seeds.refresh!()
+  end
+
   defp repos do
     Application.fetch_env!(@app, :ecto_repos)
   end
