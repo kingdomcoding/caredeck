@@ -28,43 +28,11 @@ defmodule CaredeckWeb.Layouts do
         </a>
         <nav class="flex items-center gap-3 sm:gap-6 text-sm text-ink-500">
           <.link
-            :if={@current_user && @profile_rid}
-            navigate={~p"/residents/#{@profile_rid}"}
+            :if={@current_user}
+            navigate={~p"/feed"}
             class="hidden md:inline-block hover:text-ink-900"
           >
-            Profile
-          </.link>
-          <.link
-            :if={@current_user}
-            navigate={~p"/profile/edit"}
-            class="hidden md:inline-block hover:text-ink-900"
-          >
-            Edit
-          </.link>
-          <.link
-            :if={@current_user}
-            navigate={~p"/notifications"}
-            class="relative hidden md:inline-block hover:text-ink-900"
-            aria-label="Notifications"
-          >
-            <Icons.icon name={:bell} class="h-5 w-5" />
-            <span
-              :if={@unread > 0}
-              class="absolute -top-1 -right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-like-red text-white text-[10px] font-bold flex items-center justify-center"
-            >
-              {format_count(@unread)}
-            </span>
-          </.link>
-          <span :if={@current_user} class="hidden lg:inline-block text-ink-900 truncate max-w-[18ch]">
-            {@current_user.email}
-          </span>
-          <.link
-            :if={@current_user}
-            href={~p"/sign-out"}
-            method="delete"
-            class="hidden md:inline-block hover:text-ink-900"
-          >
-            Sign out
+            Feed
           </.link>
           <.link
             :if={@current_team}
@@ -115,9 +83,54 @@ defmodule CaredeckWeb.Layouts do
           >
             Kitchen
           </.link>
+
+          <span class="hidden md:inline-block text-divider">·</span>
+
+          <.link
+            :if={@current_user}
+            navigate={~p"/notifications"}
+            class="relative hidden md:inline-block hover:text-ink-900"
+            aria-label="Notifications"
+          >
+            <Icons.icon name={:bell} class="h-5 w-5" />
+            <span
+              :if={@unread > 0}
+              class="absolute -top-1 -right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-like-red text-white text-[10px] font-bold flex items-center justify-center"
+            >
+              {format_count(@unread)}
+            </span>
+          </.link>
+          <.link
+            :if={@current_user && @profile_rid}
+            navigate={~p"/residents/#{@profile_rid}"}
+            class="hidden md:inline-block hover:text-ink-900"
+          >
+            Profile
+          </.link>
+          <.link
+            :if={@current_user}
+            navigate={~p"/profile/edit"}
+            class="hidden md:inline-block hover:text-ink-900"
+          >
+            Edit
+          </.link>
+          <span
+            :if={@current_user}
+            class="hidden lg:inline-block text-ink-900 truncate max-w-[18ch]"
+          >
+            {@current_user.email}
+          </span>
           <span :if={@current_team} class="text-ink-900 truncate max-w-[14ch]">
             {@current_team.name}
           </span>
+          <.link
+            :if={@current_user}
+            href={~p"/sign-out"}
+            method="delete"
+            class="hidden md:inline-block hover:text-ink-900"
+          >
+            Sign out
+          </.link>
           <.link
             :if={@current_team}
             href={~p"/team/sign-out"}
