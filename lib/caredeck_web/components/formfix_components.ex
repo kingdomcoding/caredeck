@@ -1,14 +1,6 @@
 defmodule CaredeckWeb.FormfixComponents do
   use Phoenix.Component
 
-  def formfix_footer(assigns) do
-    ~H"""
-    <p class="text-ink-500 text-xs text-center mt-10 mb-4">
-      🔒 Your data is safe with us.
-    </p>
-    """
-  end
-
   attr :application_id, :string, required: true
   attr :label, :string, default: "Back to overview"
 

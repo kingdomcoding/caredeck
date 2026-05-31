@@ -237,8 +237,6 @@ defmodule CaredeckWeb.Formfix.SectionLive do
             Begin →
           </button>
         </div>
-
-        <.formfix_footer />
       </div>
     </Layouts.app>
     """
@@ -307,8 +305,6 @@ defmodule CaredeckWeb.Formfix.SectionLive do
           application={@application}
           section_key={@section_key}
         />
-
-        <.formfix_footer />
       </div>
     </Layouts.app>
     """

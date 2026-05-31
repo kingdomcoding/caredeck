@@ -73,8 +73,6 @@ defmodule CaredeckWeb.Formfix.DocumentsLive do
         >
           No documents required for this section.
         </p>
-
-        <.formfix_footer />
       </div>
     </Layouts.app>
     """

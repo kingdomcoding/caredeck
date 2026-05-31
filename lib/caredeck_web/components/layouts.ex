@@ -47,7 +47,7 @@ defmodule CaredeckWeb.Layouts do
             class="relative hidden md:inline-block hover:text-ink-900"
             aria-label="Notifications"
           >
-            <span aria-hidden="true">🔔</span>
+            <Icons.icon name={:bell} class="h-5 w-5" />
             <span
               :if={@unread > 0}
               class="absolute -top-1 -right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-like-red text-white text-[10px] font-bold flex items-center justify-center"
@@ -138,6 +138,9 @@ defmodule CaredeckWeb.Layouts do
 
     <main class="bg-page min-h-[calc(100vh-65px)] pb-16 md:pb-0">
       {render_slot(@inner_block)}
+      <p class="text-ink-500 text-xs text-center mt-10 mb-4 flex items-center justify-center gap-1.5">
+        <Icons.icon name={:lock} class="h-3.5 w-3.5" /> Your data is safe with us.
+      </p>
     </main>
 
     <nav

@@ -143,8 +143,6 @@ defmodule CaredeckWeb.Formfix.OverviewLive do
             <p class="text-ink-500 text-xs mt-2">Support: Mon–Fri 9 am – 5 pm</p>
           </aside>
         </div>
-
-        <.formfix_footer />
       </div>
     </Layouts.app>
     """

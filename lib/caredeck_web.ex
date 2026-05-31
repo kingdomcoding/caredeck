@@ -83,6 +83,8 @@ defmodule CaredeckWeb do
       import CaredeckWeb.CoreComponents
       import CaredeckWeb.FormfixComponents
 
+      alias CaredeckWeb.Icons
+
       # Common modules used in templates
       alias CaredeckWeb.Layouts
       alias Phoenix.LiveView.JS

@@ -159,8 +159,6 @@ defmodule CaredeckWeb.Formfix.ListLive do
             </.link>
           </li>
         </ul>
-
-        <.formfix_footer />
       </div>
     </Layouts.app>
     """

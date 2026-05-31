@@ -134,8 +134,6 @@ defmodule CaredeckWeb.Formfix.SubmitLive do
         >
           Please complete all sections and upload all required documents before submitting.
         </p>
-
-        <.formfix_footer />
       </div>
     </Layouts.app>
     """
