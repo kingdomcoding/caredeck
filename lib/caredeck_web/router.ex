@@ -39,7 +39,7 @@ defmodule CaredeckWeb.Router do
   scope "/", CaredeckWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
+    get "/", PageController, :root
     live "/design-system", DesignSystemLive
 
     auth_routes(AuthController, Caredeck.Accounts.User, path: "/auth")
