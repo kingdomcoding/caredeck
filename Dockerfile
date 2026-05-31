@@ -33,7 +33,7 @@ FROM debian:${DEBIAN_VERSION} AS runner
 ENV LANG=C.UTF-8
 
 RUN apt-get update -qq && \
-    apt-get install -y libstdc++6 openssl libncurses5 locales ca-certificates wget && \
+    apt-get install -y libstdc++6 openssl libncurses5 locales ca-certificates wget imagemagick ffmpeg && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
