@@ -63,15 +63,19 @@ defmodule Caredeck.Release.Assets do
   defp strip_exif(path) do
     tmp = Path.join(System.tmp_dir!(), "caredeck_strip_" <> Path.basename(path))
 
-    case System.cmd("mogrify", ["-strip", "-write", tmp, path], stderr_to_stdout: true) do
-      {_, 0} ->
-        {:ok, body} = File.read(tmp)
-        File.rm(tmp)
-        body
+    try do
+      case System.cmd("mogrify", ["-strip", "-write", tmp, path], stderr_to_stdout: true) do
+        {_, 0} ->
+          {:ok, body} = File.read(tmp)
+          File.rm(tmp)
+          body
 
-      _ ->
-        {:ok, body} = File.read(path)
-        body
+        _ ->
+          File.rm(tmp)
+          File.read!(path)
+      end
+    rescue
+      _ -> File.read!(path)
     end
   end
 

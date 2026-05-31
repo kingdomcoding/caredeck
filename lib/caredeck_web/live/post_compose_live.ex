@@ -739,14 +739,19 @@ defmodule CaredeckWeb.PostComposeLive do
   defp strip_exif_or_read!(path) do
     tmp = Path.join(System.tmp_dir!(), "caredeck_strip_" <> Path.basename(path))
 
-    case System.cmd("mogrify", ["-strip", "-write", tmp, path], stderr_to_stdout: true) do
-      {_, 0} ->
-        body = File.read!(tmp)
-        File.rm(tmp)
-        body
+    try do
+      case System.cmd("mogrify", ["-strip", "-write", tmp, path], stderr_to_stdout: true) do
+        {_, 0} ->
+          body = File.read!(tmp)
+          File.rm(tmp)
+          body
 
-      _ ->
-        File.read!(path)
+        _ ->
+          File.rm(tmp)
+          File.read!(path)
+      end
+    rescue
+      _ -> File.read!(path)
     end
   end
 end
