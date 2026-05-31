@@ -97,3 +97,16 @@
     background-color: var(--color-card);
   }
 }
+
+@media print {
+  header, nav, footer, .fixed { display: none !important; }
+  main { padding: 0 !important; }
+  body { background: white; color: black; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
