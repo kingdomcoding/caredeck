@@ -17,6 +17,10 @@ defmodule CaredeckWeb.Auth.SignInLive do
             <p class="text-ink-700 text-xs">
               Built as my application for the <em>Senior Fullstack Engineer (Elixir/Phoenix)</em> role at Myosotis GmbH. The product is a working demo, not a live SaaS.
               <a href="https://github.com/kingdomcoding/caredeck" class="text-brand hover:underline whitespace-nowrap">View source →</a>
+              ·
+              <.link navigate={~p"/design-system"} class="text-brand hover:underline whitespace-nowrap">
+                See the design tokens →
+              </.link>
             </p>
           </div>
 

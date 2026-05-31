@@ -146,7 +146,7 @@ defmodule CaredeckWeb.Formfix.ListLive do
                   Application for {a.resident.first_name} {a.resident.last_name}
                 </p>
                 <.formfix_status_pill
-                  :if={a.state in [:submitted, :approved]}
+                  :if={a.state in [:draft, :missing_documents, :ready_to_submit, :submitted, :approved]}
                   status={a.state}
                 />
               </div>

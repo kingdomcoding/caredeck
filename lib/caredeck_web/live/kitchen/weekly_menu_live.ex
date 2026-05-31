@@ -102,7 +102,7 @@ defmodule CaredeckWeb.Kitchen.WeeklyMenuLive do
               </div>
               <.link
                 navigate={~p"/kitchen/weekly-menu/#{Date.to_iso8601(date)}"}
-                class="rounded-button bg-brand-soft text-brand text-xs font-medium px-3 py-1.5 hover:bg-brand hover:text-white whitespace-nowrap"
+                class="rounded-button border border-divider text-ink-500 text-xs font-medium px-3 py-1.5 hover:border-brand hover:text-ink-900 whitespace-nowrap"
               >
                 Edit
               </.link>

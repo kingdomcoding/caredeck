@@ -93,7 +93,7 @@ defmodule CaredeckWeb.Formfix.AdminLive do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user} current_team={@current_team}>
-      <div class="mx-auto max-w-6xl px-4 sm:px-6 py-6">
+      <div class="mx-auto max-w-6xl px-4 sm:px-6 py-6 pb-24 md:pb-6">
         <header class="mb-6">
           <p class="text-ink-500 text-xs uppercase tracking-wide">Admin</p>
           <h1 class="text-display-md text-ink-900">Formfix applications</h1>
