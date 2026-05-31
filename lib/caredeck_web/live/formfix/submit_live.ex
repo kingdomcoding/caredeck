@@ -78,7 +78,7 @@ defmodule CaredeckWeb.Formfix.SubmitLive do
         <.formfix_back_link application_id={@application.id} />
 
         <header class="mb-6">
-          <h1 class="text-display-md text-ink-900">Review and submit</h1>
+          <h1 class="text-display-md text-ink-900">{header_title(@application.state)}</h1>
           <p class="text-ink-500 text-sm">
             For {@application.resident.first_name} {@application.resident.last_name}
           </p>
@@ -90,6 +90,30 @@ defmodule CaredeckWeb.Formfix.SubmitLive do
             />
           </div>
         </header>
+
+        <div
+          :if={@application.state == :submitted}
+          class="bg-purple-50 border border-purple-200 rounded-card p-4 mb-6"
+        >
+          <p class="text-purple-900 font-medium">
+            Submitted on {format_submitted_at(@application.submitted_at)}
+          </p>
+          <p class="text-purple-800 text-sm mt-1">
+            Awaiting decision. We'll notify you when it's reviewed.
+          </p>
+        </div>
+
+        <div
+          :if={@application.state == :approved}
+          class="bg-green-50 border border-green-200 rounded-card p-4 mb-6"
+        >
+          <p class="text-green-900 font-medium">
+            Approved on {format_submitted_at(@application.decided_at)}
+          </p>
+          <p :if={@application.outcome} class="text-green-800 text-sm mt-1">
+            {@application.outcome}
+          </p>
+        </div>
 
         <ul class="space-y-4">
           <li :for={key <- @ordered_keys} class="bg-card rounded-card shadow-card p-4">
@@ -116,6 +140,7 @@ defmodule CaredeckWeb.Formfix.SubmitLive do
         </ul>
 
         <button
+          :if={@application.state not in [:submitted, :approved]}
           type="button"
           phx-click="submit"
           disabled={@application.state != :ready_to_submit}
@@ -129,7 +154,7 @@ defmodule CaredeckWeb.Formfix.SubmitLive do
         </button>
 
         <p
-          :if={@application.state != :ready_to_submit}
+          :if={@application.state not in [:ready_to_submit, :submitted, :approved]}
           class="text-ink-500 text-xs text-center mt-2"
         >
           Please complete all sections and upload all required documents before submitting.
@@ -153,4 +178,14 @@ defmodule CaredeckWeb.Formfix.SubmitLive do
   defp render_value(%{value_decimal: v}) when not is_nil(v), do: Decimal.to_string(v)
   defp render_value(%{value_atom: v}) when not is_nil(v), do: Atom.to_string(v)
   defp render_value(_), do: "—"
+
+  defp format_submitted_at(nil), do: "—"
+
+  defp format_submitted_at(%DateTime{} = dt) do
+    Calendar.strftime(dt, "%d %b %Y at %H:%M UTC")
+  end
+
+  defp header_title(:submitted), do: "Submitted"
+  defp header_title(:approved), do: "Approved"
+  defp header_title(_), do: "Review and submit"
 end

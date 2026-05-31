@@ -85,6 +85,19 @@ defmodule CaredeckWeb.Formfix.OverviewLive do
             Formfix — {@application.resident.first_name} {@application.resident.last_name}
           </h1>
 
+          <p
+            :if={@application.state == :submitted}
+            class="text-ink-700 text-sm mt-2"
+          >
+            Submitted on {format_submitted_at(@application.submitted_at)} · awaiting decision.
+          </p>
+          <p
+            :if={@application.state == :approved}
+            class="text-ink-700 text-sm mt-2"
+          >
+            Approved on {format_submitted_at(@application.decided_at)}.
+          </p>
+
           <div class="mt-3 h-3 w-full bg-page rounded-full overflow-hidden">
             <div class="h-3 bg-brand" style={"width: #{@total_progress}%"}></div>
           </div>
@@ -153,4 +166,10 @@ defmodule CaredeckWeb.Formfix.OverviewLive do
 
   defp continue_label(%{section_key: key}),
     do: "Start " <> SectionKey.label(key)
+
+  defp format_submitted_at(nil), do: "—"
+
+  defp format_submitted_at(%DateTime{} = dt) do
+    Calendar.strftime(dt, "%d %b %Y")
+  end
 end
