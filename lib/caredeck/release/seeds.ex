@@ -199,9 +199,83 @@ defmodule Caredeck.Release.Seeds do
     refresh_kitchen_slots!(facility)
     rematerialise_kitchen_days!(facility)
 
+    refresh_avatars!(facility)
+
     IO.puts("")
     IO.puts("Demo data refreshed.")
     IO.puts("")
+
+    :ok
+  end
+
+  @team_avatar_map %{
+    "team-admin" => 0,
+    "team-care" => 1,
+    "team-activities" => 2,
+    "team-therapy" => 3,
+    "team-kitchen" => 4,
+    "team-pharmacy" => 5,
+    "team-laundry" => 6,
+    "team-hairdresser" => 7,
+    "team-doctor" => 8
+  }
+
+  defp refresh_avatars!(facility) do
+    IO.puts("  ↺ uploading + assigning avatars")
+
+    Enum.each(@team_avatar_map, fn {handle, idx} ->
+      case Accounts.TeamIdentity
+           |> Ash.Query.filter(handle == ^handle and facility_id == ^facility.id)
+           |> Ash.read_one(authorize?: false) do
+        {:ok, %{} = team} ->
+          key = Caredeck.Release.Assets.upload!(Caredeck.Release.Assets.at(:avatars_team, idx))
+
+          team
+          |> Ash.Changeset.for_update(:update, %{avatar_url: key}, authorize?: false)
+          |> Ash.update!(authorize?: false)
+
+        _ ->
+          :ok
+      end
+    end)
+
+    residents =
+      People.Resident
+      |> Ash.Query.sort(inserted_at: :asc)
+      |> Ash.Query.limit(15)
+      |> Ash.read!(tenant: facility.id, authorize?: false)
+
+    Enum.with_index(residents)
+    |> Enum.each(fn {resident, idx} ->
+      key = Caredeck.Release.Assets.upload!(Caredeck.Release.Assets.at(:avatars_resident, idx))
+
+      resident
+      |> Ash.Changeset.for_update(:update, %{avatar_url: key},
+        tenant: facility.id,
+        authorize?: false
+      )
+      |> Ash.update!(tenant: facility.id, authorize?: false)
+    end)
+
+    relatives =
+      People.Relative
+      |> Ash.Query.sort(inserted_at: :asc)
+      |> Ash.Query.limit(20)
+      |> Ash.read!(tenant: facility.id, authorize?: false)
+
+    Enum.with_index(relatives)
+    |> Enum.each(fn {relative, idx} ->
+      key = Caredeck.Release.Assets.upload!(Caredeck.Release.Assets.at(:avatars_relative, idx))
+
+      relative
+      |> Ash.Changeset.for_update(:update, %{avatar_url: key},
+        tenant: facility.id,
+        authorize?: false
+      )
+      |> Ash.update!(tenant: facility.id, authorize?: false)
+    end)
+
+    IO.puts("  ✓ avatars: #{length(residents)} residents, #{length(relatives)} relatives, #{map_size(@team_avatar_map)} teams")
 
     :ok
   end
