@@ -238,6 +238,16 @@ defmodule Caredeck.Release.Seeds do
       ])
 
     Enum.each(dates, fn date ->
+      day = date |> Date.day_of_week() |> day_atom()
+
+      template_slot_count =
+        Kitchen.MenuTemplateSlot
+        |> Ash.Query.filter(day_of_week == ^day)
+        |> Ash.read!(tenant: facility.id, authorize?: false)
+        |> length()
+
+      IO.puts("  debug #{date} (#{day}): #{template_slot_count} template slots for that day")
+
       try do
         result = Kitchen.Materialise.materialise_day(facility.id, date)
         IO.puts("  ✓ materialised #{date}: #{length(result.slots)} slots")
@@ -337,6 +347,14 @@ defmodule Caredeck.Release.Seeds do
 
     :ok
   end
+
+  defp day_atom(1), do: :monday
+  defp day_atom(2), do: :tuesday
+  defp day_atom(3), do: :wednesday
+  defp day_atom(4), do: :thursday
+  defp day_atom(5), do: :friday
+  defp day_atom(6), do: :saturday
+  defp day_atom(7), do: :sunday
 
   defp find_or_create_product(facility, category, name) do
     case Kitchen.Product
