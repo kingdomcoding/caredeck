@@ -1480,7 +1480,7 @@ defmodule Caredeck.Release.Seeds do
       Accounts.TeamIdentity
       |> Ash.Query.filter(facility_id == ^facility.id)
       |> Ash.read!(authorize?: false)
-      |> Map.new(&{&1.handle, &1})
+      |> Map.new(&{to_string(&1.handle), &1})
 
     residents =
       People.Resident
