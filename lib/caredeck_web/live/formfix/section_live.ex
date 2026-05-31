@@ -13,10 +13,11 @@ defmodule CaredeckWeb.Formfix.SectionLive do
     section_key = String.to_existing_atom(sk)
 
     with {:ok, application} <-
-           Ash.get(AidApplication, aid, tenant: facility.id, actor: actor, load: [:resident]),
+           Ash.get(AidApplication, aid, tenant: facility.id, actor: actor, load: [:resident, :sections]),
          {:ok, _section} <- fetch_section(application, section_key) do
       answers = load_answers(application, section_key)
       form_data = build_initial_form(section_key, answers)
+      ordered_sections = Enum.sort_by(application.sections, & &1.position)
 
       if connected?(socket) and Caredeck.Formfix.RequiredDocuments.for(section_key) != [] do
         Phoenix.PubSub.subscribe(Caredeck.PubSub, "formfix:#{application.id}:documents")
@@ -29,6 +30,7 @@ defmodule CaredeckWeb.Formfix.SectionLive do
        |> assign(:section_key, section_key)
        |> assign(:fields, SectionSchema.fields(section_key))
        |> assign(:sub_sections, SectionSchema.sub_sections(section_key))
+       |> assign(:ordered_sections, ordered_sections)
        |> assign(:form_data, form_data)
        |> assign(:next_key, Caredeck.Formfix.Applications.next_section_key(application, section_key))}
     else
@@ -245,7 +247,7 @@ defmodule CaredeckWeb.Formfix.SectionLive do
   defp render_form(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_user={@current_user} current_team={@current_team}>
-      <div class="mx-auto max-w-4xl px-4 sm:px-6 py-6">
+      <div class="mx-auto max-w-4xl px-4 sm:px-6 py-6 pb-32 md:pb-28">
         <.formfix_back_link application_id={@application.id} />
 
         <header class="mb-6">
@@ -255,7 +257,7 @@ defmodule CaredeckWeb.Formfix.SectionLive do
           </p>
         </header>
 
-        <form phx-change="change" phx-submit="save" class="space-y-6">
+        <form phx-change="change" phx-submit="save" id="section-form" class="space-y-6">
           <section :for={sub <- @sub_sections} class="bg-card rounded-card shadow-card p-4">
             <h2 class="text-ink-900 font-medium mb-3">{sub.label}</h2>
 
@@ -280,22 +282,6 @@ defmodule CaredeckWeb.Formfix.SectionLive do
               </aside>
             </div>
           </section>
-
-          <div class="flex justify-end gap-2 sticky bottom-0 bg-card border-t border-divider py-3 px-3">
-            <button
-              type="button"
-              phx-click="skip"
-              class="rounded-button bg-card border border-divider text-ink-500 text-sm px-3 py-2 hover:border-brand"
-            >
-              Skip
-            </button>
-            <button
-              type="submit"
-              class="rounded-button bg-brand text-white text-sm font-medium px-4 py-2 hover:bg-brand-strong"
-            >
-              Continue →
-            </button>
-          </div>
         </form>
 
         <.live_component
@@ -306,8 +292,44 @@ defmodule CaredeckWeb.Formfix.SectionLive do
           section_key={@section_key}
         />
       </div>
+
+      <div
+        role="region"
+        aria-label="Section actions"
+        class="fixed left-0 right-0 bottom-16 md:bottom-0 z-20 bg-card border-t border-divider shadow-[0_-2px_8px_rgba(0,0,0,0.04)] pb-[env(safe-area-inset-bottom)]"
+      >
+        <div class="mx-auto max-w-4xl px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
+          <p class="text-ink-500 text-xs">
+            {section_position(@ordered_sections, @section_key)} of {length(@ordered_sections)}
+          </p>
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              phx-click="skip"
+              class="rounded-button border border-divider text-ink-500 text-sm px-3 py-2 hover:border-brand"
+            >
+              Skip
+            </button>
+            <button
+              type="submit"
+              form="section-form"
+              class="rounded-button bg-brand text-white text-sm font-medium px-4 py-2 hover:bg-brand-strong"
+            >
+              Continue →
+            </button>
+          </div>
+        </div>
+      </div>
     </Layouts.app>
     """
+  end
+
+  defp section_position(ordered_sections, current_key) do
+    Enum.find_index(ordered_sections, &(&1.section_key == current_key))
+    |> case do
+      nil -> 1
+      idx -> idx + 1
+    end
   end
 
   attr :field, :map, required: true
