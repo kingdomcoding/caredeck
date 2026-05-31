@@ -207,16 +207,13 @@ defmodule Caredeck.Release.Seeds do
   end
 
   defp rematerialise_kitchen_days!(facility) do
-    {:ok, %{rows: rows}} =
-      Caredeck.Repo.query("SELECT date FROM kitchen_day_menus WHERE facility_id = $1", [
-        Ecto.UUID.dump!(facility.id)
-      ])
-
     dates =
-      rows
-      |> Enum.map(fn [d] -> d end)
+      Kitchen.DayMenu
+      |> Ash.read!(tenant: facility.id, authorize?: false)
+      |> Enum.map(& &1.date)
+      |> Enum.sort()
 
-    IO.puts("  ↺ rematerialising #{length(dates)} kitchen day(s)")
+    IO.puts("  ↺ rematerialising #{length(dates)} kitchen day(s): #{inspect(dates)}")
 
     {:ok, _} =
       Caredeck.Repo.query(
