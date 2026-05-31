@@ -42,6 +42,10 @@ defmodule CaredeckWeb.Router do
     get "/", PageController, :root
     live "/design-system", DesignSystemLive
 
+    post "/demo/admin", DemoSignInController, :admin
+    post "/demo/care", DemoSignInController, :care
+    post "/demo/relative", DemoSignInController, :relative
+
     auth_routes(AuthController, Caredeck.Accounts.User, path: "/auth")
     delete "/sign-out", AuthController, :sign_out
 
