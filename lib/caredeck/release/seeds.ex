@@ -219,6 +219,18 @@ defmodule Caredeck.Release.Seeds do
     IO.puts("  ↺ rematerialising #{length(dates)} kitchen day(s)")
 
     {:ok, _} =
+      Caredeck.Repo.query(
+        "DELETE FROM kitchen_day_menu_slots_versions WHERE facility_id = $1",
+        [Ecto.UUID.dump!(facility.id)]
+      )
+
+    {:ok, _} =
+      Caredeck.Repo.query(
+        "DELETE FROM kitchen_day_menus_versions WHERE facility_id = $1",
+        [Ecto.UUID.dump!(facility.id)]
+      )
+
+    {:ok, _} =
       Caredeck.Repo.query("DELETE FROM kitchen_day_menu_slots WHERE facility_id = $1", [
         Ecto.UUID.dump!(facility.id)
       ])
