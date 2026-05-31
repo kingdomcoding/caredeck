@@ -122,6 +122,11 @@ defmodule Caredeck.Feed.Attachment do
       authorize_if expr(post.team_identity_id == ^actor(:id))
 
       authorize_if expr(
+                     ^actor(:__struct__) == Caredeck.Accounts.TeamIdentity and
+                       ^actor(:role_kind) in [:care, :admin]
+                   )
+
+      authorize_if expr(
                      post.is_internal == false and
                        ^actor(:__struct__) == Caredeck.Accounts.User
                    )

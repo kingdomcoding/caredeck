@@ -87,6 +87,12 @@ defmodule Caredeck.Feed.Post do
   policies do
     policy action_type(:read) do
       authorize_if relates_to_actor_via([:team_identity])
+
+      authorize_if expr(
+                     ^actor(:__struct__) == Caredeck.Accounts.TeamIdentity and
+                       ^actor(:role_kind) in [:care, :admin]
+                   )
+
       authorize_if expr(exists(audience.relative_links.relative, user_id == ^actor(:id)))
 
       authorize_if expr(

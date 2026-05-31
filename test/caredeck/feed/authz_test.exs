@@ -77,6 +77,30 @@ defmodule Caredeck.Feed.AuthzTest do
                  actor: ctx.team_a
                )
     end
+
+    test "admin team can read internal post by another team in same facility", ctx do
+      admin = create_team(ctx.facility_a, "admin-#{:erlang.unique_integer([:positive])}", :admin)
+
+      assert {:ok, post} =
+               Ash.get(Feed.Post, ctx.post_internal_a.id,
+                 tenant: ctx.facility_a.id,
+                 actor: admin
+               )
+
+      assert post.id == ctx.post_internal_a.id
+    end
+
+    test "admin team can read public post by another team in same facility", ctx do
+      admin = create_team(ctx.facility_a, "admin-#{:erlang.unique_integer([:positive])}", :admin)
+
+      assert {:ok, post} =
+               Ash.get(Feed.Post, ctx.post_public_a.id,
+                 tenant: ctx.facility_a.id,
+                 actor: admin
+               )
+
+      assert post.id == ctx.post_public_a.id
+    end
   end
 
   describe "Post create" do
@@ -334,14 +358,14 @@ defmodule Caredeck.Feed.AuthzTest do
     |> Ash.create!(authorize?: false)
   end
 
-  defp create_team(facility, handle) do
+  defp create_team(facility, handle, role_kind \\ :care) do
     Accounts.TeamIdentity
     |> Ash.Changeset.for_create(
       :register_with_password,
       %{
         handle: handle,
         name: handle,
-        role_kind: :care,
+        role_kind: role_kind,
         facility_id: facility.id,
         password: "phase4-test-pass"
       },
